@@ -50,7 +50,7 @@ const GameControls = ({
 
   return (
     <>
-      <h2 className="text-2xl font-luckiest text-jungle-darkGreen mb-4 relative z-20">
+      <h2 className="text-2xl font-luckiest text-jungle-darkGreen mb-4 relative z-30">
         {getGameTitle()}
       </h2>
       
@@ -63,7 +63,7 @@ const GameControls = ({
             Start Game
           </button>
           
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-2 relative z-30">
             Watch carefully where the ball is placed, then the cups will shuffle!
           </p>
         </div>
@@ -94,11 +94,11 @@ const GameControls = ({
               />
             </div>
           ) : canBet && currentBet.amount > 0 && selectedCup === -1 ? (
-            <p className="text-center mt-4 animate-pulse">
+            <p className="text-center mt-4 animate-pulse relative z-30">
               Click on a cup to make your guess!
             </p>
           ) : !canBet && !gameEnded ? (
-            <p className="text-center mt-4 animate-pulse">
+            <p className="text-center mt-4 animate-pulse relative z-30">
               {isShuffling ? "Watch carefully..." : areLifted ? "Remember where the ball is..." : "Get ready..."}
             </p>
           ) : null}

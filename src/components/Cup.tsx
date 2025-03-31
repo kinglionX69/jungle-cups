@@ -51,7 +51,7 @@ const Cup = ({
           "transform transition-all duration-300"
         )}
         onClick={() => isClickable && onClick(index)}
-        style={{ zIndex: isLifted || isRevealed ? 1 : 10 }} // Lower z-index when lifted or revealed to prevent text overlap
+        style={{ zIndex: 10 }} // Keep high z-index for the cup regardless of state
       >
         <div className="cup-base"></div>
       </div>
@@ -62,7 +62,7 @@ const Cup = ({
           isLifted ? "bottom-0" : "bottom-12"
         )}></div>
       )}
-      <p className="mt-2 font-bungee text-lg">{index + 1}</p>
+      <p className="mt-2 font-bungee text-lg relative z-20">{index + 1}</p> {/* Increased z-index to stay above cups */}
     </div>
   );
 };
