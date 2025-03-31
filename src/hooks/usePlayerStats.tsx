@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useStatsLoader } from "./useStatsLoader";
 import { useStatsUpdater } from "./useStatsUpdater";
@@ -10,7 +9,6 @@ export const usePlayerStats = (walletAddress: string): UsePlayerStatsReturn => {
   const { updateStats, addReferral } = useStatsUpdater(walletAddress, stats, setStats);
   const { isWithdrawing, withdrawFunds, lastTxHash, lastTxExplorerUrl } = useStatsWithdrawal(walletAddress, stats, setStats);
   
-  // Load stats from database when wallet changes
   useEffect(() => {
     if (walletAddress) {
       loadStats(walletAddress);
