@@ -155,7 +155,8 @@ export const withdrawWinnings = async (
           success: true,
           message: `Withdrawal of ${amount} ${tokenType} successful! Tokens are on their way to your wallet.`,
           txHash: data.transactionHash,
-          explorerUrl: data.explorerUrl
+          explorerUrl: data.explorerUrl,
+          details: data.details || "Transaction submitted successfully."
         };
       } else {
         console.error(`Withdrawal failed: ${data?.error || 'Unknown error'}`);

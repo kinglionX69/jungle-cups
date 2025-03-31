@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
 import { AptosClient, TxnBuilderTypes, BCS, HexString } from "https://esm.sh/aptos@1.20.0";
+import * as aptos from "https://esm.sh/aptos@1.20.0";
 
 // CORS headers for the function
 const corsHeaders = {
@@ -22,28 +23,15 @@ const initializeAptosAccount = (privateKeyHex: string) => {
       privateKeyHex = privateKeyHex.slice(2);
     }
     
-    // Convert to UInt8Array
-    const privateKeyBytes = new HexString(privateKeyHex).toUint8Array();
+    console.log("Creating account with SDK version:", aptos.VERSION);
     
-    // Create account using the BCS and TxnBuilderTypes to construct the account properly
-    const { Ed25519PrivateKey, AccountAddress } = TxnBuilderTypes;
-    const privateKey = new Ed25519PrivateKey(privateKeyBytes);
+    // Using the proper API from aptos 1.20.0
+    const privateKey = new aptos.Ed25519PrivateKey(privateKeyHex);
+    const account = new aptos.Account(privateKey);
     
-    // Get the public key
-    const publicKey = privateKey.public_key();
+    console.log("Account initialized with address:", account.address().toString());
     
-    // Get the address from the public key
-    const authKey = BCS.bcsToBytes(publicKey);
-    const address = AccountAddress.fromHex(HexString.fromUint8Array(authKey.slice(-32)).hex());
-    
-    return {
-      address: () => ({ hex: () => HexString.fromUint8Array(BCS.bcsToBytes(address)).hex() }),
-      publicKey: () => publicKey,
-      signBuffer: (buffer: Uint8Array) => {
-        const signatureBytes = privateKey.sign(buffer);
-        return signatureBytes;
-      }
-    };
+    return account;
   } catch (error) {
     console.error("Error initializing Aptos account:", error);
     throw new Error(`Failed to initialize Aptos account: ${error.message}`);
@@ -147,9 +135,9 @@ serve(async (req) => {
       }
 
       try {
-        // Initialize the escrow account using our custom function
+        // Initialize the escrow account using our updated function
         const escrowAccount = initializeAptosAccount(escrowPrivateKey);
-        console.log("Escrow account initialized:", escrowAccount.address().hex());
+        console.log("Escrow account initialized:", escrowAccount.address().toString());
 
         // Convert amount to octas (8 decimals)
         const amountInOctas = Math.floor(amount * 100000000).toString(); 
@@ -172,7 +160,7 @@ serve(async (req) => {
         let txnRequest;
         try {
           txnRequest = await client.generateTransaction(
-            escrowAccount.address().hex(),
+            escrowAccount.address().toString(),
             {
               function: functionName,
               type_arguments: typeArguments,
@@ -186,21 +174,10 @@ serve(async (req) => {
         }
 
         // Sign transaction with proper error handling
-        // In aptos 1.20.0, we need to handle signing differently
+        // Updated for aptos 1.20.0
         let signedTxn;
         try {
-          const toSign = await client.createSigningMessage(txnRequest);
-          const signature = escrowAccount.signBuffer(toSign);
-          
-          signedTxn = {
-            ...txnRequest,
-            signature: {
-              type: "ed25519_signature",
-              public_key: HexString.fromUint8Array(BCS.bcsToBytes(escrowAccount.publicKey())).hex(),
-              signature: HexString.fromUint8Array(signature).hex(),
-            },
-          };
-          
+          signedTxn = await client.signTransaction(escrowAccount, txnRequest);
           console.log("Transaction signed successfully");
         } catch (signError) {
           console.error("Error signing transaction:", signError);
@@ -289,7 +266,8 @@ serve(async (req) => {
             success: true,
             message: `Successfully processed withdrawal of ${amount} ${tokenType} to ${playerAddress}`,
             transactionHash: transactionRes.hash,
-            explorerUrl: `https://explorer.aptoslabs.com/txn/${transactionRes.hash}?network=${NETWORK}`
+            explorerUrl: `https://explorer.aptoslabs.com/txn/${transactionRes.hash}?network=${NETWORK}`,
+            details: "Transaction successfully submitted to the blockchain."
           }),
           { 
             status: 200, 
@@ -419,7 +397,8 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           message: `Successfully processed payout of ${amount} ${tokenType} to ${playerAddress}`,
-          transactionHash: mockTxHash
+          transactionHash: mockTxHash,
+          details: "Virtual balance updated. You can withdraw these funds later."
         }),
         { 
           status: 200, 
@@ -435,7 +414,11 @@ serve(async (req) => {
   } catch (error) {
     console.error("Function error:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        details: "An unexpected error occurred in the edge function." 
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
