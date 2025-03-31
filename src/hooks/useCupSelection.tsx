@@ -28,7 +28,8 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
     selectedCup,
     areLifted,
     currentBet,
-    canBet
+    canBet,
+    initialReveal
   } = useGameState();
   
   // Handle cup selection
@@ -37,16 +38,18 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
     // 1. Cups are shuffling
     // 2. Game has ended
     // 3. A cup is already selected
-    // 4. Cups are lifted
-    // 5. User hasn't placed a bet yet (currentBet.amount === 0)
+    // 4. Cups are lifted for initial reveal
+    // 5. During the initial reveal phase
+    // 6. User hasn't placed a bet yet (currentBet.amount === 0)
     if (
       isShuffling || 
       gameEnded || 
       selectedCup !== -1 || 
       areLifted || 
+      initialReveal ||
       (canBet && currentBet.amount === 0)
     ) {
-      console.log("Cup selection prevented during shuffling or other inactive states");
+      console.log("Cup selection prevented - game is not in selection phase");
       return;
     }
     
