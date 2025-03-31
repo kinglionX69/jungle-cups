@@ -1,7 +1,7 @@
 
 import { corsHeaders } from "./cors.ts";
-import { client, initializeAptosAccount } from "./aptosUtils.ts";
-import { createTransferPayload, createRawTransaction, signAndSubmitTransaction, waitForTransactionWithTimeout } from "./transactionUtils.ts";
+import { callAptosService } from "./aptosUtils.ts";
+import { waitForTransactionWithTimeout } from "./transactionUtils.ts";
 import { verifyPlayerBalance, createTransactionRecord, updateTransactionStatus, updatePlayerBalance } from "./dbOperations.ts";
 import { createSuccessResponse, createErrorResponse } from "./responseHelpers.ts";
 
@@ -30,32 +30,29 @@ export const handleWithdrawalTransaction = async (
     );
 
     try {
-      // Step 3: Initialize the escrow account
-      const escrowAccount = initializeAptosAccount(escrowPrivateKey);
-      console.log("Escrow account initialized:", escrowAccount.address().hex());
-
-      // Step 4: Convert amount to octas (8 decimals)
+      // Step 3: Convert amount to octas (8 decimals)
       const amountInOctas = Math.floor(amount * 100000000);
 
-      // Step 5: Create and process transaction
+      // Step 4: Call external Node.js service to handle the Aptos transaction
       if (tokenType === "APT" || tokenType === "EMOJICOIN") {
-        // Create transaction payload
-        const entryFunctionPayload = createTransferPayload(
-          tokenType,
-          playerAddress, 
-          amountInOctas
-        );
+        console.log(`Requesting withdrawal of ${amount} ${tokenType} (${amountInOctas} octas) to ${playerAddress}`);
         
-        // Create raw transaction
-        const senderAddress = escrowAccount.address().hex();
-        const rawTxn = await createRawTransaction(
-          senderAddress,
-          entryFunctionPayload
-        );
+        // Prepare the request to the external service
+        const aptosServiceRequest = {
+          operation: "withdraw",
+          tokenType: tokenType,
+          amount: amountInOctas,
+          recipientAddress: playerAddress,
+          privateKey: escrowPrivateKey
+        };
         
-        // Sign and submit transaction
-        const transactionRes = await signAndSubmitTransaction(rawTxn, escrowAccount);
-        console.log("Transaction submitted successfully:", transactionRes.hash);
+        // Call the external service
+        const transactionRes = await callAptosService("processTransaction", aptosServiceRequest);
+        console.log("Transaction submitted via external service:", transactionRes);
+
+        if (!transactionRes.hash) {
+          throw new Error("External service did not return a transaction hash");
+        }
 
         // Wait for transaction completion
         try {

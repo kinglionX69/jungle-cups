@@ -1,78 +1,42 @@
 
-import { BCS, TxnBuilderTypes, HexString } from "https://esm.sh/aptos@1.37.1";
-import { client } from "./aptosUtils.ts";
+import { callAptosService } from "./aptosUtils.ts";
 
-// Create transaction payload for token transfer
+// Create transaction payload via external service
 export const createTransferPayload = (
   tokenType: string,
   recipientAddress: string,
   amountInOctas: number
 ) => {
-  // For now, we're using APT for both APT and EMOJICOIN in testing
-  const typeTag = new TxnBuilderTypes.TypeTagStruct(
-    TxnBuilderTypes.StructTag.fromString("0x1::aptos_coin::AptosCoin")
-  );
-
-  // Create a serializer for coin transfer function
-  const serializer = new BCS.Serializer();
-  
-  // Encode the recipient address as a 32-byte array
-  const recipientAddressBytes = HexString.ensure(recipientAddress).toUint8Array();
-  serializer.serializeFixedBytes(recipientAddressBytes);
-  
-  // Encode the amount as a u64
-  serializer.serializeU64(BigInt(amountInOctas));
-  
-  // Return the transaction payload
-  return new TxnBuilderTypes.TransactionPayloadEntryFunction(
-    TxnBuilderTypes.EntryFunction.natural(
-      "0x1::coin",
-      "transfer",
-      [typeTag],
-      [serializer.getBytes()]
-    )
-  );
+  // This function now just returns the parameters to be sent to the external service
+  return {
+    tokenType,
+    recipientAddress,
+    amountInOctas
+  };
 };
 
-// Prepare raw transaction
+// Prepare raw transaction via external service
 export const createRawTransaction = async (
   senderAddress: string,
-  entryFunctionPayload: TxnBuilderTypes.TransactionPayloadEntryFunction,
+  entryFunctionPayload: any
 ) => {
-  // Get account sequence number
-  const senderAccount = await client.getAccount(senderAddress);
-  
-  // Create raw transaction
-  return new TxnBuilderTypes.RawTransaction(
-    TxnBuilderTypes.AccountAddress.fromHex(senderAddress),
-    BigInt(senderAccount.sequence_number),
-    entryFunctionPayload,
-    BigInt(2000), // Max gas amount
-    BigInt(100), // Gas price per unit
-    BigInt(Math.floor(Date.now() / 1000) + 600), // Expiration timestamp: 10 minutes from now
-    new TxnBuilderTypes.ChainId(parseInt(await client.getChainId()))
-  );
+  // This function now just returns the parameters to be sent to the external service
+  return {
+    senderAddress,
+    payload: entryFunctionPayload
+  };
 };
 
-// Sign and submit transaction
+// Sign and submit transaction via external service
 export const signAndSubmitTransaction = async (
-  rawTxn: TxnBuilderTypes.RawTransaction,
+  rawTxn: any,
   escrowAccount: any
 ) => {
-  // Sign the transaction
-  const signingMessage = TxnBuilderTypes.RawTransactionWithData.new(rawTxn).inner();
-  const signature = escrowAccount.signBuffer(signingMessage);
-  
-  // Create and submit signed transaction
-  const authenticator = new TxnBuilderTypes.TransactionAuthenticatorEd25519(
-    new TxnBuilderTypes.Ed25519PublicKey(escrowAccount.publicKey().toBytes()),
-    new TxnBuilderTypes.Ed25519Signature(signature)
-  );
-  
-  const signedTxn = new TxnBuilderTypes.SignedTransaction(rawTxn, authenticator);
-  
-  // Submit the transaction
-  return await client.submitSignedBCSTransaction(signedTxn);
+  // Call the external Node.js service to process the transaction
+  return await callAptosService("signAndSubmitTransaction", {
+    rawTransaction: rawTxn,
+    privateKey: Deno.env.get("ESCROW_PRIVATE_KEY")
+  });
 };
 
 // Wait for transaction with timeout
@@ -80,10 +44,34 @@ export const waitForTransactionWithTimeout = async (
   transactionHash: string,
   timeoutMs: number = 30000
 ) => {
-  return await Promise.race([
-    client.waitForTransaction(transactionHash),
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Transaction confirmation timeout")), timeoutMs)
-    )
-  ]);
+  try {
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < timeoutMs) {
+      try {
+        // Call the Aptos fullnode REST API directly for transaction status
+        const response = await fetch(`${Deno.env.get("NODE_URL") || "https://fullnode.testnet.aptoslabs.com/v1"}/transactions/by_hash/${transactionHash}`);
+        
+        if (response.ok) {
+          const txData = await response.json();
+          
+          // Check if the transaction is confirmed
+          if (txData.success !== undefined) {
+            return txData;
+          }
+        }
+        
+        // Wait a bit before the next attempt
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error("Error checking transaction status:", error);
+        // Continue the loop to retry
+      }
+    }
+    
+    throw new Error("Transaction confirmation timeout");
+  } catch (error) {
+    console.error("Error in waitForTransactionWithTimeout:", error);
+    throw error;
+  }
 };
