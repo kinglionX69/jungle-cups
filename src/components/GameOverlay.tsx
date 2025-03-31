@@ -3,14 +3,16 @@ import { useGame } from "@/contexts/GameContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const GameOverlay = () => {
-  const { isShuffling, canBet, currentBet, initialReveal, areLifted } = useGame();
+  const { isShuffling, canBet, currentBet, initialReveal, areLifted, gameEnded, readyForNewGame } = useGame();
   const isMobile = useIsMobile();
 
   // Show overlay during: 
   // 1. Shuffling
   // 2. Initial reveal phase
   // 3. When bet can be placed but hasn't been yet
-  const showOverlay = isShuffling || initialReveal || (canBet && currentBet.amount === 0);
+  // Don't show when game is ended or ready for new game
+  const showOverlay = (isShuffling || initialReveal || (canBet && currentBet.amount === 0)) && 
+                      !gameEnded && !readyForNewGame;
   
   if (!showOverlay) return null;
   
