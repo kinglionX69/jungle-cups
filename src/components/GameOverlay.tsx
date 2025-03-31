@@ -12,7 +12,7 @@ const GameOverlay = () => {
   // Only cover the cup area during betting phase, not the entire game
   const overlayStyle = isShuffling 
     ? "absolute inset-0 bg-transparent z-40 cursor-not-allowed" // Full overlay during shuffling
-    : "absolute top-[200px] inset-x-0 bottom-0 bg-transparent z-40 cursor-not-allowed"; // Only cover cups area during betting
+    : "absolute top-[300px] inset-x-0 bottom-0 bg-transparent z-40 cursor-not-allowed"; // Adjusted height to be below the bet form
   
   return (
     <div 
