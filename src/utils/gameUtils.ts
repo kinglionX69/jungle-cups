@@ -57,5 +57,6 @@ export const playClickSound = () => {
 export const TIMING = {
   INITIAL_REVEAL: 3000,  // Time showing the ball at the beginning
   CUPS_DOWN: 1000,       // Time to lower the cups
-  SHUFFLE_DURATION: 3000 // Time for shuffling animation
+  SHUFFLE_DURATION: 2000 // Reduced from 3000 for faster shuffling
 };
+

@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
 
@@ -96,25 +97,28 @@
 /* Animation keyframes and classes */
 @keyframes cup-shuffle-1 {
   0% { transform: translateX(0); }
-  25% { transform: translateX(120px); }
-  50% { transform: translateX(60px); }
-  75% { transform: translateX(-80px); }
+  20% { transform: translateX(140px); }
+  40% { transform: translateX(40px); }
+  60% { transform: translateX(-100px); }
+  80% { transform: translateX(80px); }
   100% { transform: translateX(0); }
 }
 
 @keyframes cup-shuffle-2 {
   0% { transform: translateX(0); }
-  25% { transform: translateX(-120px); }
-  50% { transform: translateX(80px); }
-  75% { transform: translateX(40px); }
+  20% { transform: translateX(-120px); }
+  40% { transform: translateX(90px); }
+  60% { transform: translateX(30px); }
+  80% { transform: translateX(-80px); }
   100% { transform: translateX(0); }
 }
 
 @keyframes cup-shuffle-3 {
   0% { transform: translateX(0); }
-  25% { transform: translateX(80px); }
-  50% { transform: translateX(-120px); }
-  75% { transform: translateX(40px); }
+  20% { transform: translateX(80px); }
+  40% { transform: translateX(-140px); }
+  60% { transform: translateX(70px); }
+  80% { transform: translateX(-30px); }
   100% { transform: translateX(0); }
 }
 
@@ -125,15 +129,15 @@
 }
 
 .animate-cup-shuffle-1 {
-  animation: cup-shuffle-1 3s ease-in-out;
+  animation: cup-shuffle-1 2s ease-in-out;
 }
 
 .animate-cup-shuffle-2 {
-  animation: cup-shuffle-2 3s ease-in-out;
+  animation: cup-shuffle-2 2s ease-in-out;
 }
 
 .animate-cup-shuffle-3 {
-  animation: cup-shuffle-3 3s ease-in-out;
+  animation: cup-shuffle-3 2s ease-in-out;
 }
 
 .animate-cup-reveal {
