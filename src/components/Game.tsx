@@ -1,5 +1,5 @@
 
-import { GameProvider } from "@/contexts/GameContext";
+import { GameProvider } from "@/contexts/GameProvider";
 import { useGameLogic } from "@/hooks/useGameLogic";
 import GameContainer from "@/components/GameContainer";
 import CupsDisplay from "@/components/CupsDisplay";
