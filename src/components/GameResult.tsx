@@ -67,11 +67,7 @@ const GameResult = ({ won, amount, tokenType, onPlayAgain }: GameResultProps) =>
           <CircleX className="w-16 h-16 mb-4 text-destructive" />
           <h2 className="text-3xl text-destructive mb-2">You Lost</h2>
           <p className="text-xl mb-4">
-            Better luck next time! Your bet of{" "}
-            <span className="text-jungle-darkGreen font-bold">
-              {amount} {tokenType === "EMOJICOIN" ? "🦁♥️" : tokenType}
-            </span>{" "}
-            has been transferred to the escrow wallet.
+            Better luck next time!
           </p>
         </>
       )}
