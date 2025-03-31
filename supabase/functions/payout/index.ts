@@ -3,11 +3,9 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
 import { 
   AptosClient, 
-  Account, 
-  HexString, 
-  TxnBuilderTypes 
-} from "https://esm.sh/aptos@1.37.1";
-import * as aptos from "https://esm.sh/aptos@1.37.1";
+  Types, 
+  HexString 
+} from "https://esm.sh/aptos@1.20.0";
 
 // CORS headers for the function
 const corsHeaders = {
@@ -28,17 +26,15 @@ const initializeAptosAccount = (privateKeyHex: string) => {
       privateKeyHex = privateKeyHex.slice(2);
     }
     
-    console.log("Creating account with Aptos SDK version 1.37.1");
+    console.log("Creating account with Aptos SDK version 1.20.0");
     
     // Convert the hex string to a Uint8Array
-    const privateKeyBytes = HexString.fromString(privateKeyHex).toUint8Array();
+    const privateKeyBytes = new HexString(privateKeyHex).toUint8Array();
     
-    // Create the account instance using the updated SDK's method
-    const account = Account.fromPrivateKey({
-      privateKey: privateKeyBytes,
-    });
+    // Create the account using SDK version 1.20.0
+    const account = new Types.AccountKey(privateKeyBytes);
     
-    console.log("Account initialized with address:", account.address().toString());
+    console.log("Account initialized with address:", account.address().hex());
     
     return account;
   } catch (error) {
@@ -144,37 +140,37 @@ serve(async (req) => {
       }
 
       try {
-        // Initialize the escrow account using our updated function
+        // Initialize the escrow account
         const escrowAccount = initializeAptosAccount(escrowPrivateKey);
-        console.log("Escrow account initialized:", escrowAccount.address().toString());
+        console.log("Escrow account initialized:", escrowAccount.address().hex());
 
         // Convert amount to octas (8 decimals)
         const amountInOctas = Math.floor(amount * 100000000).toString(); 
 
         // Create transaction payload
-        let payload;
+        let functionName, typeArguments, functionArguments;
         
         if (tokenType === "APT") {
-          payload = {
-            function: "0x1::coin::transfer",
-            type_arguments: ["0x1::aptos_coin::AptosCoin"],
-            arguments: [playerAddress, amountInOctas],
-          };
+          functionName = "0x1::coin::transfer";
+          typeArguments = ["0x1::aptos_coin::AptosCoin"];
+          functionArguments = [playerAddress, amountInOctas];
         } else {
           // For testing, still use APT but will be replaced with Emojicoin on mainnet
-          payload = {
-            function: "0x1::coin::transfer",
-            type_arguments: ["0x1::aptos_coin::AptosCoin"],
-            arguments: [playerAddress, amountInOctas],
-          };
+          functionName = "0x1::coin::transfer";
+          typeArguments = ["0x1::aptos_coin::AptosCoin"];
+          functionArguments = [playerAddress, amountInOctas];
         }
         
         // Generate transaction with proper error handling
         let txnRequest;
         try {
           txnRequest = await client.generateTransaction(
-            escrowAccount.address(),
-            payload
+            escrowAccount.address().hex(),
+            {
+              function: functionName,
+              type_arguments: typeArguments,
+              arguments: functionArguments,
+            }
           );
           console.log("Transaction generated successfully");
         } catch (genError) {
@@ -183,7 +179,6 @@ serve(async (req) => {
         }
 
         // Sign transaction with proper error handling
-        // Updated for aptos 1.37.1
         let signedTxn;
         try {
           signedTxn = await client.signTransaction(escrowAccount, txnRequest);
