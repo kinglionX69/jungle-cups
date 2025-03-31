@@ -46,7 +46,8 @@ export const useGameLogic = ({
     isShuffling,
     gameEnded,
     areLifted,
-    currentBet
+    currentBet,
+    canBet // Add this line to fix the error - we need to destructure canBet from useGame
   } = useGame();
   
   // Starts a new game sequence with ball shown first
