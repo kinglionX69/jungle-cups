@@ -11,9 +11,10 @@ import { useGameState } from "./useGameState";
 
 interface UseCupSelectionProps {
   onStatsUpdated: () => void;
+  updatePlayerStats?: (won: boolean, betAmount: number, tokenType: string) => Promise<any>;
 }
 
-export const useCupSelection = ({ onStatsUpdated }: UseCupSelectionProps) => {
+export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSelectionProps) => {
   const { toast } = useToast();
   const {
     setSelectedCup,
@@ -79,6 +80,11 @@ export const useCupSelection = ({ onStatsUpdated }: UseCupSelectionProps) => {
       
       setGameEnded(true);
       setReadyForNewGame(true);
+      
+      // Update stats if function is provided
+      if (updatePlayerStats) {
+        await updatePlayerStats(won, currentBet.amount, currentBet.tokenType);
+      }
       
       // Notify parent to update stats
       onStatsUpdated();

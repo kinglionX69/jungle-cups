@@ -9,28 +9,35 @@ interface GameProps {
   walletAddress: string;
   isEscrowFunded: boolean;
   onStatsUpdated: () => void;
+  updatePlayerStats?: (won: boolean, betAmount: number, tokenType: string) => Promise<any>;
 }
 
-const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
+const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated, updatePlayerStats }: GameProps) => {
   return (
     <GameProvider>
       <GameContent 
         walletAddress={walletAddress} 
         isEscrowFunded={isEscrowFunded} 
-        onStatsUpdated={onStatsUpdated} 
+        onStatsUpdated={onStatsUpdated}
+        updatePlayerStats={updatePlayerStats}
       />
     </GameProvider>
   );
 };
 
 // This component is wrapped in the GameProvider and has access to the game context
-const GameContent = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
+const GameContent = ({ walletAddress, isEscrowFunded, onStatsUpdated, updatePlayerStats }: GameProps) => {
   const {
     startGameSequence,
     handlePlaceBet,
     handleCupSelect,
     handleNewRound
-  } = useGameLogic({ walletAddress, isEscrowFunded, onStatsUpdated });
+  } = useGameLogic({ 
+    walletAddress, 
+    isEscrowFunded, 
+    onStatsUpdated,
+    updatePlayerStats
+  });
 
   return (
     <GameContainer>

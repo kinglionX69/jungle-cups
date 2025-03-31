@@ -6,10 +6,10 @@ import Game from "@/components/Game";
 import StatsCard from "@/components/StatsCard";
 import ReferralCard from "@/components/ReferralCard";
 import { useToast } from "@/components/ui/use-toast";
+import { usePlayerStats } from "@/hooks/usePlayerStats";
 
 import {
   checkEscrowFunding,
-  getPlayerStats,
   getLeaderboardData,
   getReferralFromUrl,
   trackReferral,
@@ -22,16 +22,11 @@ const Index = () => {
   const [walletAddress, setWalletAddress] = useState("");
   const [isEscrowFunded, setIsEscrowFunded] = useState(true);
   
-  // Player data
-  const [playerStats, setPlayerStats] = useState({
-    gamesPlayed: 0,
-    wins: 0,
-    losses: 0,
-    winRate: 0,
-    aptWon: 0,
-    emojiWon: 0,
-    referrals: 0,
-  });
+  // Use player stats hook
+  const { stats, updateStats, addReferral } = usePlayerStats(walletAddress);
+  
+  // Loading state for stats
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
   
   // Leaderboard data - keeping this state for later reintegration
   const [leaderboardData, setLeaderboardData] = useState({
@@ -59,39 +54,35 @@ const Index = () => {
     setWalletAddress(address);
     
     if (address) {
+      setIsStatsLoading(true);
+      
       // Check for referral code
       const referralAddress = getReferralFromUrl();
       if (referralAddress && referralAddress !== address) {
         await trackReferral(address, referralAddress);
+        // Track this referral in our stats system
+        await addReferral();
+        
         toast({
           title: "Referral Detected",
           description: "You've been referred by another player!",
         });
       }
       
-      await updatePlayerStats(address);
-      
       // Load leaderboard data (keeping this for later reintegration)
       const leaderboard = await getLeaderboardData();
       if (leaderboard) {
         setLeaderboardData(leaderboard);
       }
-    }
-  };
-  
-  // Update player stats
-  const updatePlayerStats = async (address: string) => {
-    const stats = await getPlayerStats(address);
-    if (stats) {
-      setPlayerStats(stats);
+      
+      setIsStatsLoading(false);
     }
   };
 
   // Handle game stats update
   const handleStatsUpdated = async () => {
-    if (walletAddress) {
-      await updatePlayerStats(walletAddress);
-    }
+    // Stats are now automatically updated by our hook system
+    console.log("Game stats updated");
   };
 
   return (
@@ -114,16 +105,20 @@ const Index = () => {
                 walletAddress={walletAddress}
                 isEscrowFunded={isEscrowFunded}
                 onStatsUpdated={handleStatsUpdated}
+                updatePlayerStats={updateStats}
               />
             </div>
             
             {/* Stats and Referral */}
             <div className="space-y-6">
-              <StatsCard stats={playerStats} />
+              <StatsCard 
+                stats={stats} 
+                isLoading={isStatsLoading} 
+              />
               
               <ReferralCard 
                 walletAddress={walletAddress}
-                referrals={playerStats.referrals}
+                referrals={stats.referrals}
               />
             </div>
           </div>
