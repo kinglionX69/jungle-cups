@@ -88,11 +88,25 @@ const WithdrawFunds = ({
       return;
     }
     
-    // Process withdrawal
-    const success = await onWithdraw(amountNum, tokenType);
-    
-    if (success) {
-      setAmount("");
+    // Process withdrawal with improved feedback
+    try {
+      toast({
+        title: "Processing Withdrawal",
+        description: "Your withdrawal request is being processed. Please wait...",
+      });
+      
+      const success = await onWithdraw(amountNum, tokenType);
+      
+      if (success) {
+        setAmount("");
+      }
+    } catch (error) {
+      console.error("Withdrawal processing error:", error);
+      toast({
+        title: "Withdrawal Error",
+        description: "An unexpected error occurred. Please check the console for details.",
+        variant: "destructive",
+      });
     }
   };
   

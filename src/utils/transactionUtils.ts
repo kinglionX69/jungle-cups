@@ -97,7 +97,7 @@ export const placeBet = async (
 export const withdrawWinnings = async (
   amount: number, 
   tokenType: string = "APT"
-): Promise<{ success: boolean; message?: string; txHash?: string; explorerUrl?: string }> => {
+): Promise<{ success: boolean; message?: string; details?: string; txHash?: string; explorerUrl?: string }> => {
   try {
     if (!window.aptos) {
       console.error("Wallet not connected");
@@ -129,45 +129,56 @@ export const withdrawWinnings = async (
     console.log(`Initiating withdrawal of ${amount} ${tokenType} to ${playerAddress}`);
     
     // Call the Supabase Edge Function to process the withdrawal
-    const { data, error } = await supabase.functions.invoke('payout/withdraw', {
-      body: {
-        playerAddress,
-        amount,
-        tokenType
-      }
-    });
-    
-    if (error) {
-      console.error("Error calling withdrawal function:", error);
-      return {
-        success: false,
-        message: `Error processing withdrawal: ${error.message || "Unknown error"}`
-      };
-    }
-    
-    if (data && data.success) {
-      console.log(`Successfully initiated withdrawal of ${amount} ${tokenType} to ${playerAddress}`);
-      console.log(`Transaction hash: ${data.transactionHash}`);
+    try {
+      const { data, error } = await supabase.functions.invoke('payout/withdraw', {
+        body: {
+          playerAddress,
+          amount,
+          tokenType
+        }
+      });
       
-      return {
-        success: true,
-        message: `Withdrawal of ${amount} ${tokenType} successful! Tokens are on their way to your wallet.`,
-        txHash: data.transactionHash,
-        explorerUrl: data.explorerUrl
-      };
-    } else {
-      console.error(`Withdrawal failed: ${data?.error || 'Unknown error'}`);
+      if (error) {
+        console.error("Error calling withdrawal function:", error);
+        return {
+          success: false,
+          message: `Error processing withdrawal: ${error.message || "Unknown error"}`,
+          details: "The server encountered an error processing your request. Please try again later."
+        };
+      }
+      
+      if (data && data.success) {
+        console.log(`Successfully initiated withdrawal of ${amount} ${tokenType} to ${playerAddress}`);
+        console.log(`Transaction hash: ${data.transactionHash}`);
+        
+        return {
+          success: true,
+          message: `Withdrawal of ${amount} ${tokenType} successful! Tokens are on their way to your wallet.`,
+          txHash: data.transactionHash,
+          explorerUrl: data.explorerUrl
+        };
+      } else {
+        console.error(`Withdrawal failed: ${data?.error || 'Unknown error'}`);
+        return {
+          success: false,
+          message: data?.error || "Withdrawal failed. Please try again later.",
+          details: data?.details || "No additional details available."
+        };
+      }
+    } catch (invokeError) {
+      console.error("Function invocation error:", invokeError);
       return {
         success: false,
-        message: data?.error || "Withdrawal failed. Please try again later.",
-        ...(data?.details ? { details: data.details } : {})
+        message: "Failed to connect to the withdrawal service",
+        details: `Technical details: ${invokeError.message}`
       };
     }
   } catch (error) {
     console.error("Error withdrawing winnings:", error);
     return {
       success: false,
-      message: `Unexpected error: ${error.message || "Unknown error"}`
+      message: `Unexpected error: ${error.message || "Unknown error"}`,
+      details: "Please check your wallet connection and try again."
     };
   }
 };

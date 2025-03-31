@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
-import { AptosClient, AptosAccount, Types } from "https://esm.sh/aptos@1.20.0";
+import { AptosClient, TxnBuilderTypes, BCS, HexString } from "https://esm.sh/aptos@1.20.0";
 
 // CORS headers for the function
 const corsHeaders = {
@@ -13,6 +13,42 @@ const corsHeaders = {
 const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
 const NETWORK = "testnet";
 const EMOJICOIN_ADDRESS = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27::coin_factory::Emojicoin";
+
+// Function to create and initialize the Aptos account from a private key
+const initializeAptosAccount = (privateKeyHex: string) => {
+  try {
+    // Ensure privateKeyHex is properly formatted (remove 0x prefix if present)
+    if (privateKeyHex.startsWith('0x')) {
+      privateKeyHex = privateKeyHex.slice(2);
+    }
+    
+    // Convert to UInt8Array
+    const privateKeyBytes = new HexString(privateKeyHex).toUint8Array();
+    
+    // Create account using the BCS and TxnBuilderTypes to construct the account properly
+    const { Ed25519PrivateKey, AccountAddress } = TxnBuilderTypes;
+    const privateKey = new Ed25519PrivateKey(privateKeyBytes);
+    
+    // Get the public key
+    const publicKey = privateKey.public_key();
+    
+    // Get the address from the public key
+    const authKey = BCS.bcsToBytes(publicKey);
+    const address = AccountAddress.fromHex(HexString.fromUint8Array(authKey.slice(-32)).hex());
+    
+    return {
+      address: () => ({ hex: () => HexString.fromUint8Array(BCS.bcsToBytes(address)).hex() }),
+      publicKey: () => publicKey,
+      signBuffer: (buffer: Uint8Array) => {
+        const signatureBytes = privateKey.sign(buffer);
+        return signatureBytes;
+      }
+    };
+  } catch (error) {
+    console.error("Error initializing Aptos account:", error);
+    throw new Error(`Failed to initialize Aptos account: ${error.message}`);
+  }
+};
 
 // Serve the function
 serve(async (req) => {
@@ -111,8 +147,8 @@ serve(async (req) => {
       }
 
       try {
-        // Initialize the escrow account using the private key
-        const escrowAccount = AptosAccount.fromPrivateKeyHex(escrowPrivateKey);
+        // Initialize the escrow account using our custom function
+        const escrowAccount = initializeAptosAccount(escrowPrivateKey);
         console.log("Escrow account initialized:", escrowAccount.address().hex());
 
         // Convert amount to octas (8 decimals)
@@ -150,9 +186,21 @@ serve(async (req) => {
         }
 
         // Sign transaction with proper error handling
+        // In aptos 1.20.0, we need to handle signing differently
         let signedTxn;
         try {
-          signedTxn = await client.signTransaction(escrowAccount, txnRequest);
+          const toSign = await client.createSigningMessage(txnRequest);
+          const signature = escrowAccount.signBuffer(toSign);
+          
+          signedTxn = {
+            ...txnRequest,
+            signature: {
+              type: "ed25519_signature",
+              public_key: HexString.fromUint8Array(BCS.bcsToBytes(escrowAccount.publicKey())).hex(),
+              signature: HexString.fromUint8Array(signature).hex(),
+            },
+          };
+          
           console.log("Transaction signed successfully");
         } catch (signError) {
           console.error("Error signing transaction:", signError);
