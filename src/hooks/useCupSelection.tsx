@@ -45,7 +45,10 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
       selectedCup !== -1 || 
       areLifted || 
       (canBet && currentBet.amount === 0)
-    ) return;
+    ) {
+      console.log("Cup selection prevented during shuffling or other inactive states");
+      return;
+    }
     
     playClickSound();
     setSelectedCup(index);

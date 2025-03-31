@@ -4,6 +4,7 @@ import { useGameLogic } from "@/hooks/useGameLogic";
 import GameContainer from "@/components/GameContainer";
 import CupsDisplay from "@/components/CupsDisplay";
 import GameControls from "@/components/GameControls";
+import GameOverlay from "@/components/GameOverlay";
 
 interface GameProps {
   walletAddress: string;
@@ -41,6 +42,7 @@ const GameContent = ({ walletAddress, isEscrowFunded, onStatsUpdated, updatePlay
 
   return (
     <GameContainer>
+      <GameOverlay />
       <GameControls
         onStartGame={startGameSequence}
         onPlaceBet={handlePlaceBet}

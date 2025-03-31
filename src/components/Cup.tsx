@@ -36,6 +36,13 @@ const Cup = ({
   // Determine if the cup is clickable
   const isClickable = !isShuffling && !gameEnded && !isLifted;
 
+  // Handle cup click with additional check for shuffling state
+  const handleCupClick = () => {
+    if (isClickable && !isShuffling) {
+      onClick(index);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center relative">
       <div
@@ -50,7 +57,7 @@ const Cup = ({
           !isClickable && "cursor-default",
           "transform transition-all duration-300"
         )}
-        onClick={() => isClickable && onClick(index)}
+        onClick={handleCupClick}
         style={{ zIndex: 10 }} // Keep high z-index for the cup regardless of state
       >
         <div className="cup-base"></div>
