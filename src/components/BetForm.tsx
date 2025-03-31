@@ -37,6 +37,9 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
     onPlaceBet(tokenType, parseFloat(amount));
   };
 
+  // Check if form is valid (amount is entered)
+  const isFormValid = amount !== "" && parseFloat(amount) > 0;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex flex-col gap-2">
@@ -73,11 +76,11 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
       <Button 
         type="submit" 
         className="jungle-btn w-full" 
-        disabled={disabled || !isEscrowFunded}
+        disabled={disabled || !isEscrowFunded || !isFormValid}
       >
         {!isEscrowFunded
           ? "⚠️ Game unavailable: Escrow wallet is low on funds"
-          : "Start Game"}
+          : "Place Bet"}
       </Button>
     </form>
   );

@@ -26,12 +26,25 @@ export const useCupSelection = ({ onStatsUpdated }: UseCupSelectionProps) => {
     gameEnded,
     selectedCup,
     areLifted,
-    currentBet
+    currentBet,
+    canBet
   } = useGameState();
   
   // Handle cup selection
   const handleCupSelect = (index: number) => {
-    if (isShuffling || gameEnded || selectedCup !== -1 || areLifted) return;
+    // Don't allow selection if:
+    // 1. Cups are shuffling
+    // 2. Game has ended
+    // 3. A cup is already selected
+    // 4. Cups are lifted
+    // 5. User hasn't placed a bet yet (currentBet.amount === 0)
+    if (
+      isShuffling || 
+      gameEnded || 
+      selectedCup !== -1 || 
+      areLifted || 
+      (canBet && currentBet.amount === 0)
+    ) return;
     
     playClickSound();
     setSelectedCup(index);

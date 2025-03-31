@@ -33,6 +33,9 @@ const Cup = ({
     }
   }, [isShuffling, index]);
 
+  // Determine if the cup is clickable
+  const isClickable = !isShuffling && !gameEnded && !isLifted;
+
   return (
     <div className="flex flex-col items-center relative">
       <div
@@ -42,10 +45,12 @@ const Cup = ({
           selected && "border-jungle-yellow border-4",
           isRevealed && selected && "animate-cup-reveal",
           isLifted && "transform -translate-y-12 transition-transform duration-700",
-          !isShuffling && !gameEnded && !isLifted && "animate-bounce",
+          isClickable && "animate-bounce",
+          isClickable && "cursor-pointer",
+          !isClickable && "cursor-default",
           "transform transition-all duration-300"
         )}
-        onClick={() => !isShuffling && !gameEnded && !isLifted && onClick(index)}
+        onClick={() => isClickable && onClick(index)}
         style={{ zIndex: isLifted || isRevealed ? 1 : 10 }} // Lower z-index when lifted or revealed to prevent text overlap
       >
         <div className="cup-base"></div>
