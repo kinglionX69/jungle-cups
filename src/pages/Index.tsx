@@ -5,6 +5,7 @@ import BetForm from "@/components/BetForm";
 import GameResult from "@/components/GameResult";
 import StatsCard from "@/components/StatsCard";
 import ReferralCard from "@/components/ReferralCard";
+import Logo from "@/components/Logo";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Trophy, User } from "lucide-react";
@@ -269,13 +270,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen py-6 px-4 sm:px-6 lg:px-8 relative">
-      {/* Header with Wallet Connection */}
+      {/* Header with Logo and Wallet Connection */}
       <header className="max-w-7xl mx-auto mb-6 flex flex-col sm:flex-row justify-between items-center">
         <div className="mb-4 sm:mb-0">
-          <h1 className="text-4xl md:text-5xl font-luckiest text-jungle-darkGreen">
-            3 Cups Game 🏆
-          </h1>
-          <p className="text-jungle-green font-bungee">Find the ball, win the prize!</p>
+          <Logo />
+          <p className="text-jungle-green font-bungee ml-1">Find the ball, win the prize!</p>
         </div>
         
         <WalletConnect 
@@ -293,7 +292,7 @@ const Index = () => {
               Connect Your Wallet to Play
             </h2>
             <p className="mb-8 text-lg max-w-xl mx-auto">
-              Connect your Aptos wallet to start playing the 3 Cups Game and win APT or Emojicoin tokens!
+              Connect your Aptos wallet to start playing the Jungle Cups Game and win APT or Emojicoin tokens!
             </p>
             <WalletConnect 
               onConnect={handleWalletConnect}
@@ -401,7 +400,7 @@ const Index = () => {
       <footer className="max-w-7xl mx-auto mt-16 text-center">
         <Separator className="mb-6" />
         <div className="text-sm text-muted-foreground">
-          <p>© 2023 3 Cups Game. All rights reserved.</p>
+          <p>© 2023 Jungle Cups Game. All rights reserved.</p>
           <p className="mt-1">
             Powered by the Aptos blockchain. Not affiliated with Aptos Foundation.
           </p>
