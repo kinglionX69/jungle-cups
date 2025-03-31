@@ -68,7 +68,10 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
         playWinSound();
         // Process winnings - double the bet amount
         const winAmount = currentBet.amount * 2;
-        await transferWinnings(winAmount, currentBet.tokenType);
+        
+        // Get player wallet address for payout
+        const playerAddress = await window.aptos.account().then(acc => acc.address);
+        await transferWinnings(playerAddress, winAmount, currentBet.tokenType);
         
         toast({
           title: "You Won! 🎉",
