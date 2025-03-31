@@ -1,10 +1,22 @@
 
 // Aptos wallet integration utilities
+import { AptosClient, Types } from "aptos";
+
+// Testnet configuration
+export const NETWORK = "testnet";
+export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
+export const EXPLORER_URL = "https://explorer.aptoslabs.com/txn/";
+export const FAUCET_URL = "https://faucet.testnet.aptoslabs.com";
+
+// Placeholder escrow wallet for testing
 export const ESCROW_WALLET_ADDRESS = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"; // Replace with actual escrow wallet
 export const EMOJICOIN_ADDRESS = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27::coin_factory::Emojicoin";
 
 export const MIN_APT_BALANCE = 1; // 1 APT
 export const MIN_EMOJICOIN_BALANCE = 1000; // 1000 Emojicoin
+
+// Initialize Aptos client
+const client = new AptosClient(NODE_URL);
 
 // Check if wallet is connected
 export const isWalletConnected = async (): Promise<boolean> => {
@@ -19,18 +31,27 @@ export const isWalletConnected = async (): Promise<boolean> => {
   }
 };
 
-// Get wallet balance
+// Get wallet balance from Aptos blockchain
 export const getWalletBalance = async (address: string, tokenType: string = "APT"): Promise<number> => {
   if (!window.aptos) return 0;
   
   try {
-    // Simplified implementation - in a real app, you would use the Aptos SDK to query balances
     if (tokenType === "APT") {
-      // This would be an API call to get APT balance
-      return 10; // Mock balance
+      // Get native APT balance from chain
+      const resources = await client.getAccountResources(address);
+      const aptosCoin = resources.find(
+        (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
+      );
+      
+      if (aptosCoin) {
+        const balance = parseInt((aptosCoin.data as any).coin.value);
+        return balance / 100000000; // Convert from octas to APT (8 decimals)
+      }
+      return 0;
     } else {
       // This would be an API call to get Emojicoin balance
-      return 5000; // Mock balance
+      // For testing purposes, we'll return a mock balance
+      return 5000;
     }
   } catch (error) {
     console.error("Error getting wallet balance:", error);
@@ -41,11 +62,8 @@ export const getWalletBalance = async (address: string, tokenType: string = "APT
 // Check if escrow wallet is sufficiently funded
 export const checkEscrowFunding = async (): Promise<boolean> => {
   try {
-    // In a real implementation, this would make API calls to check the balances
-    const aptBalance = 5; // Mock APT balance
-    const emojiBalance = 5000; // Mock Emojicoin balance
-    
-    return aptBalance >= MIN_APT_BALANCE && emojiBalance >= MIN_EMOJICOIN_BALANCE;
+    // In a real implementation, this would check the escrow wallet's balance
+    return true; // For testnet testing, assume the escrow is funded
   } catch (error) {
     console.error("Error checking escrow funding:", error);
     return false;
@@ -60,14 +78,35 @@ export const placeBet = async (
   if (!window.aptos) return false;
   
   try {
-    // This would be an actual blockchain transaction in a real implementation
-    // For now, we'll just return success
-    console.log(`Placing bet of ${amount} ${tokenType}`);
+    console.log(`Placing bet of ${amount} ${tokenType} on Aptos ${NETWORK}`);
     
-    // Simulate a delay for transaction processing
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return true;
+    if (tokenType === "APT") {
+      // Create a transaction payload to transfer APT
+      const payload: Types.TransactionPayload = {
+        type: "entry_function_payload",
+        function: "0x1::coin::transfer",
+        type_arguments: ["0x1::aptos_coin::AptosCoin"],
+        arguments: [
+          ESCROW_WALLET_ADDRESS, 
+          Math.floor(amount * 100000000).toString() // Convert APT to octas (8 decimals)
+        ]
+      };
+      
+      // Sign and submit the transaction
+      const response = await window.aptos.signAndSubmitTransaction(payload);
+      console.log("Transaction submitted:", response);
+      
+      // For testing, we would wait for transaction confirmation
+      // In production, you'd implement proper transaction tracking
+      
+      return true;
+    } else {
+      // For testnet testing, we'll simulate a successful Emojicoin transfer
+      // In production, you'd implement the actual token transfer
+      console.log(`Simulating transfer of ${amount} ${tokenType} to escrow`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return true;
+    }
   } catch (error) {
     console.error("Error placing bet:", error);
     return false;
@@ -80,15 +119,28 @@ export const transferWinnings = async (
   tokenType: string = "APT"
 ): Promise<boolean> => {
   try {
-    // This would be an actual blockchain transaction in a real implementation
-    console.log(`Transferring winnings of ${amount} ${tokenType}`);
-    
-    // Simulate a delay for transaction processing
+    // For testnet testing, we'll simulate a successful winnings transfer
+    // In a production environment, this would be handled by a backend service
+    // that controls the escrow wallet's private key
+    console.log(`Simulating transfer of ${amount} ${tokenType} winnings to player`);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
     return true;
   } catch (error) {
     console.error("Error transferring winnings:", error);
+    return false;
+  }
+};
+
+// Request testnet tokens from faucet (for testing)
+export const requestTestnetTokens = async (address: string): Promise<boolean> => {
+  try {
+    console.log(`Requesting testnet tokens for ${address}`);
+    // This would make an API call to the testnet faucet
+    // For now, we'll simulate a successful request
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    return true;
+  } catch (error) {
+    console.error("Error requesting testnet tokens:", error);
     return false;
   }
 };

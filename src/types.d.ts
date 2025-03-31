@@ -9,5 +9,6 @@ interface Window {
     signAndSubmitTransaction: (transaction: any) => Promise<any>;
     signTransaction: (transaction: any) => Promise<any>;
     signMessage: (message: any) => Promise<any>;
+    network: () => Promise<string>;
   };
 }
