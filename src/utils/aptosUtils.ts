@@ -1,4 +1,3 @@
-
 // Aptos wallet integration utilities
 import { AptosClient, Types, AptosAccount } from "aptos";
 
@@ -15,19 +14,8 @@ export const EMOJICOIN_ADDRESS = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f3618
 export const MIN_APT_BALANCE = 1; // 1 APT
 export const MIN_EMOJICOIN_BALANCE = 1000; // 1000 Emojicoin
 
-// List of admin wallet addresses that can call protected functions
-export const ADMIN_WALLET_ADDRESSES = [
-  // Add admin wallet addresses here
-  "0x2afbb09094a37b84d14bc9aaf7deb6dd586acc20b0e3ba8c8c5a7cafd9eb5a0d" // Escrow wallet itself can manage funds
-];
-
 // Initialize Aptos client
 const client = new AptosClient(NODE_URL);
-
-// Check if a wallet is an admin
-export const isAdminWallet = (address: string): boolean => {
-  return ADMIN_WALLET_ADDRESSES.includes(address);
-};
 
 // Initialize account with APT coin if needed
 export const initializeAccount = async (address: string): Promise<boolean> => {
@@ -402,24 +390,6 @@ export const transferWinnings = async (
     console.log("SIMULATING successful transfer for demonstration");
     return true;
   }
-};
-
-// Admin function: Direct transfer from escrow wallet (requires private key)
-// This would typically be implemented in a secure backend environment
-export const adminTransferFromEscrow = async (
-  recipientAddress: string,
-  amount: number,
-  tokenType: string = "APT"
-): Promise<string> => {
-  // This is a placeholder function that would be implemented in a backend service
-  // The frontend should never have access to the escrow wallet's private key
-  
-  console.log(`[ADMIN] Would transfer ${amount} ${tokenType} to ${recipientAddress}`);
-  
-  // In a real implementation, this would call a secure backend API
-  // that has access to the escrow wallet's private key
-  
-  return "transaction_hash_placeholder";
 };
 
 // Request testnet tokens from faucet (for testing)
