@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PlayerStats } from "@/types/gameTypes";
-import { withdrawWinnings } from "@/utils/aptosUtils";
+import { withdrawWinnings } from "@/utils/transactionUtils";
 
 // Default stats for new players
 const DEFAULT_STATS: PlayerStats = {

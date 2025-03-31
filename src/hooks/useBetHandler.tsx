@@ -1,6 +1,6 @@
 
 import { useToast } from "@/components/ui/use-toast";
-import { placeBet } from "@/utils/aptosUtils";
+import { placeBet } from "@/utils/transactionUtils";
 import { playClickSound } from "@/utils/gameUtils";
 import { useGameState } from "./useGameState";
 

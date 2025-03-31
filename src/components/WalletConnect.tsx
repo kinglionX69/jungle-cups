@@ -1,9 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Trophy, Coins } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { NETWORK, NODE_URL, requestTestnetTokens, initializeAccount } from "@/utils/aptosUtils";
+import { 
+  NETWORK, 
+  requestTestnetTokens, 
+  initializeAccount 
+} from "@/utils/aptosUtils";
 
 interface WalletConnectProps {
   onConnect: (wallet: string) => void;

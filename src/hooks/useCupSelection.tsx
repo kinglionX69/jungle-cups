@@ -1,4 +1,3 @@
-
 import { useToast } from "@/components/ui/use-toast";
 import { 
   didPlayerWin, 
@@ -6,7 +5,7 @@ import {
   playWinSound, 
   playLoseSound 
 } from "@/utils/gameUtils";
-import { transferWinnings } from "@/utils/aptosUtils";
+import { transferWinnings } from "@/utils/escrowUtils";
 import { useGameState } from "./useGameState";
 
 interface UseCupSelectionProps {
@@ -32,15 +31,7 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
     initialReveal
   } = useGameState();
   
-  // Handle cup selection
   const handleCupSelect = (index: number) => {
-    // Don't allow selection if:
-    // 1. Cups are shuffling
-    // 2. Game has ended
-    // 3. A cup is already selected
-    // 4. Cups are lifted for initial reveal
-    // 5. During the initial reveal phase
-    // 6. User hasn't placed a bet yet (currentBet.amount === 0)
     if (
       isShuffling || 
       gameEnded || 
@@ -56,21 +47,17 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
     playClickSound();
     setSelectedCup(index);
     
-    // Determine win/loss and reveal
     const won = didPlayerWin(index, ballPosition);
     setPlayerWon(won);
     
-    // Reveal after a short delay
     setTimeout(async () => {
       setIsRevealed(true);
       
       if (won) {
         playWinSound();
-        // Process winnings - double the bet amount
         const winAmount = currentBet.amount * 2;
         
         try {
-          // Get player wallet address for payout
           const playerAddress = await window.aptos.account().then(acc => acc.address);
           const payoutSuccess = await transferWinnings(playerAddress, winAmount, currentBet.tokenType);
           
@@ -107,12 +94,10 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
       setGameEnded(true);
       setReadyForNewGame(true);
       
-      // Update stats if function is provided
       if (updatePlayerStats) {
         await updatePlayerStats(won, currentBet.amount, currentBet.tokenType);
       }
       
-      // Notify parent to update stats
       onStatsUpdated();
     }, 1000);
   };
