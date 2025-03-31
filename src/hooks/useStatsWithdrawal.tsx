@@ -4,6 +4,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { withdrawWinnings } from "@/utils/transactionUtils";
 import { PlayerStats } from "@/types/gameTypes";
 
+// Extend the withdrawal result type to include the details property
+interface WithdrawalResult {
+  success: boolean;
+  message?: string;
+  details?: string; // Adding the details property
+  txHash?: string;
+  explorerUrl?: string;
+}
+
 export const useStatsWithdrawal = (
   walletAddress: string, 
   stats: PlayerStats, 
@@ -49,7 +58,7 @@ export const useStatsWithdrawal = (
       }
       
       // Call the withdraw function from transactionUtils
-      const result = await withdrawWinnings(amount, tokenType);
+      const result = await withdrawWinnings(amount, tokenType) as WithdrawalResult;
       
       if (result.success) {
         // Update local stats (the database is updated in the edge function)

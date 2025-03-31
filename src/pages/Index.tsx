@@ -55,8 +55,8 @@ const Index = () => {
       const referralAddress = getReferralFromUrl();
       if (referralAddress && referralAddress !== address) {
         await trackReferral(address, referralAddress);
-        // Track this referral in our stats system
-        await addReferral();
+        // Track this referral in our stats system - provide an empty string as placeholder for now
+        await addReferral(referralAddress);
         
         toast({
           title: "Referral Detected",

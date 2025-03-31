@@ -11,8 +11,8 @@ export const useStatsUpdater = (
   const { toast } = useToast();
   
   // Save stats to database
-  const saveStats = async (updatedStats: PlayerStats) => {
-    if (!walletAddress) return;
+  const saveStats = async (updatedStats: PlayerStats): Promise<boolean> => {
+    if (!walletAddress) return false;
     
     try {
       // Update state first for immediate UI feedback
@@ -36,6 +36,7 @@ export const useStatsUpdater = (
       if (error) throw error;
       
       console.log(`Saved stats for ${walletAddress}`, updatedStats);
+      return true;
     } catch (error) {
       console.error("Error saving stats:", error);
       toast({
@@ -43,12 +44,13 @@ export const useStatsUpdater = (
         description: "Could not save your game stats to the database",
         variant: "destructive",
       });
+      return false;
     }
   };
   
   // Update stats after a game
-  const updateStats = async (won: boolean, betAmount: number, tokenType: string) => {
-    if (!walletAddress) return;
+  const updateStats = async (won: boolean, betAmount: number, tokenType: string): Promise<boolean> => {
+    if (!walletAddress) return false;
     
     // Calculate new stats
     const newStats = { ...stats };
@@ -72,21 +74,17 @@ export const useStatsUpdater = (
     }
     
     // Save updated stats
-    await saveStats(newStats);
-    
-    return newStats;
+    return await saveStats(newStats);
   };
   
   // Track a new referral
-  const addReferral = async () => {
-    if (!walletAddress) return;
+  const addReferral = async (referrerAddress: string): Promise<boolean> => {
+    if (!walletAddress) return false;
     
     const newStats = { ...stats };
     newStats.referrals += 1;
     
-    await saveStats(newStats);
-    
-    return newStats;
+    return await saveStats(newStats);
   };
   
   return {
