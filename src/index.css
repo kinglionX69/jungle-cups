@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
 
@@ -44,8 +43,7 @@
   }
 
   body {
-    @apply bg-jungle-background text-foreground font-bungee bg-[url('/images/jungle-bg.png')] bg-cover bg-center bg-fixed;
-    background-color: #F2FCE2;
+    @apply bg-jungle-background text-foreground font-bungee bg-[url('/lovable-uploads/817fa8b9-5293-419b-a2fe-fc15acd3d076.png')] bg-cover bg-center bg-fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
