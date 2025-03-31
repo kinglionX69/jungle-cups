@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Select,
@@ -22,10 +22,27 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
   const [amount, setAmount] = useState("");
   const { toast } = useToast();
 
+  // Define minimum bet amounts for each token type
+  const MIN_APT_BET = 0.01;
+  const MIN_EMOJICOIN_BET = 1000;
+
+  // Get the current minimum bet based on selected token
+  const getCurrentMinBet = () => {
+    return tokenType === "APT" ? MIN_APT_BET : MIN_EMOJICOIN_BET;
+  };
+
+  // Reset amount when token type changes
+  useEffect(() => {
+    setAmount("");
+  }, [tokenType]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!amount || parseFloat(amount) <= 0) {
+    const minBet = getCurrentMinBet();
+    const amountNum = parseFloat(amount);
+    
+    if (!amount || amountNum <= 0) {
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid bet amount",
@@ -34,11 +51,20 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
       return;
     }
     
-    onPlaceBet(tokenType, parseFloat(amount));
+    if (amountNum < minBet) {
+      toast({
+        title: "Bet Too Small",
+        description: `Minimum bet is ${minBet} ${tokenType}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    onPlaceBet(tokenType, amountNum);
   };
 
-  // Check if form is valid (amount is entered)
-  const isFormValid = amount !== "" && parseFloat(amount) > 0;
+  // Check if form is valid (amount is entered and meets minimum)
+  const isFormValid = amount !== "" && parseFloat(amount) >= getCurrentMinBet();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -65,12 +91,15 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="Enter bet amount"
+          placeholder={`Min: ${getCurrentMinBet()} ${tokenType}`}
           className="input-field"
-          min="0.1"
-          step="0.1"
+          min={getCurrentMinBet()}
+          step={tokenType === "APT" ? "0.01" : "100"}
           disabled={disabled}
         />
+        <span className="text-xs text-muted-foreground">
+          Minimum bet: {getCurrentMinBet()} {tokenType}
+        </span>
       </div>
       
       <Button 

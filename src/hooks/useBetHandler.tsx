@@ -4,6 +4,10 @@ import { placeBet } from "@/utils/aptosUtils";
 import { playClickSound } from "@/utils/gameUtils";
 import { useGameState } from "./useGameState";
 
+// Define minimum bet constants
+const MIN_APT_BET = 0.01;
+const MIN_EMOJICOIN_BET = 1000;
+
 export const useBetHandler = (walletAddress: string) => {
   const { toast } = useToast();
   const { setCurrentBet, canBet } = useGameState();
@@ -23,6 +27,17 @@ export const useBetHandler = (walletAddress: string) => {
       toast({
         title: "Wait for Shuffling",
         description: "Please wait for the cups to shuffle before placing a bet",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check minimum bet amount
+    const minBet = tokenType === "APT" ? MIN_APT_BET : MIN_EMOJICOIN_BET;
+    if (amount < minBet) {
+      toast({
+        title: "Bet Too Small",
+        description: `Minimum bet is ${minBet} ${tokenType}`,
         variant: "destructive",
       });
       return;
