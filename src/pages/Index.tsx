@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
 import PageFooter from "@/components/PageFooter";
@@ -107,7 +106,8 @@ const Index = () => {
             <div className="space-y-6">
               <StatsCard 
                 stats={stats} 
-                isLoading={isLoading} 
+                isLoading={isLoading}
+                walletAddress={walletAddress}
               />
               
               <ReferralCard 

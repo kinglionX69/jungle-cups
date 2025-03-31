@@ -382,6 +382,60 @@ export const transferWinnings = async (
   }
 };
 
+// Withdraw winnings from player stats to wallet
+export const withdrawWinnings = async (
+  amount: number, 
+  tokenType: string = "APT"
+): Promise<boolean> => {
+  try {
+    if (!window.aptos) {
+      console.error("Wallet not connected");
+      return false;
+    }
+
+    if (amount <= 0) {
+      console.error("Invalid withdrawal amount");
+      return false;
+    }
+    
+    // Get player wallet address
+    const { address: playerAddress } = await window.aptos.account();
+    
+    if (!playerAddress) {
+      console.error("Could not get player address");
+      return false;
+    }
+    
+    console.log(`Initiating withdrawal of ${amount} ${tokenType} to ${playerAddress}`);
+    
+    // Call the Supabase Edge Function to process the withdrawal
+    const { data, error } = await supabase.functions.invoke('payout/withdraw', {
+      body: {
+        playerAddress,
+        amount,
+        tokenType
+      }
+    });
+    
+    if (error) {
+      console.error("Error calling withdrawal function:", error);
+      return false;
+    }
+    
+    if (data && data.success) {
+      console.log(`Successfully initiated withdrawal of ${amount} ${tokenType} to ${playerAddress}`);
+      console.log(`Transaction hash: ${data.transactionHash}`);
+      return true;
+    } else {
+      console.error(`Withdrawal failed: ${data?.error || 'Unknown error'}`);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error withdrawing winnings:", error);
+    return false;
+  }
+};
+
 // Request testnet tokens from faucet (for testing)
 export const requestTestnetTokens = async (address: string): Promise<boolean> => {
   try {
