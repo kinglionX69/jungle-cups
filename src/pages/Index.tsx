@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from "react";
 import WalletConnect from "@/components/WalletConnect";
 import Cup from "@/components/Cup";
 import BetForm from "@/components/BetForm";
 import GameResult from "@/components/GameResult";
 import StatsCard from "@/components/StatsCard";
-import LeaderboardCard from "@/components/LeaderboardCard";
 import ReferralCard from "@/components/ReferralCard";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
@@ -63,7 +61,7 @@ const Index = () => {
     referrals: 0,
   });
   
-  // Leaderboard data
+  // Leaderboard data - keeping this state for later reintegration
   const [leaderboardData, setLeaderboardData] = useState({
     aptLeaders: [],
     emojiLeaders: [],
@@ -105,7 +103,7 @@ const Index = () => {
         setPlayerStats(stats);
       }
       
-      // Load leaderboard data
+      // Load leaderboard data (keeping this for later reintegration)
       const leaderboard = await getLeaderboardData();
       if (leaderboard) {
         setLeaderboardData(leaderboard);
@@ -320,14 +318,11 @@ const Index = () => {
               </div>
             </div>
             
-            {/* Stats and Leaderboard */}
+            {/* Stats and Referral - removed LeaderboardCard */}
             <div className="space-y-6">
               <StatsCard stats={playerStats} />
               
-              <LeaderboardCard 
-                aptLeaders={leaderboardData.aptLeaders}
-                emojiLeaders={leaderboardData.emojiLeaders}
-              />
+              {/* LeaderboardCard removed as requested */}
               
               <ReferralCard 
                 walletAddress={walletAddress}
