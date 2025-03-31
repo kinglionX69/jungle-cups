@@ -2,7 +2,8 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
 import { corsHeaders, handleCors } from "./cors.ts";
-import { handleWithdrawalTransaction, handlePayoutTransaction } from "./transactionHandlers.ts";
+import { handleWithdrawalTransaction } from "./withdrawalHandler.ts";
+import { handlePayoutTransaction } from "./payoutHandler.ts";
 
 // Serve the function
 serve(async (req) => {
