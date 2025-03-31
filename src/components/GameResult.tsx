@@ -63,7 +63,7 @@ const GameResult = ({ won, amount, tokenType, onPlayAgain }: GameResultProps) =>
             <span className="text-jungle-darkGreen font-bold">
               {amount * 2} {tokenType === "EMOJICOIN" ? "🦁♥️" : tokenType}
             </span>{" "}
-            has been sent to your wallet
+            has been added to your winnings
           </p>
           <div className="flex items-center justify-center gap-2 mb-4">
             <Star className="text-jungle-yellow fill-jungle-yellow" />
