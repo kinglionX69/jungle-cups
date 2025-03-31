@@ -94,11 +94,11 @@ const GameControls = ({
               />
             </div>
           ) : canBet && currentBet.amount > 0 && selectedCup === -1 ? (
-            <p className="text-center mt-4 animate-pulse relative z-30">
+            <p className="text-center mt-4 mb-12 animate-pulse relative z-30">
               Click on a cup to make your guess!
             </p>
           ) : !canBet && !gameEnded ? (
-            <p className="text-center mt-4 animate-pulse relative z-30">
+            <p className="text-center mt-4 mb-12 animate-pulse relative z-30">
               {isShuffling ? "Watch carefully..." : areLifted ? "Remember where the ball is..." : "Get ready..."}
             </p>
           ) : null}

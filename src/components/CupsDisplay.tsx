@@ -17,7 +17,7 @@ const CupsDisplay = ({ onCupSelect }: CupsDisplayProps) => {
   } = useGame();
 
   return (
-    <div className="flex justify-center space-x-4 md:space-x-12 my-8">
+    <div className="flex justify-center space-x-4 md:space-x-12 mt-16 mb-8">
       {[0, 1, 2].map((index) => (
         <Cup
           key={index}
