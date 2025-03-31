@@ -11,7 +11,7 @@ const WelcomeScreen = ({
       <h2 className="text-3xl font-luckiest text-jungle-darkGreen mb-4">
         Connect Your Wallet to Play
       </h2>
-      <p className="mb-8 text-lg max-w-xl mx-auto">Connect your Aptos wallet to start playing the Jungle Cups Game and win APT or 🦁♥️ Emojicoin!</p>
+      <p className="mb-8 text-lg max-w-xl mx-auto">Connect your Aptos wallet to start playing the Jungle Cups Game and win APT or LionHeart🦁♥️ Emojicoin!</p>
       <WalletConnect onConnect={onConnect} connected={false} walletAddress="" />
     </div>;
 };
