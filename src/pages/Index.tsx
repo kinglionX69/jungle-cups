@@ -5,7 +5,6 @@ import WelcomeScreen from "@/components/WelcomeScreen";
 import Game from "@/components/Game";
 import StatsCard from "@/components/StatsCard";
 import ReferralCard from "@/components/ReferralCard";
-import WithdrawFunds from "@/components/WithdrawFunds";
 import { useToast } from "@/components/ui/use-toast";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 
@@ -109,12 +108,8 @@ const Index = () => {
                 stats={stats} 
                 isLoading={isLoading}
                 walletAddress={walletAddress}
-              />
-              
-              <WithdrawFunds
-                stats={stats}
+                withdrawFunds={withdrawFunds}
                 isWithdrawing={isWithdrawing}
-                onWithdraw={withdrawFunds}
               />
               
               <ReferralCard 

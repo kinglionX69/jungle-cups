@@ -11,9 +11,17 @@ interface StatsCardProps {
   stats: PlayerStats;
   isLoading: boolean;
   walletAddress?: string;
+  withdrawFunds?: (amount: number, tokenType: string) => Promise<boolean>;
+  isWithdrawing?: boolean;
 }
 
-const StatsCard = ({ stats, isLoading, walletAddress = "" }: StatsCardProps) => {
+const StatsCard = ({ 
+  stats, 
+  isLoading, 
+  walletAddress = "",
+  withdrawFunds,
+  isWithdrawing = false
+}: StatsCardProps) => {
   const [showWithdraw, setShowWithdraw] = useState(false);
 
   const toggleWithdraw = () => {
@@ -97,11 +105,8 @@ const StatsCard = ({ stats, isLoading, walletAddress = "" }: StatsCardProps) => 
               {showWithdraw ? (
                 <WithdrawFunds
                   stats={stats}
-                  isWithdrawing={false}
-                  onWithdraw={async (amount, tokenType) => {
-                    handleWithdrawComplete();
-                    return true;
-                  }}
+                  isWithdrawing={isWithdrawing || false}
+                  onWithdraw={withdrawFunds || (async () => false)}
                 />
               ) : (
                 <Button 
