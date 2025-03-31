@@ -5,6 +5,7 @@ import WelcomeScreen from "@/components/WelcomeScreen";
 import Game from "@/components/Game";
 import StatsCard from "@/components/StatsCard";
 import ReferralCard from "@/components/ReferralCard";
+import WithdrawFunds from "@/components/WithdrawFunds";
 import { useToast } from "@/components/ui/use-toast";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 
@@ -23,7 +24,7 @@ const Index = () => {
   const [isEscrowFunded, setIsEscrowFunded] = useState(true);
   
   // Use player stats hook
-  const { stats, isLoading, updateStats, addReferral } = usePlayerStats(walletAddress);
+  const { stats, isLoading, isWithdrawing, updateStats, addReferral, withdrawFunds } = usePlayerStats(walletAddress);
   
   // Leaderboard data - keeping this state for later reintegration
   const [leaderboardData, setLeaderboardData] = useState({
@@ -108,6 +109,12 @@ const Index = () => {
                 stats={stats} 
                 isLoading={isLoading}
                 walletAddress={walletAddress}
+              />
+              
+              <WithdrawFunds
+                stats={stats}
+                isWithdrawing={isWithdrawing}
+                onWithdraw={withdrawFunds}
               />
               
               <ReferralCard 
