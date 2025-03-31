@@ -2,12 +2,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { ArrowDownToLine, Loader2 } from "lucide-react";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PlayerStats } from "@/types/gameTypes";
-import { motion } from "framer-motion";
+import { CreditCard } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface WithdrawFundsProps {
   stats: PlayerStats;
@@ -15,101 +19,150 @@ interface WithdrawFundsProps {
   onWithdraw: (amount: number, tokenType: string) => Promise<boolean>;
 }
 
+const MIN_APT_WITHDRAWAL = 0.1;
+const MIN_EMOJICOIN_WITHDRAWAL = 100;
+
 const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps) => {
-  const [amount, setAmount] = useState<string>("");
   const [tokenType, setTokenType] = useState<string>("APT");
+  const [amount, setAmount] = useState<string>("");
+  const { toast } = useToast();
   
+  // Get current balance based on token type
+  const getCurrentBalance = () => {
+    return tokenType === "APT" ? stats.aptWon : stats.emojiWon;
+  };
+  
+  // Get minimum withdrawal amount
+  const getMinWithdrawal = () => {
+    return tokenType === "APT" ? MIN_APT_WITHDRAWAL : MIN_EMOJICOIN_WITHDRAWAL;
+  };
+  
+  // Handle withdrawal
   const handleWithdraw = async () => {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
+    const amountNum = parseFloat(amount);
+    const minWithdrawal = getMinWithdrawal();
+    const currentBalance = getCurrentBalance();
     
-    await onWithdraw(Number(amount), tokenType);
-    setAmount(""); // Clear the input after withdrawal
+    // Validate amount
+    if (!amount || isNaN(amountNum) || amountNum <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid withdrawal amount",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check minimum withdrawal
+    if (amountNum < minWithdrawal) {
+      toast({
+        title: "Amount Too Small",
+        description: `Minimum withdrawal is ${minWithdrawal} ${tokenType}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if enough balance
+    if (amountNum > currentBalance) {
+      toast({
+        title: "Insufficient Balance",
+        description: `You only have ${currentBalance} ${tokenType} available`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Process withdrawal
+    const success = await onWithdraw(amountNum, tokenType);
+    
+    if (success) {
+      setAmount("");
+      toast({
+        title: "Withdrawal Successful",
+        description: `${amountNum} ${tokenType} has been sent to your wallet`,
+      });
+    }
   };
   
-  const maxAmount = tokenType === "APT" ? stats.aptWon : stats.emojiWon;
-  const isInvalidAmount = !amount || isNaN(Number(amount)) || Number(amount) <= 0 || Number(amount) > maxAmount;
-  
-  const handleSetMaxAmount = () => {
-    setAmount(maxAmount.toString());
+  // Reset amount when token type changes
+  const handleTokenChange = (value: string) => {
+    setTokenType(value);
+    setAmount("");
   };
+  
+  // Format the balance display
+  const formatBalance = (balance: number) => {
+    if (tokenType === "APT") {
+      return balance.toFixed(2);
+    }
+    return balance.toLocaleString();
+  };
+  
+  // Check if user has any balance to withdraw
+  const hasWithdrawableBalance = stats.aptWon > 0 || stats.emojiWon > 0;
   
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ArrowDownToLine className="h-5 w-5" />
-          Withdraw Winnings
-        </CardTitle>
-        <CardDescription>
-          Transfer your winnings to your wallet
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="token-type">Select Token</Label>
-          <RadioGroup 
-            value={tokenType}
-            onValueChange={setTokenType}
-            className="flex space-x-2"
-            id="token-type"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="APT" id="apt" />
-              <Label htmlFor="apt" className="cursor-pointer">APT</Label>
+    <div className="stats-card p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <CreditCard className="w-5 h-5 text-jungle-green" />
+        <h3 className="text-lg font-luckiest text-jungle-darkGreen">Withdraw Funds</h3>
+      </div>
+      
+      {!hasWithdrawableBalance ? (
+        <p className="text-sm text-muted-foreground">You don't have any winnings to withdraw yet. Play and win to earn tokens!</p>
+      ) : (
+        <>
+          <div className="space-y-4">
+            <div>
+              <Select 
+                value={tokenType} 
+                onValueChange={handleTokenChange}
+              >
+                <SelectTrigger className="input-field">
+                  <SelectValue placeholder="Select token" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="APT" disabled={stats.aptWon <= 0}>
+                    APT {stats.aptWon <= 0 && "(No balance)"}
+                  </SelectItem>
+                  <SelectItem value="EMOJICOIN" disabled={stats.emojiWon <= 0}>
+                    🦁♥️ Emojicoin {stats.emojiWon <= 0 && "(No balance)"}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs mt-1">
+                Available: <span className="font-semibold">{formatBalance(getCurrentBalance())} {tokenType}</span>
+              </p>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="EMOJICOIN" id="emoji" />
-              <Label htmlFor="emoji" className="cursor-pointer">EMOJICOIN</Label>
+            
+            <div>
+              <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={`Amount (min: ${getMinWithdrawal()})`}
+                className="input-field"
+                min={getMinWithdrawal()}
+                step={tokenType === "APT" ? "0.1" : "100"}
+              />
             </div>
-          </RadioGroup>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <Label htmlFor="amount">Amount</Label>
-            <span className="text-sm text-muted-foreground">
-              Available: {tokenType === "APT" ? stats.aptWon.toFixed(2) : stats.emojiWon.toFixed(0)} {tokenType}
-            </span>
-          </div>
-          <div className="flex space-x-2">
-            <Input
-              id="amount"
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder={`Enter ${tokenType} amount`}
-              min="0"
-              step={tokenType === "APT" ? "0.01" : "1"}
-              disabled={isWithdrawing}
-            />
+            
             <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSetMaxAmount}
-              disabled={maxAmount <= 0 || isWithdrawing}
+              className="jungle-btn w-full" 
+              onClick={handleWithdraw}
+              disabled={isWithdrawing || !amount || parseFloat(amount) <= 0 || parseFloat(amount) > getCurrentBalance()}
             >
-              Max
+              {isWithdrawing ? "Processing..." : "Withdraw to Wallet"}
             </Button>
+            
+            <p className="text-xs text-muted-foreground">
+              Withdrawals are processed on the Aptos blockchain and may take a few moments to appear in your wallet.
+            </p>
           </div>
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button 
-          onClick={handleWithdraw} 
-          disabled={isInvalidAmount || isWithdrawing} 
-          className="w-full"
-        >
-          {isWithdrawing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>Withdraw {amount ? amount : "0"} {tokenType}</>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+        </>
+      )}
+    </div>
   );
 };
 

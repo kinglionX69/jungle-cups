@@ -64,7 +64,7 @@ export const useBetHandler = (walletAddress: string) => {
     
     toast({
       title: "Bet Placed!",
-      description: "Now select a cup where you think the ball is hidden",
+      description: `${amount} ${tokenType} has been deducted from your wallet. Now select a cup where you think the ball is hidden.`,
     });
   };
   

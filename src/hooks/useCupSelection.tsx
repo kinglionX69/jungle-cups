@@ -77,13 +77,13 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
           if (payoutSuccess) {
             toast({
               title: "You Won! 🎉",
-              description: `${winAmount} ${currentBet.tokenType} has been sent to your wallet`,
+              description: `${winAmount} ${currentBet.tokenType} has been added to your winnings`,
               variant: "default",
             });
           } else {
             toast({
               title: "Payout Processing",
-              description: "Your winnings are being processed. They'll appear in your wallet soon.",
+              description: "Your winnings are being processed. They'll appear in your stats soon.",
               variant: "default",
             });
           }
