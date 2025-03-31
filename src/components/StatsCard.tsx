@@ -28,7 +28,7 @@ const StatsCard = ({ stats, isLoading, walletAddress = "" }: StatsCardProps) => 
   if (isLoading) {
     return (
       <div className="stats-card space-y-4">
-        <h2 className="text-xl mb-4">Your Stats</h2>
+        <h2 className="text-xl mb-4 text-jungle-darkGreen">Your Stats</h2>
         <div className="space-y-4">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-full" />
@@ -41,12 +41,12 @@ const StatsCard = ({ stats, isLoading, walletAddress = "" }: StatsCardProps) => 
 
   return (
     <div className="stats-card">
-      <h2 className="text-xl mb-4">Your Stats</h2>
+      <h2 className="text-xl mb-4 text-jungle-darkGreen">Your Stats</h2>
       
       <Tabs defaultValue="performance">
-        <TabsList className="grid grid-cols-2 mb-4">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="earnings">Earnings</TabsTrigger>
+        <TabsList className="grid grid-cols-2 mb-4 bg-jungle-lightGreen/30">
+          <TabsTrigger value="performance" className="data-[state=active]:bg-jungle-green data-[state=active]:text-white">Performance</TabsTrigger>
+          <TabsTrigger value="earnings" className="data-[state=active]:bg-jungle-yellow data-[state=active]:text-jungle-darkGreen">Earnings</TabsTrigger>
         </TabsList>
         
         <TabsContent value="performance" className="space-y-4">
@@ -78,7 +78,7 @@ const StatsCard = ({ stats, isLoading, walletAddress = "" }: StatsCardProps) => 
         <TabsContent value="earnings" className="space-y-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-blue-500" />
+              <CreditCard className="h-4 w-4 text-jungle-green" />
               <span className="text-sm">APT Won</span>
             </div>
             <span className="font-bold">{stats.aptWon.toFixed(2)} APT</span>
@@ -86,7 +86,7 @@ const StatsCard = ({ stats, isLoading, walletAddress = "" }: StatsCardProps) => 
           
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Coins className="h-4 w-4 text-yellow-500" />
+              <Coins className="h-4 w-4 text-jungle-yellow" />
               <span className="text-sm">Emojicoin Won</span>
             </div>
             <span className="font-bold">{stats.emojiWon.toFixed(0)} EMOJICOIN</span>

@@ -46,10 +46,19 @@ const GameResult = ({ won, amount, tokenType, onPlayAgain }: GameResultProps) =>
 
   return (
     <div className="stats-card flex flex-col items-center p-6 animate-fade-in">
+      {/* Decorative background elements */}
+      {won && (
+        <>
+          <div className="absolute top-0 left-0 w-full h-full bg-jungle-green/5 pointer-events-none rounded-lg"></div>
+          <div className="absolute -top-2 -right-2 w-16 h-16 bg-jungle-yellow/20 rounded-full blur-md"></div>
+          <div className="absolute -bottom-2 -left-2 w-14 h-14 bg-jungle-green/20 rounded-full blur-md"></div>
+        </>
+      )}
+      
       {won ? (
         <>
-          <Trophy className="w-16 h-16 mb-4 text-jungle-yellow animate-bounce" />
-          <h2 className="text-3xl text-jungle-green mb-2">You Won!</h2>
+          <Trophy className="w-16 h-16 mb-4 text-jungle-yellow animate-bounce fill-yellow-500/30" />
+          <h2 className="text-3xl text-jungle-green mb-2 drop-shadow-sm">You Won!</h2>
           <p className="text-xl mb-4">
             <span className="text-jungle-darkGreen font-bold">
               {amount * 2} {tokenType === "EMOJICOIN" ? "🦁♥️" : tokenType}
@@ -65,7 +74,7 @@ const GameResult = ({ won, amount, tokenType, onPlayAgain }: GameResultProps) =>
       ) : (
         <>
           <CircleX className="w-16 h-16 mb-4 text-destructive" />
-          <h2 className="text-3xl text-destructive mb-2">You Lost</h2>
+          <h2 className="text-3xl text-destructive mb-2 drop-shadow-sm">You Lost</h2>
           <p className="text-xl mb-4">
             Better luck next time!
           </p>

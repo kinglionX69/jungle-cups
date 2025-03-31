@@ -57,7 +57,7 @@ const Cup = ({
         className={cn(
           "cup",
           shuffleAnimation,
-          selected && "border-jungle-yellow border-4",
+          selected && "border-jungle-yellow border-4 ring-2 ring-yellow-400",
           isRevealed && selected && "animate-cup-reveal",
           isLifted && "transform -translate-y-12 transition-transform duration-700",
           isClickable && "animate-bounce",
@@ -69,15 +69,23 @@ const Cup = ({
         style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }} // Lower z-index during shuffling or initial reveal
       >
         <div className="cup-base"></div>
+        
+        {/* Add subtle wood texture effect */}
+        <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-yellow-100 to-transparent rounded-t-[100px] pointer-events-none"></div>
       </div>
+      
       {/* Ball shown below cup when lifted, or inside cup when revealed */}
       {hasBall && (isLifted || (isRevealed && selected)) && (
         <div className={cn(
           "ball absolute left-1/2 transform -translate-x-1/2 animate-fade-in",
           isLifted ? "bottom-0" : "bottom-12"
-        )}></div>
+        )}>
+          {/* Add subtle highlight to the ball */}
+          <div className="absolute top-1 left-2 w-2 h-2 bg-white/40 rounded-full"></div>
+        </div>
       )}
-      <p className="mt-2 font-bungee text-lg relative z-20">{index + 1}</p>
+      
+      <p className="mt-2 font-bungee text-lg relative z-20 text-jungle-darkGreen">{index + 1}</p>
     </div>
   );
 };

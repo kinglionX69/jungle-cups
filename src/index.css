@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
 
@@ -43,11 +44,12 @@
   }
 
   body {
-    @apply bg-jungle-background text-foreground font-bungee bg-[url('/lovable-uploads/817fa8b9-5293-419b-a2fe-fc15acd3d076.png')] bg-cover bg-center bg-fixed;
+    @apply bg-jungle-background text-foreground font-bungee bg-[url('/images/jungle-bg.png')] bg-cover bg-center bg-fixed;
+    background-blend-mode: overlay;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-luckiest text-jungle-darkGreen;
+    @apply font-luckiest text-jungle-darkGreen drop-shadow-sm;
   }
 
   button {
@@ -76,11 +78,11 @@
   }
 
   .game-container {
-    @apply relative bg-white/70 backdrop-blur-sm p-8 rounded-xl border-4 border-jungle-green shadow-xl max-w-4xl mx-auto;
+    @apply relative bg-white/80 backdrop-blur-sm p-8 rounded-xl border-4 border-jungle-green shadow-xl max-w-4xl mx-auto;
   }
 
   .stats-card {
-    @apply bg-white/80 backdrop-blur-sm p-4 rounded-lg border-2 border-jungle-green shadow-md;
+    @apply bg-white/90 backdrop-blur-sm p-4 rounded-lg border-2 border-jungle-green shadow-md;
   }
 
   .input-field {
