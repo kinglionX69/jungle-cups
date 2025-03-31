@@ -21,7 +21,8 @@ export const useGameState = () => {
     gameEnded,
     areLifted,
     currentBet,
-    canBet
+    canBet,
+    initialReveal
   } = useGame();
 
   // Reset game state for new round
@@ -63,6 +64,7 @@ export const useGameState = () => {
     areLifted,
     currentBet,
     canBet,
+    initialReveal,
     
     // State management functions
     resetGameState
