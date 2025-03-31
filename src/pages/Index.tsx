@@ -23,10 +23,7 @@ const Index = () => {
   const [isEscrowFunded, setIsEscrowFunded] = useState(true);
   
   // Use player stats hook
-  const { stats, updateStats, addReferral } = usePlayerStats(walletAddress);
-  
-  // Loading state for stats
-  const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const { stats, isLoading, updateStats, addReferral } = usePlayerStats(walletAddress);
   
   // Leaderboard data - keeping this state for later reintegration
   const [leaderboardData, setLeaderboardData] = useState({
@@ -54,8 +51,6 @@ const Index = () => {
     setWalletAddress(address);
     
     if (address) {
-      setIsStatsLoading(true);
-      
       // Check for referral code
       const referralAddress = getReferralFromUrl();
       if (referralAddress && referralAddress !== address) {
@@ -74,8 +69,6 @@ const Index = () => {
       if (leaderboard) {
         setLeaderboardData(leaderboard);
       }
-      
-      setIsStatsLoading(false);
     }
   };
 
@@ -113,7 +106,7 @@ const Index = () => {
             <div className="space-y-6">
               <StatsCard 
                 stats={stats} 
-                isLoading={isStatsLoading} 
+                isLoading={isLoading} 
               />
               
               <ReferralCard 

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define the PlayerStats interface
 export interface PlayerStats {
@@ -24,14 +25,12 @@ const DEFAULT_STATS: PlayerStats = {
   referrals: 0,
 };
 
-// Key for storing stats in localStorage
-const STATS_STORAGE_KEY = "shell-game-player-stats";
-
 export const usePlayerStats = (walletAddress: string) => {
   const [stats, setStats] = useState<PlayerStats>(DEFAULT_STATS);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
-  // Load stats from storage when wallet changes
+  // Load stats from database when wallet changes
   useEffect(() => {
     if (walletAddress) {
       loadStats(walletAddress);
@@ -40,19 +39,34 @@ export const usePlayerStats = (walletAddress: string) => {
     }
   }, [walletAddress]);
   
-  // Load stats from localStorage or blockchain
+  // Load stats from Supabase
   const loadStats = async (address: string) => {
     try {
-      // First check localStorage (for quicker loading)
-      const storedStats = localStorage.getItem(`${STATS_STORAGE_KEY}-${address}`);
+      setIsLoading(true);
       
-      if (storedStats) {
-        setStats(JSON.parse(storedStats));
+      // Query the database for this wallet's stats
+      const { data, error } = await supabase
+        .from('player_stats')
+        .select('*')
+        .eq('wallet_address', address)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Map database fields to our interface
+        setStats({
+          gamesPlayed: data.games_played,
+          wins: data.wins,
+          losses: data.losses,
+          winRate: data.win_rate,
+          aptWon: data.apt_won,
+          emojiWon: data.emoji_won,
+          referrals: data.referrals
+        });
       } else {
-        // If not in localStorage, try to load from blockchain
-        // For now, we're using mock data
-        const newStats = DEFAULT_STATS;
-        setStats(newStats);
+        // No stats found, create new record
+        await createNewPlayerStats(address);
       }
     } catch (error) {
       console.error("Error loading stats:", error);
@@ -61,31 +75,58 @@ export const usePlayerStats = (walletAddress: string) => {
         description: "Could not load your game stats",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  // Save stats to localStorage and blockchain
+  // Create new player stats record
+  const createNewPlayerStats = async (address: string) => {
+    try {
+      const { error } = await supabase
+        .from('player_stats')
+        .insert([{ wallet_address: address }]);
+      
+      if (error) throw error;
+      
+      // Set default stats since we just created a new record
+      setStats(DEFAULT_STATS);
+    } catch (error) {
+      console.error("Error creating player stats:", error);
+    }
+  };
+  
+  // Save stats to database
   const saveStats = async (updatedStats: PlayerStats) => {
     if (!walletAddress) return;
     
     try {
-      // Update state
+      // Update state first for immediate UI feedback
       setStats(updatedStats);
       
-      // Save to localStorage
-      localStorage.setItem(
-        `${STATS_STORAGE_KEY}-${walletAddress}`, 
-        JSON.stringify(updatedStats)
-      );
+      // Then update the database
+      const { error } = await supabase
+        .from('player_stats')
+        .update({
+          games_played: updatedStats.gamesPlayed,
+          wins: updatedStats.wins,
+          losses: updatedStats.losses,
+          win_rate: updatedStats.winRate,
+          apt_won: updatedStats.aptWon,
+          emoji_won: updatedStats.emojiWon,
+          referrals: updatedStats.referrals,
+          updated_at: new Date().toISOString()
+        })
+        .eq('wallet_address', walletAddress);
       
-      // In a real implementation, would also save to blockchain
-      // This would involve calling a smart contract function
+      if (error) throw error;
+      
       console.log(`Saved stats for ${walletAddress}`, updatedStats);
     } catch (error) {
       console.error("Error saving stats:", error);
       toast({
         title: "Stats Saving Error",
-        description: "Could not save your game stats",
+        description: "Could not save your game stats to the database",
         variant: "destructive",
       });
     }
@@ -136,6 +177,7 @@ export const usePlayerStats = (walletAddress: string) => {
   
   return {
     stats,
+    isLoading,
     loadStats,
     updateStats,
     addReferral
