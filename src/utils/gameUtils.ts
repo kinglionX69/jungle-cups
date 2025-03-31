@@ -55,7 +55,7 @@ export const playClickSound = () => {
 
 // Game timing constants (in milliseconds)
 export const TIMING = {
-  INITIAL_REVEAL: 3000,  // Time showing the ball at the beginning
-  CUPS_DOWN: 1000,       // Time to lower the cups
-  SHUFFLE_DURATION: 1500 // Reduced from 2000 for even faster shuffling
+  INITIAL_REVEAL: 2000,  // Time showing the ball at the beginning (reduced from 3000)
+  CUPS_DOWN: 800,        // Time to lower the cups (reduced from 1000)
+  SHUFFLE_DURATION: 1200 // Reduced from 1500 for even faster shuffling
 };

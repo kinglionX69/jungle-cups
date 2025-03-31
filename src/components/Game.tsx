@@ -41,7 +41,7 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
   const [areLifted, setAreLifted] = useState(false);
   const [canBet, setCanBet] = useState(false);
   const [initialReveal, setInitialReveal] = useState(false);
-  const [readyForNewBet, setReadyForNewBet] = useState(false);
+  const [readyForNewGame, setReadyForNewGame] = useState(false);
   
   // Bet states
   const [currentBet, setCurrentBet] = useState({
@@ -49,17 +49,12 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
     tokenType: "APT",
   });
   
-  // Starts the game sequence (initial reveal before betting)
+  // Starts a new game sequence with ball shown first
   const startGameSequence = () => {
     // Initial setup - show cups lifted and ball visible
-    setGameStarted(true);
-    setGameEnded(false);
-    setSelectedCup(-1);
-    setIsRevealed(false);
+    resetGameState();
     setAreLifted(true);
-    setCanBet(false);
     setInitialReveal(true);
-    setReadyForNewBet(false);
     
     // Randomize initial ball position
     const initialBallPosition = Math.floor(Math.random() * 3);
@@ -69,10 +64,6 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
     setTimeout(() => {
       setAreLifted(false);
       playCupsDownSound();
-      toast({
-        title: "Watching the Cups",
-        description: "The cups are covering the ball. Get ready!",
-      });
       
       // After cups are down, start shuffling
       setTimeout(() => {
@@ -97,6 +88,22 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
       }, TIMING.CUPS_DOWN);
       
     }, TIMING.INITIAL_REVEAL);
+  };
+
+  // Reset game state for new round
+  const resetGameState = () => {
+    setGameStarted(true);
+    setGameEnded(false);
+    setSelectedCup(-1);
+    setIsRevealed(false);
+    setAreLifted(false);
+    setCanBet(false);
+    setInitialReveal(false);
+    setReadyForNewGame(false);
+    setCurrentBet({
+      amount: 0,
+      tokenType: "APT",
+    });
   };
   
   // Handle placing a bet and participating in the game
@@ -137,8 +144,6 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
       amount,
       tokenType,
     });
-
-    setReadyForNewBet(false);
     
     toast({
       title: "Bet Placed!",
@@ -182,34 +187,17 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
       }
       
       setGameEnded(true);
-      setReadyForNewBet(true);
+      setReadyForNewGame(true);
       
       // Notify parent to update stats
       onStatsUpdated();
     }, 1000);
   };
   
-  // Reset the game to play again
-  const handlePlayAgain = () => {
-    setCurrentBet({
-      amount: 0,
-      tokenType: "APT",
-    });
-    setGameEnded(false);
-    setSelectedCup(-1);
-    setIsRevealed(false);
-    setCanBet(true);
-    setReadyForNewBet(false);
+  // Start a new round
+  const handleNewRound = () => {
     playClickSound();
-    
-    // Shuffle the cups again for a new round
-    const newBallPosition = Math.floor(Math.random() * 3);
-    setBallPosition(newBallPosition);
-    
-    toast({
-      title: "New Round",
-      description: "Place your bet for the next round!",
-    });
+    startGameSequence();
   };
 
   return (
@@ -246,28 +234,21 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
             Watch carefully where the ball is placed, then the cups will shuffle!
           </p>
         </div>
-      ) : readyForNewBet ? (
+      ) : readyForNewGame ? (
         <div className="text-center">
-          <button 
-            onClick={handlePlayAgain} 
-            className="jungle-btn px-8 py-3 mb-6"
-          >
-            Play Again
-          </button>
-          <div className="max-w-md mx-auto mt-6">
-            <BetForm 
-              onPlaceBet={handlePlaceBet}
-              disabled={!walletAddress || !canBet}
-              isEscrowFunded={isEscrowFunded}
-            />
-          </div>
+          <GameResult 
+            won={playerWon}
+            amount={currentBet.amount}
+            tokenType={currentBet.tokenType}
+            onPlayAgain={handleNewRound}
+          />
         </div>
       ) : gameEnded ? (
         <GameResult 
           won={playerWon}
           amount={currentBet.amount}
           tokenType={currentBet.tokenType}
-          onPlayAgain={handlePlayAgain}
+          onPlayAgain={handleNewRound}
         />
       ) : (
         <>
