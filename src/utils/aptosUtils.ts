@@ -9,7 +9,7 @@ export const EXPLORER_URL = "https://explorer.aptoslabs.com/txn/";
 export const FAUCET_URL = "https://faucet.testnet.aptoslabs.com";
 
 // Real escrow wallet for the app
-export const ESCROW_WALLET_ADDRESS = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27";
+export const ESCROW_WALLET_ADDRESS = "0x2afbb09094a37b84d14bc9aaf7deb6dd586acc20b0e3ba8c8c5a7cafd9eb5a0d";
 export const EMOJICOIN_ADDRESS = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27::coin_factory::Emojicoin";
 
 export const MIN_APT_BALANCE = 1; // 1 APT
