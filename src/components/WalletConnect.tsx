@@ -26,9 +26,13 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
         if (connected) {
           try {
             const network = await window.aptos.network();
-            setIsCorrectNetwork(network === NETWORK);
+            console.log("Current wallet network:", network);
             
-            if (network !== NETWORK) {
+            // Fix for network detection - check for both "testnet" and "Testnet"
+            const networkMatch = network.toLowerCase() === NETWORK.toLowerCase();
+            setIsCorrectNetwork(networkMatch);
+            
+            if (!networkMatch) {
               toast({
                 title: "Wrong Network",
                 description: `Please switch to Aptos ${NETWORK.charAt(0).toUpperCase() + NETWORK.slice(1)} in your wallet.`,
@@ -68,7 +72,11 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
       
       // Check if on correct network
       const network = await window.aptos.network();
-      if (network !== NETWORK) {
+      console.log("Connected to network:", network);
+      
+      // Fix for network detection - check for both "testnet" and "Testnet"
+      const networkMatch = network.toLowerCase() === NETWORK.toLowerCase();
+      if (!networkMatch) {
         toast({
           title: "Wrong Network",
           description: `Please switch to Aptos ${NETWORK.charAt(0).toUpperCase() + NETWORK.slice(1)} in your wallet settings.`,
