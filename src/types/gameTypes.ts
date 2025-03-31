@@ -37,4 +37,15 @@ export interface GameActions {
   setCurrentBet: (bet: { amount: number; tokenType: string }) => void;
 }
 
+// Player statistics interface
+export interface PlayerStats {
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  aptWon: number;
+  emojiWon: number;
+  referrals: number;
+}
+
 export type GameContextType = GameState & GameActions;

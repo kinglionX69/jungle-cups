@@ -1,18 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
-// Define the PlayerStats interface
-export interface PlayerStats {
-  gamesPlayed: number;
-  wins: number;
-  losses: number;
-  winRate: number;
-  aptWon: number;
-  emojiWon: number;
-  referrals: number;
-}
+import { PlayerStats } from "@/types/gameTypes";
 
 // Default stats for new players
 const DEFAULT_STATS: PlayerStats = {
