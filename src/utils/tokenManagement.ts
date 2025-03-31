@@ -50,6 +50,13 @@ export const initializeTokenStore = async (address: string, tokenType: string): 
   try {
     console.log(`Checking if account ${address} needs ${tokenType} initialization`);
     
+    // For testing purposes, we're just using APT for Emojicoin
+    // So we check if the APT coin store is registered
+    if (tokenType === "EMOJICOIN") {
+      console.log("Using APT coin store for Emojicoin (testing only)");
+      return await initializeAccount(address);
+    }
+    
     let tokenTypeAddress = "";
     
     if (tokenType === "EMOJICOIN") {
@@ -59,6 +66,8 @@ export const initializeTokenStore = async (address: string, tokenType: string): 
       return false;
     }
     
+    // This part will be used in mainnet but is commented out for testing
+    /*
     // Check if the account has already registered the coin store
     const resources = await client.getAccountResources(address);
     const hasTokenStore = resources.some(
@@ -90,6 +99,7 @@ export const initializeTokenStore = async (address: string, tokenType: string): 
       
       return true;
     }
+    */
     
     return false;
   } catch (error) {
@@ -116,6 +126,21 @@ export const getWalletBalance = async (address: string, tokenType: string = "APT
       }
       return 0;
     } else if (tokenType === "EMOJICOIN") {
+      // For testing, we're using APT for Emojicoin
+      // This will be replaced with real Emojicoin in mainnet
+      const resources = await client.getAccountResources(address);
+      const aptosCoin = resources.find(
+        (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
+      );
+      
+      if (aptosCoin) {
+        const balance = parseInt((aptosCoin.data as any).coin.value);
+        return balance / 100000000; // Same conversion as APT for testing
+      }
+      return 0;
+      
+      // This part will be used in mainnet but is commented out for testing
+      /*
       // Get Emojicoin balance
       const resources = await client.getAccountResources(address);
       const emojiCoin = resources.find(
@@ -126,7 +151,7 @@ export const getWalletBalance = async (address: string, tokenType: string = "APT
         const balance = parseInt((emojiCoin.data as any).coin.value);
         return balance / 100000000; // Assuming same 8 decimals as APT
       }
-      return 0;
+      */
     }
     
     // Unknown token type

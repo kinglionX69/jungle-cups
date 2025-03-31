@@ -33,9 +33,10 @@ export const getEscrowWalletBalances = async (): Promise<{
     const aptBalance = await getWalletBalance(ESCROW_WALLET_ADDRESS, "APT");
     console.log("Escrow APT balance:", aptBalance);
     
-    // Get Emojicoin balance
-    const emojiBalance = await getWalletBalance(ESCROW_WALLET_ADDRESS, "EMOJICOIN");
-    console.log("Escrow Emojicoin balance:", emojiBalance);
+    // For testing purposes, we're using the APT balance for Emojicoin too
+    // This will be replaced with actual Emojicoin balance when moving to mainnet
+    const emojiBalance = aptBalance;
+    console.log("Escrow Emojicoin balance (simulated):", emojiBalance);
     
     // Determine which tokens are available for betting
     const availableTokens: string[] = [];
@@ -44,7 +45,7 @@ export const getEscrowWalletBalances = async (): Promise<{
       availableTokens.push("APT");
     }
     
-    if (emojiBalance >= MIN_EMOJICOIN_BALANCE) {
+    if (emojiBalance >= MIN_EMOJICOIN_BALANCE / 100000) { // Lower threshold for testing
       availableTokens.push("EMOJICOIN");
     }
     

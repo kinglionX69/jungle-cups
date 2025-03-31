@@ -25,7 +25,8 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
 
   // Define minimum bet amounts for each token type
   const MIN_APT_BET = 0.01;
-  const MIN_EMOJICOIN_BET = 1000;
+  // Reduced Emojicoin minimum bet for testing purposes
+  const MIN_EMOJICOIN_BET = 0.01; // Will be increased for mainnet
 
   // Initialize token type when available tokens change
   useEffect(() => {
@@ -103,7 +104,7 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
               <SelectItem value="APT">APT</SelectItem>
             )}
             {availableTokens.includes("EMOJICOIN") && (
-              <SelectItem value="EMOJICOIN">🦁♥️ Emojicoin</SelectItem>
+              <SelectItem value="EMOJICOIN">🦁♥️ Emojicoin (Testing)</SelectItem>
             )}
             {noTokensAvailable && (
               <SelectItem value="" disabled>No tokens available</SelectItem>
@@ -121,12 +122,12 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
           placeholder={tokenType ? `Min: ${getCurrentMinBet()} ${tokenType}` : "Select token first"}
           className="input-field"
           min={tokenType ? getCurrentMinBet() : 0}
-          step={tokenType === "APT" ? "0.01" : "100"}
+          step={tokenType === "APT" ? "0.01" : "0.01"} // Same step for testing
           disabled={disabled || !tokenType || noTokensAvailable}
         />
         {tokenType && (
           <span className="text-xs text-muted-foreground">
-            Minimum bet: {getCurrentMinBet()} {tokenType}
+            Minimum bet: {getCurrentMinBet()} {tokenType} {tokenType === "EMOJICOIN" && "(Testing mode)"}
           </span>
         )}
       </div>
@@ -147,6 +148,13 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
         <p className="text-xs text-red-500 text-center">
           The escrow wallet currently has no tokens available for payouts.
           Please check back later.
+        </p>
+      )}
+      
+      {tokenType === "EMOJICOIN" && (
+        <p className="text-xs text-amber-600 text-center mt-2">
+          Note: For testing purposes, we're using APT for 🦁♥️ Emojicoin transactions. 
+          This will be replaced with the real Emojicoin token on mainnet.
         </p>
       )}
     </form>

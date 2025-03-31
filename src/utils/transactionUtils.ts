@@ -63,15 +63,18 @@ export const placeBet = async (
         throw error; // Re-throw for other errors
       }
     } else if (tokenType === "EMOJICOIN") {
+      // For testing purposes, we treat Emojicoin like APT
+      // This will be replaced with actual Emojicoin code when moving to mainnet
+      
       // Initialize Emojicoin store if needed
       const { address } = await window.aptos.account();
       await initializeTokenStore(address, tokenType);
       
-      // Create transaction payload for Emojicoin transfer
+      // For testing, we just use APT with the APT coin transfer
       const payload = {
         type: "entry_function_payload",
         function: "0x1::coin::transfer",
-        type_arguments: [EMOJICOIN_ADDRESS],
+        type_arguments: ["0x1::aptos_coin::AptosCoin"], // Use APT for testing
         arguments: [
           ESCROW_WALLET_ADDRESS, 
           Math.floor(amount * 100000000).toString() // Convert to smallest units (8 decimals)
@@ -80,7 +83,7 @@ export const placeBet = async (
       
       // Sign and submit the transaction
       const response = await window.aptos.signAndSubmitTransaction(payload);
-      console.log("Emojicoin transaction submitted:", response);
+      console.log("Emojicoin transaction submitted (using APT for testing):", response);
       
       return true;
     } else {

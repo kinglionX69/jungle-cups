@@ -20,7 +20,8 @@ interface WithdrawFundsProps {
 }
 
 const MIN_APT_WITHDRAWAL = 0.1;
-const MIN_EMOJICOIN_WITHDRAWAL = 100;
+// Reduced for testing purposes
+const MIN_EMOJICOIN_WITHDRAWAL = 0.1; // Will be increased for mainnet
 
 const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps) => {
   const [tokenType, setTokenType] = useState<string>("APT");
@@ -96,7 +97,7 @@ const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps)
     if (tokenType === "APT") {
       return balance.toFixed(2);
     }
-    return balance.toLocaleString();
+    return balance.toFixed(2); // Same formatting for testing
   };
   
   // Check if user has any balance to withdraw
@@ -127,7 +128,7 @@ const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps)
                     APT {stats.aptWon <= 0 && "(No balance)"}
                   </SelectItem>
                   <SelectItem value="EMOJICOIN" disabled={stats.emojiWon <= 0}>
-                    🦁♥️ Emojicoin {stats.emojiWon <= 0 && "(No balance)"}
+                    🦁♥️ Emojicoin (Testing) {stats.emojiWon <= 0 && "(No balance)"}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -144,7 +145,7 @@ const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps)
                 placeholder={`Amount (min: ${getMinWithdrawal()})`}
                 className="input-field"
                 min={getMinWithdrawal()}
-                step={tokenType === "APT" ? "0.1" : "100"}
+                step={tokenType === "APT" ? "0.1" : "0.1"} // Same step for testing
               />
             </div>
             
@@ -159,6 +160,13 @@ const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps)
             <p className="text-xs text-muted-foreground">
               Withdrawals are processed on the Aptos blockchain and may take a few moments to appear in your wallet.
             </p>
+
+            {tokenType === "EMOJICOIN" && (
+              <p className="text-xs text-amber-600 mt-2">
+                Note: For testing purposes, we're using APT for 🦁♥️ Emojicoin transactions. 
+                This will be replaced with the real Emojicoin token on mainnet.
+              </p>
+            )}
           </div>
         </>
       )}
