@@ -10,8 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PlayerStats } from "@/types/gameTypes";
-import { CreditCard } from "lucide-react";
+import { CreditCard, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { EXPLORER_URL } from "@/utils/aptosConfig";
 
 interface WithdrawFundsProps {
   stats: PlayerStats;
@@ -26,6 +27,7 @@ const MIN_EMOJICOIN_WITHDRAWAL = 0.1; // Will be increased for mainnet
 const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps) => {
   const [tokenType, setTokenType] = useState<string>("APT");
   const [amount, setAmount] = useState<string>("");
+  const [txHash, setTxHash] = useState<string>("");
   const { toast } = useToast();
   
   // Get current balance based on token type
@@ -79,9 +81,12 @@ const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps)
     
     if (success) {
       setAmount("");
+      // Store transaction hash for explorer link (would need to be passed from the hook)
+      // This would need to be modified to capture the actual transaction hash
+      
       toast({
-        title: "Withdrawal Successful",
-        description: `${amountNum} ${tokenType} has been sent to your wallet`,
+        title: "Withdrawal Initiated",
+        description: `${amountNum} ${tokenType} withdrawal has been initiated. Check your wallet for the transaction!`,
       });
     }
   };
@@ -158,7 +163,7 @@ const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps)
             </Button>
             
             <p className="text-xs text-muted-foreground">
-              Withdrawals are processed on the Aptos blockchain and may take a few moments to appear in your wallet.
+              Withdrawals are processed on the Aptos blockchain. Tokens will be transferred directly to your connected wallet.
             </p>
 
             {tokenType === "EMOJICOIN" && (

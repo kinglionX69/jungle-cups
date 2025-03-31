@@ -46,11 +46,11 @@ export const useStatsWithdrawal = (
         return false;
       }
       
-      // Call the withdraw function from aptosUtils
+      // Call the withdraw function from transactionUtils
       const success = await withdrawWinnings(amount, tokenType);
       
       if (success) {
-        // Update local stats (the actual DB update happens in the edge function)
+        // Update local stats (the database is updated in the edge function)
         const newStats = { ...stats };
         if (tokenType === "APT") {
           newStats.aptWon -= amount;
@@ -62,7 +62,7 @@ export const useStatsWithdrawal = (
         
         toast({
           title: "Withdrawal Successful",
-          description: `${amount} ${tokenType} has been sent to your wallet`,
+          description: `${amount} ${tokenType} has been sent to your wallet. Check your wallet for the transaction!`,
         });
         
         return true;

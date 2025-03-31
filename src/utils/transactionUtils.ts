@@ -39,9 +39,6 @@ export const placeBet = async (
         const response = await window.aptos.signAndSubmitTransaction(payload);
         console.log("Transaction submitted:", response);
         
-        // For testing, we would wait for transaction confirmation
-        // In production, you'd implement proper transaction tracking
-        
         return true;
       } catch (error: any) {
         console.error("Transaction error:", error);

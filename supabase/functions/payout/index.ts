@@ -1,7 +1,13 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
-import { AptosClient, AptosAccount, TxnBuilderTypes, BCS } from "https://esm.sh/aptos@1.20.0";
+import { 
+  AptosClient, 
+  AptosAccount, 
+  TxnBuilderTypes, 
+  BCS,
+  HexString
+} from "https://esm.sh/aptos@1.20.0";
 
 // CORS headers for the function
 const corsHeaders = {
@@ -12,10 +18,9 @@ const corsHeaders = {
 // Network settings
 const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
 const NETWORK = "testnet";
-
-// Token settings
 const EMOJICOIN_ADDRESS = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27::coin_factory::Emojicoin";
 
+// Serve the function
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -34,7 +39,7 @@ serve(async (req) => {
       throw new Error("Escrow private key not configured");
     }
 
-    // Initialize Aptos client 
+    // Initialize Aptos client using the newer approach
     const client = new AptosClient(NODE_URL);
 
     // Parse request URL to determine operation type
@@ -112,13 +117,53 @@ serve(async (req) => {
       }
 
       try {
-        // Instead of trying to execute blockchain transaction with the failing code
-        // Let's mock a successful transaction for now and update the database accordingly
-        // In production, this should be replaced with proper blockchain transaction code
+        // Initialize the escrow account using the private key
+        const escrowAccount = AptosAccount.fromPrivateKeyHex(escrowPrivateKey);
+        console.log("Escrow account initialized:", escrowAccount.address().hex());
+
+        // Construct the transaction payload for transferring tokens
+        let payload;
+        let rawTxn;
+        const amountInOctas = Math.floor(amount * 100000000); // Convert APT to octas (8 decimals)
+
+        if (tokenType === "APT") {
+          // Create a transaction payload for APT transfer
+          payload = {
+            function: "0x1::coin::transfer",
+            type_arguments: ["0x1::aptos_coin::AptosCoin"],
+            arguments: [playerAddress, amountInOctas.toString()]
+          };
+        } else {
+          // For testing, still use APT but will be replaced with Emojicoin on mainnet
+          payload = {
+            function: "0x1::coin::transfer",
+            type_arguments: ["0x1::aptos_coin::AptosCoin"],
+            arguments: [playerAddress, amountInOctas.toString()]
+          };
+        }
+
+        console.log("Transaction payload created:", payload);
+
+        // Create signed transaction
+        const rawTx = await client.generateTransaction(escrowAccount.address(), payload);
+        console.log("Transaction generated");
+
+        const signedTx = await client.signTransaction(escrowAccount, rawTx);
+        console.log("Transaction signed");
+
+        // Submit transaction
+        const transactionRes = await client.submitTransaction(signedTx);
+        console.log("Transaction submitted:", transactionRes.hash);
         
-        // Mock transaction hash
-        const mockTxHash = `tx_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+        // Check transaction result (can be expanded)
+        const txResult = await client.waitForTransaction(transactionRes.hash);
+        console.log("Transaction result:", txResult);
         
+        // Early fail if the transaction failed
+        if (txResult.success === false) {
+          throw new Error(`Transaction failed: ${txResult.vm_status}`);
+        }
+
         // Update the player's stats to reduce their balance
         const updateField = tokenType === "APT" ? "apt_won" : "emoji_won";
         const { error: updateError } = await supabase
@@ -137,7 +182,7 @@ serve(async (req) => {
         const { error: updateTxError } = await supabase
           .from('game_transactions')
           .update({
-            transaction_hash: mockTxHash,
+            transaction_hash: transactionRes.hash,
             status: 'completed'
           })
           .eq('id', data.id);
@@ -152,7 +197,7 @@ serve(async (req) => {
           JSON.stringify({
             success: true,
             message: `Successfully processed withdrawal of ${amount} ${tokenType} to ${playerAddress}`,
-            transactionHash: mockTxHash
+            transactionHash: transactionRes.hash
           }),
           { 
             status: 200, 
@@ -178,7 +223,7 @@ serve(async (req) => {
       }
     }
     
-    // Handle payout requests (original functionality)
+    // Handle payout requests (when winning a game)
     else if (req.method === "POST") {
       // Parse request body
       const { playerAddress, amount, tokenType, gameId } = await req.json();
@@ -194,6 +239,9 @@ serve(async (req) => {
       // Log the payout request
       console.log(`Processing payout: ${amount} ${tokenType} to ${playerAddress} for game ${gameId}`);
 
+      // For payout requests, we just update the database
+      // since these are virtual winnings that can be withdrawn later
+      
       // Save transaction to database
       const { data, error } = await supabase
         .from('game_transactions')
@@ -202,7 +250,7 @@ serve(async (req) => {
           amount: amount,
           token_type: tokenType,
           game_id: gameId,
-          status: 'processing'
+          status: 'completed'
         })
         .select()
         .single();
@@ -214,106 +262,74 @@ serve(async (req) => {
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-
-      try {
-        // For now, mock a successful transaction similar to the withdrawal case
-        const mockTxHash = `tx_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
         
-        // Update player stats
-        const { data: existingStats, error: statsQueryError } = await supabase
-          .from('player_stats')
-          .select('*')
-          .eq('wallet_address', playerAddress)
-          .maybeSingle();
+      // Update player stats
+      const { data: existingStats, error: statsQueryError } = await supabase
+        .from('player_stats')
+        .select('*')
+        .eq('wallet_address', playerAddress)
+        .maybeSingle();
 
-        if (statsQueryError) {
-          console.error("Error fetching player stats:", statsQueryError);
-          throw new Error(`Failed to fetch player stats: ${statsQueryError.message}`);
-        }
-        
-        // Update the appropriate token field
-        const updateField = tokenType === "APT" ? "apt_won" : "emoji_won";
-        const currentAmount = existingStats ? existingStats[updateField] || 0 : 0;
-        
-        if (existingStats) {
-          // Update existing stats
-          const { error: updateError } = await supabase
-            .from('player_stats')
-            .update({
-              [updateField]: currentAmount + amount
-            })
-            .eq('wallet_address', playerAddress);
-            
-          if (updateError) {
-            console.error("Error updating player stats:", updateError);
-            throw new Error(`Failed to update player stats: ${updateError.message}`);
-          }
-        } else {
-          // Create new stats record for this player
-          const newStats = {
-            wallet_address: playerAddress,
-            games_played: 1,
-            wins: 1,
-            losses: 0,
-            win_rate: 100,
-            apt_won: tokenType === "APT" ? amount : 0,
-            emoji_won: tokenType === "EMOJICOIN" ? amount : 0,
-            referrals: 0
-          };
-          
-          const { error: insertError } = await supabase
-            .from('player_stats')
-            .insert(newStats);
-            
-          if (insertError) {
-            console.error("Error creating player stats:", insertError);
-            throw new Error(`Failed to create player stats: ${insertError.message}`);
-          }
-        }
-
-        // Update transaction with hash
-        const { error: updateError } = await supabase
-          .from('game_transactions')
-          .update({
-            transaction_hash: mockTxHash,
-            status: 'completed'
-          })
-          .eq('id', data.id);
-
-        if (updateError) {
-          console.error("Error updating transaction:", updateError);
-          throw new Error(`Failed to update transaction: ${updateError.message}`);
-        }
-
-        // Return success response
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: `Successfully processed payout of ${amount} ${tokenType} to ${playerAddress}`,
-            transactionHash: mockTxHash
-          }),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, "Content-Type": "application/json" } 
-          }
-        );
-      } catch (txError) {
-        console.error("Transaction error:", txError);
-        
-        // Update transaction status to failed
-        await supabase
-          .from('game_transactions')
-          .update({
-            status: 'failed',
-            transaction_hash: `error: ${txError.message}`
-          })
-          .eq('id', data.id);
-
-        return new Response(
-          JSON.stringify({ success: false, error: `Transaction failed: ${txError.message}` }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (statsQueryError) {
+        console.error("Error fetching player stats:", statsQueryError);
+        throw new Error(`Failed to fetch player stats: ${statsQueryError.message}`);
       }
+      
+      // Update the appropriate token field
+      const updateField = tokenType === "APT" ? "apt_won" : "emoji_won";
+      const currentAmount = existingStats ? existingStats[updateField] || 0 : 0;
+      
+      if (existingStats) {
+        // Update existing stats
+        const { error: updateError } = await supabase
+          .from('player_stats')
+          .update({
+            [updateField]: currentAmount + amount
+          })
+          .eq('wallet_address', playerAddress);
+          
+        if (updateError) {
+          console.error("Error updating player stats:", updateError);
+          throw new Error(`Failed to update player stats: ${updateError.message}`);
+        }
+      } else {
+        // Create new stats record for this player
+        const newStats = {
+          wallet_address: playerAddress,
+          games_played: 1,
+          wins: 1,
+          losses: 0,
+          win_rate: 100,
+          apt_won: tokenType === "APT" ? amount : 0,
+          emoji_won: tokenType === "EMOJICOIN" ? amount : 0,
+          referrals: 0
+        };
+        
+        const { error: insertError } = await supabase
+          .from('player_stats')
+          .insert(newStats);
+          
+        if (insertError) {
+          console.error("Error creating player stats:", insertError);
+          throw new Error(`Failed to create player stats: ${insertError.message}`);
+        }
+      }
+
+      // Return success response with a mock transaction hash since no actual blockchain
+      // transaction occurs when recording winnings
+      const mockTxHash = `payout_tx_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Successfully processed payout of ${amount} ${tokenType} to ${playerAddress}`,
+          transactionHash: mockTxHash
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
     } else {
       return new Response(
         JSON.stringify({ success: false, error: "Method not allowed" }),
@@ -328,19 +344,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Helper function definition kept as placeholder but not used anymore
-// This function is currently broken, which is why we're using mocked transactions
-async function processBlockchainTransaction(
-  client: AptosClient,
-  privateKeyHex: string,
-  recipientAddress: string,
-  amount: number,
-  tokenType: string
-) {
-  // Just a placeholder that returns a mock transaction result
-  return {
-    hash: `mock_tx_${Date.now()}`,
-    result: { success: true }
-  };
-}
