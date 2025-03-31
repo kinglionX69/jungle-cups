@@ -96,10 +96,12 @@ const StatsCard = ({ stats, isLoading, walletAddress = "" }: StatsCardProps) => 
             <div className="pt-2">
               {showWithdraw ? (
                 <WithdrawFunds
-                  walletAddress={walletAddress}
-                  aptBalance={stats.aptWon}
-                  emojiBalance={stats.emojiWon}
-                  onWithdrawComplete={handleWithdrawComplete}
+                  stats={stats}
+                  isWithdrawing={false}
+                  onWithdraw={async () => {
+                    handleWithdrawComplete();
+                    return true;
+                  }}
                 />
               ) : (
                 <Button 
