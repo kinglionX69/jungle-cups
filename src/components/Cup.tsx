@@ -33,13 +33,15 @@ const Cup = ({
     }
   }, [isShuffling, index]);
 
-  // Determine if the cup is clickable
+  // Determine if the cup is clickable - explicitly check !isShuffling
   const isClickable = !isShuffling && !gameEnded && !isLifted;
 
-  // Handle cup click with additional check for shuffling state
+  // Handle cup click with additional check to ensure shuffling is complete
   const handleCupClick = () => {
-    if (isClickable && !isShuffling) {
+    if (isClickable) {
       onClick(index);
+    } else if (isShuffling) {
+      console.log("Cannot select cup during shuffling");
     }
   };
 
@@ -58,7 +60,7 @@ const Cup = ({
           "transform transition-all duration-300"
         )}
         onClick={handleCupClick}
-        style={{ zIndex: 10 }} // Keep high z-index for the cup regardless of state
+        style={{ zIndex: isShuffling ? 5 : 10 }} // Lower z-index during shuffling to ensure overlay is on top
       >
         <div className="cup-base"></div>
       </div>
@@ -69,7 +71,7 @@ const Cup = ({
           isLifted ? "bottom-0" : "bottom-12"
         )}></div>
       )}
-      <p className="mt-2 font-bungee text-lg relative z-20">{index + 1}</p> {/* Increased z-index to stay above cups */}
+      <p className="mt-2 font-bungee text-lg relative z-20">{index + 1}</p>
     </div>
   );
 };
