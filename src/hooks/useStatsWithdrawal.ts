@@ -10,6 +10,8 @@ export const useStatsWithdrawal = (
   setStats: (stats: PlayerStats) => void
 ) => {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [lastTxHash, setLastTxHash] = useState<string | null>(null);
+  const [lastTxExplorerUrl, setLastTxExplorerUrl] = useState<string | null>(null);
   const { toast } = useToast();
   
   // Withdraw winnings to player's wallet
@@ -47,9 +49,9 @@ export const useStatsWithdrawal = (
       }
       
       // Call the withdraw function from transactionUtils
-      const success = await withdrawWinnings(amount, tokenType);
+      const result = await withdrawWinnings(amount, tokenType);
       
-      if (success) {
+      if (result.success) {
         // Update local stats (the database is updated in the edge function)
         const newStats = { ...stats };
         if (tokenType === "APT") {
@@ -60,18 +62,51 @@ export const useStatsWithdrawal = (
         
         setStats(newStats);
         
+        // Store transaction details
+        if (result.txHash) {
+          setLastTxHash(result.txHash);
+        }
+        
+        if (result.explorerUrl) {
+          setLastTxExplorerUrl(result.explorerUrl);
+        }
+        
+        // Show success message with explorer link if available
         toast({
           title: "Withdrawal Successful",
-          description: `${amount} ${tokenType} has been sent to your wallet. Check your wallet for the transaction!`,
+          description: result.message || `${amount} ${tokenType} has been sent to your wallet.`,
+          action: result.explorerUrl ? (
+            <a 
+              href={result.explorerUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center px-3 py-1 text-xs font-medium text-white bg-jungle-green hover:bg-jungle-darkGreen rounded"
+            >
+              View Transaction
+            </a>
+          ) : undefined,
         });
         
         return true;
       } else {
+        // Show error message with details if available
         toast({
           title: "Withdrawal Failed",
-          description: "There was an error processing your withdrawal. Please try again later.",
+          description: result.message || "There was an error processing your withdrawal.",
           variant: "destructive",
         });
+        
+        // If there are additional details, show them in a secondary toast
+        if (result.details) {
+          setTimeout(() => {
+            toast({
+              title: "Additional Details",
+              description: result.details,
+              variant: "destructive",
+            });
+          }, 500);
+        }
+        
         return false;
       }
     } catch (error) {
@@ -89,6 +124,8 @@ export const useStatsWithdrawal = (
   
   return {
     isWithdrawing,
-    withdrawFunds
+    withdrawFunds,
+    lastTxHash,
+    lastTxExplorerUrl
   };
 };

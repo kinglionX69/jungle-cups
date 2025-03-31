@@ -12,22 +12,34 @@ import {
 import { PlayerStats } from "@/types/gameTypes";
 import { CreditCard, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { 
+  Alert,
+  AlertTitle, 
+  AlertDescription 
+} from "@/components/ui/alert";
 import { EXPLORER_URL } from "@/utils/aptosConfig";
 
 interface WithdrawFundsProps {
   stats: PlayerStats;
   isWithdrawing: boolean;
   onWithdraw: (amount: number, tokenType: string) => Promise<boolean>;
+  lastTxHash?: string | null;
+  lastTxExplorerUrl?: string | null;
 }
 
 const MIN_APT_WITHDRAWAL = 0.1;
 // Reduced for testing purposes
 const MIN_EMOJICOIN_WITHDRAWAL = 0.1; // Will be increased for mainnet
 
-const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps) => {
+const WithdrawFunds = ({ 
+  stats, 
+  isWithdrawing, 
+  onWithdraw, 
+  lastTxHash,
+  lastTxExplorerUrl 
+}: WithdrawFundsProps) => {
   const [tokenType, setTokenType] = useState<string>("APT");
   const [amount, setAmount] = useState<string>("");
-  const [txHash, setTxHash] = useState<string>("");
   const { toast } = useToast();
   
   // Get current balance based on token type
@@ -81,13 +93,6 @@ const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps)
     
     if (success) {
       setAmount("");
-      // Store transaction hash for explorer link (would need to be passed from the hook)
-      // This would need to be modified to capture the actual transaction hash
-      
-      toast({
-        title: "Withdrawal Initiated",
-        description: `${amountNum} ${tokenType} withdrawal has been initiated. Check your wallet for the transaction!`,
-      });
     }
   };
   
@@ -159,8 +164,30 @@ const WithdrawFunds = ({ stats, isWithdrawing, onWithdraw }: WithdrawFundsProps)
               onClick={handleWithdraw}
               disabled={isWithdrawing || !amount || parseFloat(amount) <= 0 || parseFloat(amount) > getCurrentBalance()}
             >
-              {isWithdrawing ? "Processing..." : "Withdraw to Wallet"}
+              {isWithdrawing ? "Processing Blockchain Transaction..." : "Withdraw to Wallet"}
             </Button>
+            
+            {/* Show last transaction details */}
+            {lastTxHash && (
+              <Alert className="mt-3 bg-jungle-lightGreen/20">
+                <AlertTitle>Last Transaction</AlertTitle>
+                <AlertDescription className="text-xs">
+                  <div className="flex flex-col space-y-1">
+                    <span className="truncate">TxHash: {lastTxHash}</span>
+                    {lastTxExplorerUrl && (
+                      <a 
+                        href={lastTxExplorerUrl}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center text-jungle-green hover:text-jungle-darkGreen"
+                      >
+                        View on Explorer <ExternalLink className="ml-1 h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
             
             <p className="text-xs text-muted-foreground">
               Withdrawals are processed on the Aptos blockchain. Tokens will be transferred directly to your connected wallet.

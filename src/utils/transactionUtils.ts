@@ -97,16 +97,22 @@ export const placeBet = async (
 export const withdrawWinnings = async (
   amount: number, 
   tokenType: string = "APT"
-): Promise<boolean> => {
+): Promise<{ success: boolean; message?: string; txHash?: string; explorerUrl?: string }> => {
   try {
     if (!window.aptos) {
       console.error("Wallet not connected");
-      return false;
+      return {
+        success: false,
+        message: "Wallet not connected. Please connect your wallet first."
+      };
     }
 
     if (amount <= 0) {
       console.error("Invalid withdrawal amount");
-      return false;
+      return {
+        success: false,
+        message: "Invalid withdrawal amount. Please enter a positive number."
+      };
     }
     
     // Get player wallet address
@@ -114,7 +120,10 @@ export const withdrawWinnings = async (
     
     if (!playerAddress) {
       console.error("Could not get player address");
-      return false;
+      return {
+        success: false,
+        message: "Could not retrieve your wallet address. Please reconnect your wallet."
+      };
     }
     
     console.log(`Initiating withdrawal of ${amount} ${tokenType} to ${playerAddress}`);
@@ -130,19 +139,35 @@ export const withdrawWinnings = async (
     
     if (error) {
       console.error("Error calling withdrawal function:", error);
-      return false;
+      return {
+        success: false,
+        message: `Error processing withdrawal: ${error.message || "Unknown error"}`
+      };
     }
     
     if (data && data.success) {
       console.log(`Successfully initiated withdrawal of ${amount} ${tokenType} to ${playerAddress}`);
       console.log(`Transaction hash: ${data.transactionHash}`);
-      return true;
+      
+      return {
+        success: true,
+        message: `Withdrawal of ${amount} ${tokenType} successful! Tokens are on their way to your wallet.`,
+        txHash: data.transactionHash,
+        explorerUrl: data.explorerUrl
+      };
     } else {
       console.error(`Withdrawal failed: ${data?.error || 'Unknown error'}`);
-      return false;
+      return {
+        success: false,
+        message: data?.error || "Withdrawal failed. Please try again later.",
+        ...(data?.details ? { details: data.details } : {})
+      };
     }
   } catch (error) {
     console.error("Error withdrawing winnings:", error);
-    return false;
+    return {
+      success: false,
+      message: `Unexpected error: ${error.message || "Unknown error"}`
+    };
   }
 };

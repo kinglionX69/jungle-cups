@@ -1,13 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
-import { 
-  AptosClient, 
-  AptosAccount, 
-  TxnBuilderTypes, 
-  BCS,
-  HexString
-} from "https://esm.sh/aptos@1.20.0";
+import { AptosClient, AptosAccount, Types } from "https://esm.sh/aptos@1.20.0";
 
 // CORS headers for the function
 const corsHeaders = {
@@ -39,7 +33,7 @@ serve(async (req) => {
       throw new Error("Escrow private key not configured");
     }
 
-    // Initialize Aptos client using the newer approach
+    // Initialize Aptos client
     const client = new AptosClient(NODE_URL);
 
     // Parse request URL to determine operation type
@@ -95,7 +89,7 @@ serve(async (req) => {
       // Generate a unique withdrawal ID
       const withdrawalId = `withdrawal_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
 
-      // Save transaction to database
+      // Save transaction to database as processing
       const { data, error } = await supabase
         .from('game_transactions')
         .insert({
@@ -121,47 +115,96 @@ serve(async (req) => {
         const escrowAccount = AptosAccount.fromPrivateKeyHex(escrowPrivateKey);
         console.log("Escrow account initialized:", escrowAccount.address().hex());
 
-        // Construct the transaction payload for transferring tokens
-        let payload;
-        let rawTxn;
-        const amountInOctas = Math.floor(amount * 100000000); // Convert APT to octas (8 decimals)
+        // Convert amount to octas (8 decimals)
+        const amountInOctas = Math.floor(amount * 100000000).toString(); 
 
+        // Create transaction payload
+        let functionName, typeArguments, functionArguments;
+        
         if (tokenType === "APT") {
-          // Create a transaction payload for APT transfer
-          payload = {
-            function: "0x1::coin::transfer",
-            type_arguments: ["0x1::aptos_coin::AptosCoin"],
-            arguments: [playerAddress, amountInOctas.toString()]
-          };
+          functionName = "0x1::coin::transfer";
+          typeArguments = ["0x1::aptos_coin::AptosCoin"];
+          functionArguments = [playerAddress, amountInOctas];
         } else {
           // For testing, still use APT but will be replaced with Emojicoin on mainnet
-          payload = {
-            function: "0x1::coin::transfer",
-            type_arguments: ["0x1::aptos_coin::AptosCoin"],
-            arguments: [playerAddress, amountInOctas.toString()]
-          };
+          functionName = "0x1::coin::transfer";
+          typeArguments = ["0x1::aptos_coin::AptosCoin"];
+          functionArguments = [playerAddress, amountInOctas];
+        }
+        
+        // Generate transaction with proper error handling
+        let txnRequest;
+        try {
+          txnRequest = await client.generateTransaction(
+            escrowAccount.address().hex(),
+            {
+              function: functionName,
+              type_arguments: typeArguments,
+              arguments: functionArguments,
+            }
+          );
+          console.log("Transaction generated successfully");
+        } catch (genError) {
+          console.error("Error generating transaction:", genError);
+          throw new Error(`Failed to generate transaction: ${genError.message}`);
         }
 
-        console.log("Transaction payload created:", payload);
+        // Sign transaction with proper error handling
+        let signedTxn;
+        try {
+          signedTxn = await client.signTransaction(escrowAccount, txnRequest);
+          console.log("Transaction signed successfully");
+        } catch (signError) {
+          console.error("Error signing transaction:", signError);
+          throw new Error(`Failed to sign transaction: ${signError.message}`);
+        }
 
-        // Create signed transaction
-        const rawTx = await client.generateTransaction(escrowAccount.address(), payload);
-        console.log("Transaction generated");
+        // Submit transaction with proper error handling
+        let transactionRes;
+        try {
+          transactionRes = await client.submitTransaction(signedTxn);
+          console.log("Transaction submitted successfully:", transactionRes.hash);
+        } catch (submitError) {
+          console.error("Error submitting transaction:", submitError);
+          throw new Error(`Failed to submit transaction: ${submitError.message}`);
+        }
 
-        const signedTx = await client.signTransaction(escrowAccount, rawTx);
-        console.log("Transaction signed");
+        // Wait for transaction completion with timeout
+        let txResult;
+        try {
+          txResult = await Promise.race([
+            client.waitForTransaction(transactionRes.hash),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error("Transaction confirmation timeout")), 30000)
+            )
+          ]);
+          console.log("Transaction confirmed:", txResult);
+        } catch (waitError) {
+          console.error("Error waiting for transaction:", waitError);
+          
+          // Update transaction as pending since we don't know if it went through
+          await supabase
+            .from('game_transactions')
+            .update({
+              transaction_hash: transactionRes.hash,
+              status: 'pending'
+            })
+            .eq('id', data.id);
+            
+          throw new Error(`Waiting for transaction timed out or failed: ${waitError.message}`);
+        }
 
-        // Submit transaction
-        const transactionRes = await client.submitTransaction(signedTx);
-        console.log("Transaction submitted:", transactionRes.hash);
-        
-        // Check transaction result (can be expanded)
-        const txResult = await client.waitForTransaction(transactionRes.hash);
-        console.log("Transaction result:", txResult);
-        
         // Early fail if the transaction failed
         if (txResult.success === false) {
-          throw new Error(`Transaction failed: ${txResult.vm_status}`);
+          await supabase
+            .from('game_transactions')
+            .update({
+              transaction_hash: transactionRes.hash,
+              status: 'failed',
+            })
+            .eq('id', data.id);
+            
+          throw new Error(`Transaction failed on chain: ${txResult.vm_status}`);
         }
 
         // Update the player's stats to reduce their balance
@@ -197,7 +240,8 @@ serve(async (req) => {
           JSON.stringify({
             success: true,
             message: `Successfully processed withdrawal of ${amount} ${tokenType} to ${playerAddress}`,
-            transactionHash: transactionRes.hash
+            transactionHash: transactionRes.hash,
+            explorerUrl: `https://explorer.aptoslabs.com/txn/${transactionRes.hash}?network=${NETWORK}`
           }),
           { 
             status: 200, 
@@ -217,7 +261,11 @@ serve(async (req) => {
           .eq('id', data.id);
 
         return new Response(
-          JSON.stringify({ success: false, error: `Transaction failed: ${txError.message}` }),
+          JSON.stringify({ 
+            success: false, 
+            error: `Transaction failed: ${txError.message}`,
+            details: "The blockchain transaction could not be completed, but your balance has not been affected. Try again later."
+          }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }

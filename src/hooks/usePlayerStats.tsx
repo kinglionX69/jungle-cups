@@ -8,7 +8,7 @@ import { UsePlayerStatsReturn } from "./usePlayerStatsTypes";
 export const usePlayerStats = (walletAddress: string): UsePlayerStatsReturn => {
   const { stats, setStats, isLoading, loadStats } = useStatsLoader();
   const { updateStats, addReferral } = useStatsUpdater(walletAddress, stats, setStats);
-  const { isWithdrawing, withdrawFunds } = useStatsWithdrawal(walletAddress, stats, setStats);
+  const { isWithdrawing, withdrawFunds, lastTxHash, lastTxExplorerUrl } = useStatsWithdrawal(walletAddress, stats, setStats);
   
   // Load stats from database when wallet changes
   useEffect(() => {
@@ -34,6 +34,8 @@ export const usePlayerStats = (walletAddress: string): UsePlayerStatsReturn => {
     loadStats,
     updateStats,
     addReferral,
-    withdrawFunds
+    withdrawFunds,
+    lastTxHash,
+    lastTxExplorerUrl
   };
 };
