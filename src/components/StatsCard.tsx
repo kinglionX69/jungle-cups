@@ -98,7 +98,7 @@ const StatsCard = ({ stats, isLoading, walletAddress = "" }: StatsCardProps) => 
                 <WithdrawFunds
                   stats={stats}
                   isWithdrawing={false}
-                  onWithdraw={async () => {
+                  onWithdraw={async (amount, tokenType) => {
                     handleWithdrawComplete();
                     return true;
                   }}
