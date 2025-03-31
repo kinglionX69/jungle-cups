@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Star, Coin, Users } from "lucide-react";
+import { Trophy, Star, Coins, Users } from "lucide-react";
 
 interface LeaderboardPlayer {
   address: string;
@@ -80,7 +80,7 @@ const LeaderboardCard = ({ aptLeaders, emojiLeaders }: LeaderboardCardProps) => 
               <span className="hidden sm:inline">Win Rate</span>
             </TabsTrigger>
             <TabsTrigger value="most-earned" className="flex items-center gap-1">
-              <Coin className="h-4 w-4" />
+              <Coins className="h-4 w-4" />
               <span className="hidden sm:inline">Most Earned</span>
             </TabsTrigger>
           </TabsList>
