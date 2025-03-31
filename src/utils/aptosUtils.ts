@@ -1,5 +1,6 @@
 // Aptos wallet integration utilities
 import { AptosClient, Types, AptosAccount } from "aptos";
+import { supabase } from "@/integrations/supabase/client";
 
 // Testnet configuration
 export const NETWORK = "testnet";
@@ -349,46 +350,35 @@ export const transferWinnings = async (
     
     console.log(`Initiating transfer of ${amount} ${tokenType} to ${playerAddress}`);
     
-    // In a production environment, you would call a backend API here
-    // The backend would verify the winning, check escrow balance, and execute the transaction
+    // Generate a unique game ID for tracking
+    const gameId = `game_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
     
-    // Example API call (replace with your actual API endpoint)
-    const apiEndpoint = `${window.location.origin}/api/payout`;
-    
-    const response = await fetch(apiEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    // Call the Supabase Edge Function to process the payout
+    const { data, error } = await supabase.functions.invoke('payout', {
+      body: {
         playerAddress,
         amount,
         tokenType,
-        gameId: Date.now().toString(), // Some unique identifier for the game
-      }),
+        gameId
+      }
     });
     
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+    if (error) {
+      console.error("Error calling payout function:", error);
+      return false;
     }
     
-    const result = await response.json();
-    
-    if (result.success) {
+    if (data && data.success) {
       console.log(`Successfully initiated payout of ${amount} ${tokenType} to ${playerAddress}`);
-      console.log(`Transaction hash: ${result.transactionHash}`);
+      console.log(`Transaction hash: ${data.transactionHash}`);
       return true;
     } else {
-      console.error(`Payout failed: ${result.error}`);
+      console.error(`Payout failed: ${data?.error || 'Unknown error'}`);
       return false;
     }
   } catch (error) {
     console.error("Error transferring winnings:", error);
-    
-    // For demo/testing purposes, simulate a successful transfer
-    // Remove this in production
-    console.log("SIMULATING successful transfer for demonstration");
-    return true;
+    return false;
   }
 };
 

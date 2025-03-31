@@ -69,15 +69,32 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
         // Process winnings - double the bet amount
         const winAmount = currentBet.amount * 2;
         
-        // Get player wallet address for payout
-        const playerAddress = await window.aptos.account().then(acc => acc.address);
-        await transferWinnings(playerAddress, winAmount, currentBet.tokenType);
-        
-        toast({
-          title: "You Won! 🎉",
-          description: `${winAmount} ${currentBet.tokenType} has been sent to your wallet`,
-          variant: "default",
-        });
+        try {
+          // Get player wallet address for payout
+          const playerAddress = await window.aptos.account().then(acc => acc.address);
+          const payoutSuccess = await transferWinnings(playerAddress, winAmount, currentBet.tokenType);
+          
+          if (payoutSuccess) {
+            toast({
+              title: "You Won! 🎉",
+              description: `${winAmount} ${currentBet.tokenType} has been sent to your wallet`,
+              variant: "default",
+            });
+          } else {
+            toast({
+              title: "Payout Processing",
+              description: "Your winnings are being processed. They'll appear in your wallet soon.",
+              variant: "default",
+            });
+          }
+        } catch (error) {
+          console.error("Error processing winnings:", error);
+          toast({
+            title: "Processing Error",
+            description: "There was an issue processing your winnings. Please contact support.",
+            variant: "destructive",
+          });
+        }
       } else {
         playLoseSound();
         toast({
