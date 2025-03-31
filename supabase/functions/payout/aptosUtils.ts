@@ -1,5 +1,5 @@
 
-import { AptosClient, Types, HexString } from "https://esm.sh/aptos@1.20.0";
+import { AptosClient, TxnBuilderTypes, HexString, BCS } from "https://esm.sh/aptos@1.37.1";
 
 // Network settings
 export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
@@ -17,17 +17,30 @@ export const initializeAptosAccount = (privateKeyHex: string) => {
       privateKeyHex = privateKeyHex.slice(2);
     }
     
-    console.log("Creating account with Aptos SDK version 1.20.0");
+    console.log("Creating account with Aptos SDK version 1.37.1");
     
-    // Convert the hex string to a Uint8Array
-    const privateKeyBytes = new HexString(privateKeyHex).toUint8Array();
+    // Convert the hex string to a Uint8Array for the private key
+    const privateKeyBytes = HexString.ensure(privateKeyHex).toUint8Array();
     
-    // Create the account using SDK version 1.20.0
-    const account = new Types.AccountKey(privateKeyBytes);
+    // Create an Ed25519 keypair using the SDK's compatible approach for Deno
+    const secretKey = new Uint8Array([...privateKeyBytes, ...new Uint8Array(32)]);
+    const keypair = TxnBuilderTypes.Ed25519PrivateKey.fromSecretKey(secretKey);
     
-    console.log("Account initialized with address:", account.address().hex());
+    // Get the account address from the public key
+    const publicKey = keypair.publicKey();
+    const authKey = TxnBuilderTypes.AuthenticationKey.ed25519(publicKey);
+    const accountAddress = authKey.derivedAddress();
     
-    return account;
+    console.log("Account initialized with address:", HexString.fromUint8Array(accountAddress.address).hex());
+    
+    return {
+      address: () => HexString.fromUint8Array(accountAddress.address),
+      publicKey: () => publicKey,
+      signBuffer: (data: Uint8Array) => {
+        const signature = keypair.sign(data);
+        return signature.toUint8Array();
+      }
+    };
   } catch (error) {
     console.error("Error initializing Aptos account:", error);
     throw new Error(`Failed to initialize Aptos account: ${error.message}`);

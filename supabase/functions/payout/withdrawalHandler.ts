@@ -1,7 +1,7 @@
 
 import { corsHeaders } from "./cors.ts";
 import { client, initializeAptosAccount } from "./aptosUtils.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
+import { BCS, TxnBuilderTypes, HexString } from "https://esm.sh/aptos@1.37.1";
 
 // Process withdrawal transactions
 export const handleWithdrawalTransaction = async (
@@ -75,134 +75,141 @@ export const handleWithdrawalTransaction = async (
       console.log("Escrow account initialized:", escrowAccount.address().hex());
 
       // Convert amount to octas (8 decimals)
-      const amountInOctas = Math.floor(amount * 100000000).toString(); 
+      const amountInOctas = Math.floor(amount * 100000000); 
 
-      // Create transaction payload
-      let functionName, typeArguments, functionArguments;
-      
-      if (tokenType === "APT") {
-        functionName = "0x1::coin::transfer";
-        typeArguments = ["0x1::aptos_coin::AptosCoin"];
-        functionArguments = [playerAddress, amountInOctas];
-      } else {
-        // For testing, still use APT but will be replaced with Emojicoin on mainnet
-        functionName = "0x1::coin::transfer";
-        typeArguments = ["0x1::aptos_coin::AptosCoin"];
-        functionArguments = [playerAddress, amountInOctas];
-      }
-      
-      // Generate transaction with proper error handling
-      let txnRequest;
-      try {
-        txnRequest = await client.generateTransaction(
-          escrowAccount.address().hex(),
-          {
-            function: functionName,
-            type_arguments: typeArguments,
-            arguments: functionArguments,
-          }
-        );
-        console.log("Transaction generated successfully");
-      } catch (genError) {
-        console.error("Error generating transaction:", genError);
-        throw new Error(`Failed to generate transaction: ${genError.message}`);
-      }
-
-      // Sign transaction with proper error handling
-      let signedTxn;
-      try {
-        signedTxn = await client.signTransaction(escrowAccount, txnRequest);
-        console.log("Transaction signed successfully");
-      } catch (signError) {
-        console.error("Error signing transaction:", signError);
-        throw new Error(`Failed to sign transaction: ${signError.message}`);
-      }
-
-      // Submit transaction with proper error handling
-      let transactionRes;
-      try {
-        transactionRes = await client.submitTransaction(signedTxn);
-        console.log("Transaction submitted successfully:", transactionRes.hash);
-      } catch (submitError) {
-        console.error("Error submitting transaction:", submitError);
-        throw new Error(`Failed to submit transaction: ${submitError.message}`);
-      }
-
-      // Wait for transaction completion with timeout
-      let txResult;
-      try {
-        txResult = await Promise.race([
-          client.waitForTransaction(transactionRes.hash),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Transaction confirmation timeout")), 30000)
-          )
-        ]);
-        console.log("Transaction confirmed:", txResult);
-      } catch (waitError) {
-        console.error("Error waiting for transaction:", waitError);
+      // Create transaction payload for APT transfer
+      if (tokenType === "APT" || tokenType === "EMOJICOIN") { // For testing, we use APT for both
+        // Get account sequence number
+        const senderAddress = escrowAccount.address().hex();
+        const senderAccount = await client.getAccount(senderAddress);
         
-        // Update transaction as pending since we don't know if it went through
-        await supabase
+        // Create a serializer for coin transfer function
+        const serializer = new BCS.Serializer();
+        
+        // Encode the recipient address as a 32-byte array
+        const recipientAddress = HexString.ensure(playerAddress).toUint8Array();
+        serializer.serializeFixedBytes(recipientAddress);
+        
+        // Encode the amount as a u64
+        serializer.serializeU64(BigInt(amountInOctas));
+        
+        // Prepare the transaction payload
+        const entryFunctionPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
+          TxnBuilderTypes.EntryFunction.natural(
+            "0x1::coin",
+            "transfer",
+            [new TxnBuilderTypes.TypeTagStruct(
+              TxnBuilderTypes.StructTag.fromString("0x1::aptos_coin::AptosCoin")
+            )],
+            [serializer.getBytes()]
+          )
+        );
+
+        // Prepare raw transaction
+        const rawTxn = new TxnBuilderTypes.RawTransaction(
+          TxnBuilderTypes.AccountAddress.fromHex(senderAddress),
+          BigInt(senderAccount.sequence_number),
+          entryFunctionPayload,
+          BigInt(2000), // Max gas amount
+          BigInt(100), // Gas price per unit
+          BigInt(Math.floor(Date.now() / 1000) + 600), // Expiration timestamp: 10 minutes from now
+          new TxnBuilderTypes.ChainId(parseInt(await client.getChainId()))
+        );
+
+        // Sign the transaction
+        const signingMessage = TxnBuilderTypes.RawTransactionWithData.new(rawTxn).inner();
+        const signature = escrowAccount.signBuffer(signingMessage);
+        
+        // Create and submit signed transaction
+        const authenticator = new TxnBuilderTypes.TransactionAuthenticatorEd25519(
+          new TxnBuilderTypes.Ed25519PublicKey(escrowAccount.publicKey().toBytes()),
+          new TxnBuilderTypes.Ed25519Signature(signature)
+        );
+        
+        const signedTxn = new TxnBuilderTypes.SignedTransaction(rawTxn, authenticator);
+        
+        // Submit the transaction
+        const transactionRes = await client.submitSignedBCSTransaction(signedTxn);
+        console.log("Transaction submitted successfully:", transactionRes.hash);
+
+        // Wait for transaction completion with timeout
+        let txResult;
+        try {
+          txResult = await Promise.race([
+            client.waitForTransaction(transactionRes.hash),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error("Transaction confirmation timeout")), 30000)
+            )
+          ]);
+          console.log("Transaction confirmed:", txResult);
+        } catch (waitError) {
+          console.error("Error waiting for transaction:", waitError);
+          
+          // Update transaction as pending since we don't know if it went through
+          await supabase
+            .from('game_transactions')
+            .update({
+              transaction_hash: transactionRes.hash,
+              status: 'pending'
+            })
+            .eq('id', data.id);
+            
+          throw new Error(`Waiting for transaction timed out or failed: ${waitError.message}`);
+        }
+
+        // Early fail if the transaction failed
+        if (txResult.success === false) {
+          await supabase
+            .from('game_transactions')
+            .update({
+              transaction_hash: transactionRes.hash,
+              status: 'failed',
+            })
+            .eq('id', data.id);
+            
+          throw new Error(`Transaction failed on chain: ${txResult.vm_status}`);
+        }
+
+        // Update the player's stats to reduce their balance
+        const updateField = tokenType === "APT" ? "apt_won" : "emoji_won";
+        const { error: updateError } = await supabase
+          .from('player_stats')
+          .update({
+            [updateField]: availableBalance - amount
+          })
+          .eq('wallet_address', playerAddress);
+
+        if (updateError) {
+          console.error("Error updating player stats:", updateError);
+          throw new Error(`Failed to update player stats: ${updateError.message}`);
+        }
+
+        // Update transaction with hash
+        const { error: updateTxError } = await supabase
           .from('game_transactions')
           .update({
             transaction_hash: transactionRes.hash,
-            status: 'pending'
+            status: 'completed'
           })
           .eq('id', data.id);
-          
-        throw new Error(`Waiting for transaction timed out or failed: ${waitError.message}`);
+
+        if (updateTxError) {
+          console.error("Error updating transaction:", updateTxError);
+          throw new Error(`Failed to update transaction: ${updateTxError.message}`);
+        }
+
+        // Return success response
+        return {
+          success: true,
+          status: 200,
+          message: `Successfully processed withdrawal of ${amount} ${tokenType} to ${playerAddress}`,
+          transactionHash: transactionRes.hash,
+          explorerUrl: `https://explorer.aptoslabs.com/txn/${transactionRes.hash}?network=${client.nodeUrl.includes('testnet') ? 'testnet' : 'mainnet'}`,
+          details: "Transaction successfully submitted to the blockchain."
+        };
+      } else {
+        throw new Error(`Unsupported token type: ${tokenType}`);
       }
-
-      // Early fail if the transaction failed
-      if (txResult.success === false) {
-        await supabase
-          .from('game_transactions')
-          .update({
-            transaction_hash: transactionRes.hash,
-            status: 'failed',
-          })
-          .eq('id', data.id);
-          
-        throw new Error(`Transaction failed on chain: ${txResult.vm_status}`);
-      }
-
-      // Update the player's stats to reduce their balance
-      const updateField = tokenType === "APT" ? "apt_won" : "emoji_won";
-      const { error: updateError } = await supabase
-        .from('player_stats')
-        .update({
-          [updateField]: availableBalance - amount
-        })
-        .eq('wallet_address', playerAddress);
-
-      if (updateError) {
-        console.error("Error updating player stats:", updateError);
-        throw new Error(`Failed to update player stats: ${updateError.message}`);
-      }
-
-      // Update transaction with hash
-      const { error: updateTxError } = await supabase
-        .from('game_transactions')
-        .update({
-          transaction_hash: transactionRes.hash,
-          status: 'completed'
-        })
-        .eq('id', data.id);
-
-      if (updateTxError) {
-        console.error("Error updating transaction:", updateTxError);
-        throw new Error(`Failed to update transaction: ${updateTxError.message}`);
-      }
-
-      // Return success response
-      return {
-        success: true,
-        status: 200,
-        message: `Successfully processed withdrawal of ${amount} ${tokenType} to ${playerAddress}`,
-        transactionHash: transactionRes.hash,
-        explorerUrl: `https://explorer.aptoslabs.com/txn/${transactionRes.hash}?network=${client.nodeUrl.includes('testnet') ? 'testnet' : 'mainnet'}`,
-        details: "Transaction successfully submitted to the blockchain."
-      };
     } catch (txError) {
       console.error("Transaction error:", txError);
       
