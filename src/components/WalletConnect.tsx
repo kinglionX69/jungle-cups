@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Trophy, Coins } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { NETWORK, NODE_URL, requestTestnetTokens } from "@/utils/aptosUtils";
+import { NETWORK, NODE_URL, requestTestnetTokens, initializeAccount } from "@/utils/aptosUtils";
 
 interface WalletConnectProps {
   onConnect: (wallet: string) => void;
@@ -14,6 +14,7 @@ interface WalletConnectProps {
 const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectProps) => {
   const [isInstalled, setIsInstalled] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -38,6 +39,9 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
                 description: `Please switch to Aptos ${NETWORK.charAt(0).toUpperCase() + NETWORK.slice(1)} in your wallet.`,
                 variant: "destructive",
               });
+            } else {
+              // Initialize account if needed when wallet connects on correct network
+              await initializeWallet();
             }
           } catch (error) {
             console.error("Error checking network:", error);
@@ -53,6 +57,23 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
     
     return () => window.removeEventListener("load", checkWallet);
   }, [connected, toast]);
+
+  const initializeWallet = async () => {
+    if (!walletAddress) return;
+    
+    try {
+      setIsInitializing(true);
+      const success = await initializeAccount(walletAddress);
+      
+      if (success) {
+        console.log("Wallet initialized successfully");
+      }
+    } catch (error) {
+      console.error("Error initializing wallet:", error);
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   const connectWallet = async () => {
     if (!window.aptos) {
@@ -88,6 +109,9 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
       
       setIsCorrectNetwork(true);
       onConnect(account);
+      
+      // Initialize the wallet if needed
+      await initializeWallet();
       
       toast({
         title: "Wallet Connected",
@@ -125,17 +149,20 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
       description: "Requesting testnet tokens. Please wait...",
     });
     
+    // Check if account is initialized first
+    await initializeWallet();
+    
     const success = await requestTestnetTokens(walletAddress);
     
     if (success) {
       toast({
         title: "Success",
-        description: "Testnet tokens have been requested. They should arrive shortly.",
+        description: "Testnet tokens have been requested. Please go to https://aptoslabs.com/testnet-faucet to claim tokens.",
       });
     } else {
       toast({
         title: "Request Failed",
-        description: "Failed to request testnet tokens. Please try again later.",
+        description: "Failed to initialize account. Please try again later.",
         variant: "destructive",
       });
     }
@@ -165,8 +192,15 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
         )}
         <div className="flex gap-2">
           {isCorrectNetwork && NETWORK === "testnet" && (
-            <Button variant="outline" size="sm" className="border-2 border-jungle-green" onClick={getTestnetTokens}>
-              <Coins className="mr-1 h-4 w-4" /> Get Test Tokens
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-2 border-jungle-green" 
+              onClick={getTestnetTokens}
+              disabled={isInitializing}
+            >
+              <Coins className="mr-1 h-4 w-4" /> 
+              {isInitializing ? "Initializing..." : "Get Test Tokens"}
             </Button>
           )}
           <Button variant="outline" className="border-2 border-jungle-orange" onClick={disconnectWallet}>

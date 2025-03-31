@@ -1,6 +1,6 @@
 
 // Aptos wallet integration utilities
-import { AptosClient, Types } from "aptos";
+import { AptosClient, Types, AptosAccount } from "aptos";
 
 // Testnet configuration
 export const NETWORK = "testnet";
@@ -17,6 +17,50 @@ export const MIN_EMOJICOIN_BALANCE = 1000; // 1000 Emojicoin
 
 // Initialize Aptos client
 const client = new AptosClient(NODE_URL);
+
+// Initialize account with APT coin if needed
+export const initializeAccount = async (address: string): Promise<boolean> => {
+  try {
+    console.log(`Checking if account ${address} needs initialization`);
+    
+    // Check if the account has already registered the coin store
+    const resources = await client.getAccountResources(address);
+    const hasAptosCoin = resources.some(
+      (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
+    );
+    
+    if (hasAptosCoin) {
+      console.log("Account already has APT coin store registered");
+      return true;
+    }
+    
+    console.log("Account needs APT coin store initialization");
+    
+    // If the wallet doesn't have the APT coin store yet, we need to register it
+    if (window.aptos) {
+      const payload: Types.TransactionPayload = {
+        type: "entry_function_payload",
+        function: "0x1::managed_coin::register",
+        type_arguments: ["0x1::aptos_coin::AptosCoin"],
+        arguments: []
+      };
+      
+      const response = await window.aptos.signAndSubmitTransaction(payload);
+      console.log("Coin registration transaction submitted:", response);
+      
+      // Wait for transaction to be confirmed
+      await client.waitForTransaction(response.hash);
+      console.log("Coin registration confirmed");
+      
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Error initializing account:", error);
+    return false;
+  }
+};
 
 // Check if wallet is connected
 export const isWalletConnected = async (): Promise<boolean> => {
@@ -92,14 +136,43 @@ export const placeBet = async (
         ]
       };
       
-      // Sign and submit the transaction
-      const response = await window.aptos.signAndSubmitTransaction(payload);
-      console.log("Transaction submitted:", response);
-      
-      // For testing, we would wait for transaction confirmation
-      // In production, you'd implement proper transaction tracking
-      
-      return true;
+      try {
+        // Check if account needs initialization first
+        const { address } = await window.aptos.account();
+        const isInitialized = await initializeAccount(address);
+        
+        if (!isInitialized) {
+          console.error("Could not initialize account");
+          return false;
+        }
+        
+        // Sign and submit the transaction
+        const response = await window.aptos.signAndSubmitTransaction(payload);
+        console.log("Transaction submitted:", response);
+        
+        // For testing, we would wait for transaction confirmation
+        // In production, you'd implement proper transaction tracking
+        
+        return true;
+      } catch (error: any) {
+        console.error("Transaction error:", error);
+        
+        // Check for specific error cases
+        const errorMessage = error.message || "";
+        if (errorMessage.includes("CoinStore") && errorMessage.includes("not found")) {
+          console.log("CoinStore not found, trying to initialize account first");
+          
+          const { address } = await window.aptos.account();
+          await initializeAccount(address);
+          
+          // Try again after initialization
+          const response = await window.aptos.signAndSubmitTransaction(payload);
+          console.log("Transaction after initialization:", response);
+          return true;
+        }
+        
+        throw error; // Re-throw for other errors
+      }
     } else {
       // For testnet testing, we'll simulate a successful Emojicoin transfer
       // In production, you'd implement the actual token transfer
@@ -135,9 +208,16 @@ export const transferWinnings = async (
 export const requestTestnetTokens = async (address: string): Promise<boolean> => {
   try {
     console.log(`Requesting testnet tokens for ${address}`);
-    // This would make an API call to the testnet faucet
-    // For now, we'll simulate a successful request
+    
+    // First, ensure the account has a coin store registered
+    await initializeAccount(address);
+    
+    // Implement proper faucet API call (there's no authorized web API for the faucet,
+    // but we can inform users to use the official faucet)
+    
+    // This is a mock implementation - in production, this might be handled by a backend service
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
     return true;
   } catch (error) {
     console.error("Error requesting testnet tokens:", error);
