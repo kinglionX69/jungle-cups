@@ -25,6 +25,13 @@ export const playShuffleSound = () => {
   audio.play().catch(e => console.error("Error playing sound:", e));
 };
 
+// Play cups down sound
+export const playCupsDownSound = () => {
+  const audio = new Audio("/sounds/click.mp3");
+  audio.volume = 0.4;
+  audio.play().catch(e => console.error("Error playing sound:", e));
+};
+
 // Play win sound
 export const playWinSound = () => {
   const audio = new Audio("/sounds/win.mp3");
@@ -44,4 +51,11 @@ export const playClickSound = () => {
   const audio = new Audio("/sounds/click.mp3");
   audio.volume = 0.3;
   audio.play().catch(e => console.error("Error playing sound:", e));
+};
+
+// Game timing constants (in milliseconds)
+export const TIMING = {
+  INITIAL_REVEAL: 3000,  // Time showing the ball at the beginning
+  CUPS_DOWN: 1000,       // Time to lower the cups
+  SHUFFLE_DURATION: 3000 // Time for shuffling animation
 };

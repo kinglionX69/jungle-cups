@@ -91,3 +91,59 @@
     @apply bg-white border-2 border-jungle-green rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-jungle-orange;
   }
 }
+
+/* Add cup shuffling animations */
+@keyframes cup-shuffle-1 {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(120px); }
+  50% { transform: translateX(60px); }
+  75% { transform: translateX(-80px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes cup-shuffle-2 {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-120px); }
+  50% { transform: translateX(80px); }
+  75% { transform: translateX(40px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes cup-shuffle-3 {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(80px); }
+  50% { transform: translateX(-120px); }
+  75% { transform: translateX(40px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes cup-reveal {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-60px); }
+  100% { transform: translateY(-60px); }
+}
+
+.animate-cup-shuffle-1 {
+  animation: cup-shuffle-1 3s ease-in-out;
+}
+
+.animate-cup-shuffle-2 {
+  animation: cup-shuffle-2 3s ease-in-out;
+}
+
+.animate-cup-shuffle-3 {
+  animation: cup-shuffle-3 3s ease-in-out;
+}
+
+.animate-cup-reveal {
+  animation: cup-reveal 0.5s ease-in-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}

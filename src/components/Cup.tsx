@@ -10,6 +10,7 @@ interface CupProps {
   isRevealed: boolean;
   gameEnded: boolean;
   selected: boolean;
+  isLifted: boolean;
 }
 
 const Cup = ({
@@ -20,6 +21,7 @@ const Cup = ({
   isRevealed,
   gameEnded,
   selected,
+  isLifted,
 }: CupProps) => {
   const [shuffleAnimation, setShuffleAnimation] = useState("");
   
@@ -32,23 +34,28 @@ const Cup = ({
   }, [isShuffling, index]);
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center relative">
       <div
         className={cn(
           "cup",
           shuffleAnimation,
           selected && "border-jungle-yellow border-4",
           isRevealed && selected && "animate-cup-reveal",
-          !isShuffling && !gameEnded && "animate-bounce",
+          isLifted && "transform -translate-y-12 transition-transform duration-700",
+          !isShuffling && !gameEnded && !isLifted && "animate-bounce",
           "transform transition-all duration-300"
         )}
-        onClick={() => !isShuffling && !gameEnded && onClick(index)}
+        onClick={() => !isShuffling && !gameEnded && !isLifted && onClick(index)}
       >
         <div className="cup-base"></div>
-        {hasBall && isRevealed && selected && (
-          <div className="ball absolute bottom-12 left-1/2 transform -translate-x-1/2 animate-fade-in"></div>
-        )}
       </div>
+      {/* Ball shown below cup when lifted, or inside cup when revealed */}
+      {hasBall && (isLifted || (isRevealed && selected)) && (
+        <div className={cn(
+          "ball absolute left-1/2 transform -translate-x-1/2 animate-fade-in",
+          isLifted ? "bottom-0" : "bottom-12"
+        )}></div>
+      )}
       <p className="mt-2 font-bungee text-lg">{index + 1}</p>
     </div>
   );

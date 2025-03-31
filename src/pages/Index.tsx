@@ -23,9 +23,11 @@ import {
   shuffleCups,
   didPlayerWin,
   playShuffleSound,
+  playCupsDownSound,
   playWinSound,
   playLoseSound,
   playClickSound,
+  TIMING
 } from "@/utils/gameUtils";
 
 const Index = () => {
@@ -43,6 +45,9 @@ const Index = () => {
   const [selectedCup, setSelectedCup] = useState(-1);
   const [isRevealed, setIsRevealed] = useState(false);
   const [playerWon, setPlayerWon] = useState(false);
+  const [areLifted, setAreLifted] = useState(false);
+  const [canBet, setCanBet] = useState(false);
+  const [initialReveal, setInitialReveal] = useState(false);
   
   // Bet states
   const [currentBet, setCurrentBet] = useState({
@@ -111,12 +116,70 @@ const Index = () => {
     }
   };
   
-  // Handle placing a bet and starting the game
+  // Starts the game sequence (initial reveal before betting)
+  const startGameSequence = () => {
+    // Initial setup - show cups lifted and ball visible
+    setGameStarted(true);
+    setGameEnded(false);
+    setSelectedCup(-1);
+    setIsRevealed(false);
+    setAreLifted(true);
+    setCanBet(false);
+    setInitialReveal(true);
+    
+    // Randomize initial ball position
+    const initialBallPosition = Math.floor(Math.random() * 3);
+    setBallPosition(initialBallPosition);
+    
+    // After showing the ball, lower the cups
+    setTimeout(() => {
+      setAreLifted(false);
+      playCupsDownSound();
+      toast({
+        title: "Watching the Cups",
+        description: "The cups are covering the ball. Get ready!",
+      });
+      
+      // After cups are down, start shuffling
+      setTimeout(() => {
+        setIsShuffling(true);
+        playShuffleSound();
+        
+        // Shuffling animation duration
+        const newBallPosition = shuffleCups(ballPosition);
+        setBallPosition(newBallPosition);
+        
+        setTimeout(() => {
+          setIsShuffling(false);
+          setCanBet(true);
+          setInitialReveal(false);
+          
+          toast({
+            title: "Place Your Bet!",
+            description: "Now you can place a bet and guess which cup hides the ball.",
+          });
+        }, TIMING.SHUFFLE_DURATION);
+        
+      }, TIMING.CUPS_DOWN);
+      
+    }, TIMING.INITIAL_REVEAL);
+  };
+  
+  // Handle placing a bet and participating in the game
   const handlePlaceBet = async (tokenType: string, amount: number) => {
     if (!walletAddress) {
       toast({
         title: "Wallet Required",
         description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!canBet) {
+      toast({
+        title: "Wait for Shuffling",
+        description: "Please wait for the cups to shuffle before placing a bet",
         variant: "destructive",
       });
       return;
@@ -141,38 +204,15 @@ const Index = () => {
       tokenType,
     });
     
-    // Start the game
-    startGame();
-  };
-  
-  // Start the game with cup shuffling
-  const startGame = () => {
-    setGameStarted(true);
-    setIsShuffling(true);
-    setGameEnded(false);
-    setSelectedCup(-1);
-    setIsRevealed(false);
-    
-    // Play shuffle sound
-    playShuffleSound();
-    
-    // Randomize ball position
-    const newBallPosition = shuffleCups(ballPosition);
-    setBallPosition(newBallPosition);
-    
-    // Shuffle animation duration
-    setTimeout(() => {
-      setIsShuffling(false);
-      toast({
-        title: "Make Your Choice",
-        description: "Select a cup where you think the ball is hidden",
-      });
-    }, 3000);
+    toast({
+      title: "Bet Placed!",
+      description: "Now select a cup where you think the ball is hidden",
+    });
   };
   
   // Handle cup selection
   const handleCupSelect = (index: number) => {
-    if (isShuffling || gameEnded || selectedCup !== -1) return;
+    if (isShuffling || gameEnded || selectedCup !== -1 || areLifted) return;
     
     playClickSound();
     setSelectedCup(index);
@@ -222,6 +262,8 @@ const Index = () => {
     setGameEnded(false);
     setSelectedCup(-1);
     setIsRevealed(false);
+    setAreLifted(false);
+    setCanBet(false);
     playClickSound();
   };
 
@@ -265,25 +307,36 @@ const Index = () => {
             <div className="lg:col-span-2">
               <div className="game-container">
                 <h2 className="text-2xl font-luckiest text-jungle-darkGreen mb-4">
-                  {gameStarted 
-                    ? isShuffling 
-                      ? "Shuffling Cups..." 
-                      : gameEnded 
-                        ? playerWon 
-                          ? "You Found It! 🎉" 
-                          : "Wrong Cup 😢" 
-                        : "Select a Cup"
-                    : "Place Your Bet"
+                  {!gameStarted 
+                    ? "Start a New Game"
+                    : initialReveal
+                      ? areLifted 
+                        ? "Watch Where the Ball Is..." 
+                        : "Cups Coming Down..."
+                      : isShuffling 
+                        ? "Shuffling Cups..." 
+                        : gameEnded 
+                          ? playerWon 
+                            ? "You Found It! 🎉" 
+                            : "Wrong Cup 😢" 
+                          : canBet && currentBet.amount === 0
+                            ? "Place Your Bet"
+                            : "Select a Cup"
                   }
                 </h2>
                 
                 {!gameStarted ? (
-                  <div className="max-w-md mx-auto">
-                    <BetForm 
-                      onPlaceBet={handlePlaceBet}
-                      disabled={!walletAddress || gameStarted}
-                      isEscrowFunded={isEscrowFunded}
-                    />
+                  <div className="text-center">
+                    <button 
+                      onClick={startGameSequence} 
+                      className="jungle-btn px-8 py-3 mb-6"
+                    >
+                      Start Game
+                    </button>
+                    
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Watch carefully where the ball is placed, then the cups will shuffle!
+                    </p>
                   </div>
                 ) : gameEnded ? (
                   <GameResult 
@@ -305,24 +358,36 @@ const Index = () => {
                           isRevealed={isRevealed}
                           gameEnded={gameEnded}
                           selected={selectedCup === index}
+                          isLifted={areLifted}
                         />
                       ))}
                     </div>
-                    {!isShuffling && selectedCup === -1 && (
+
+                    {canBet && currentBet.amount === 0 ? (
+                      <div className="max-w-md mx-auto mt-6">
+                        <BetForm 
+                          onPlaceBet={handlePlaceBet}
+                          disabled={!walletAddress || !canBet}
+                          isEscrowFunded={isEscrowFunded}
+                        />
+                      </div>
+                    ) : canBet && currentBet.amount > 0 && selectedCup === -1 ? (
                       <p className="text-center mt-4 animate-pulse">
                         Click on a cup to make your guess!
                       </p>
-                    )}
+                    ) : !canBet && !gameEnded ? (
+                      <p className="text-center mt-4 animate-pulse">
+                        {isShuffling ? "Watch carefully..." : areLifted ? "Remember where the ball is..." : "Get ready..."}
+                      </p>
+                    ) : null}
                   </>
                 )}
               </div>
             </div>
             
-            {/* Stats and Referral - removed LeaderboardCard */}
+            {/* Stats and Referral */}
             <div className="space-y-6">
               <StatsCard stats={playerStats} />
-              
-              {/* LeaderboardCard removed as requested */}
               
               <ReferralCard 
                 walletAddress={walletAddress}
