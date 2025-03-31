@@ -1,13 +1,18 @@
-import { Trophy } from "lucide-react";
+
+import Logo from "@/components/Logo";
 import WalletConnect from "@/components/WalletConnect";
+
 interface WelcomeScreenProps {
   onConnect: (wallet: string) => void;
 }
+
 const WelcomeScreen = ({
   onConnect
 }: WelcomeScreenProps) => {
   return <div className="game-container text-center py-16">
-      <Trophy className="w-16 h-16 mx-auto mb-6 text-jungle-yellow" />
+      <div className="flex justify-center mb-6">
+        <Logo className="mx-auto" />
+      </div>
       <h2 className="text-3xl font-luckiest text-jungle-darkGreen mb-4">
         Connect Your Wallet to Play
       </h2>
@@ -15,4 +20,5 @@ const WelcomeScreen = ({
       <WalletConnect onConnect={onConnect} connected={false} walletAddress="" />
     </div>;
 };
+
 export default WelcomeScreen;
