@@ -15,16 +15,24 @@ interface BetFormProps {
   onPlaceBet: (tokenType: string, amount: number) => void;
   disabled: boolean;
   isEscrowFunded: boolean;
+  availableTokens: string[];
 }
 
-const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
-  const [tokenType, setTokenType] = useState("APT");
+const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetFormProps) => {
+  const [tokenType, setTokenType] = useState("");
   const [amount, setAmount] = useState("");
   const { toast } = useToast();
 
   // Define minimum bet amounts for each token type
   const MIN_APT_BET = 0.01;
   const MIN_EMOJICOIN_BET = 1000;
+
+  // Initialize token type when available tokens change
+  useEffect(() => {
+    if (availableTokens.length > 0 && !availableTokens.includes(tokenType)) {
+      setTokenType(availableTokens[0]);
+    }
+  }, [availableTokens, tokenType]);
 
   // Get the current minimum bet based on selected token
   const getCurrentMinBet = () => {
@@ -38,6 +46,15 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!tokenType) {
+      toast({
+        title: "Token Required",
+        description: "Please select a token type",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const minBet = getCurrentMinBet();
     const amountNum = parseFloat(amount);
@@ -64,7 +81,10 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
   };
 
   // Check if form is valid (amount is entered and meets minimum)
-  const isFormValid = amount !== "" && parseFloat(amount) >= getCurrentMinBet();
+  const isFormValid = tokenType !== "" && amount !== "" && parseFloat(amount) >= getCurrentMinBet();
+
+  // Check if no tokens are available
+  const noTokensAvailable = availableTokens.length === 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,14 +93,21 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
         <Select
           value={tokenType}
           onValueChange={setTokenType}
-          disabled={disabled}
+          disabled={disabled || noTokensAvailable}
         >
           <SelectTrigger className="input-field">
-            <SelectValue placeholder="Select token" />
+            <SelectValue placeholder={noTokensAvailable ? "No tokens available" : "Select token"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="APT">APT</SelectItem>
-            <SelectItem value="EMOJICOIN">🦁♥️ Emojicoin</SelectItem>
+            {availableTokens.includes("APT") && (
+              <SelectItem value="APT">APT</SelectItem>
+            )}
+            {availableTokens.includes("EMOJICOIN") && (
+              <SelectItem value="EMOJICOIN">🦁♥️ Emojicoin</SelectItem>
+            )}
+            {noTokensAvailable && (
+              <SelectItem value="" disabled>No tokens available</SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -91,26 +118,37 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded }: BetFormProps) => {
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder={`Min: ${getCurrentMinBet()} ${tokenType}`}
+          placeholder={tokenType ? `Min: ${getCurrentMinBet()} ${tokenType}` : "Select token first"}
           className="input-field"
-          min={getCurrentMinBet()}
+          min={tokenType ? getCurrentMinBet() : 0}
           step={tokenType === "APT" ? "0.01" : "100"}
-          disabled={disabled}
+          disabled={disabled || !tokenType || noTokensAvailable}
         />
-        <span className="text-xs text-muted-foreground">
-          Minimum bet: {getCurrentMinBet()} {tokenType}
-        </span>
+        {tokenType && (
+          <span className="text-xs text-muted-foreground">
+            Minimum bet: {getCurrentMinBet()} {tokenType}
+          </span>
+        )}
       </div>
       
       <Button 
         type="submit" 
         className="jungle-btn w-full" 
-        disabled={disabled || !isEscrowFunded || !isFormValid}
+        disabled={disabled || !isEscrowFunded || !isFormValid || noTokensAvailable}
       >
         {!isEscrowFunded
           ? "⚠️ Game unavailable: Escrow wallet is low on funds"
-          : "Place Bet"}
+          : noTokensAvailable
+            ? "No tokens available for betting"
+            : "Place Bet"}
       </Button>
+
+      {noTokensAvailable && isEscrowFunded && (
+        <p className="text-xs text-red-500 text-center">
+          The escrow wallet currently has no tokens available for payouts.
+          Please check back later.
+        </p>
+      )}
     </form>
   );
 };

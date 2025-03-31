@@ -8,8 +8,8 @@ export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
 export const EXPLORER_URL = "https://explorer.aptoslabs.com/txn/";
 export const FAUCET_URL = "https://faucet.testnet.aptoslabs.com";
 
-// Placeholder escrow wallet for testing
-export const ESCROW_WALLET_ADDRESS = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"; // Replace with actual escrow wallet
+// Real escrow wallet for the app
+export const ESCROW_WALLET_ADDRESS = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27";
 export const EMOJICOIN_ADDRESS = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27::coin_factory::Emojicoin";
 
 export const MIN_APT_BALANCE = 1; // 1 APT
@@ -62,6 +62,59 @@ export const initializeAccount = async (address: string): Promise<boolean> => {
   }
 };
 
+// Initialize emojicoin or any other token
+export const initializeTokenStore = async (address: string, tokenType: string): Promise<boolean> => {
+  try {
+    console.log(`Checking if account ${address} needs ${tokenType} initialization`);
+    
+    let tokenTypeAddress = "";
+    
+    if (tokenType === "EMOJICOIN") {
+      tokenTypeAddress = EMOJICOIN_ADDRESS;
+    } else {
+      console.log("Unknown token type for initialization");
+      return false;
+    }
+    
+    // Check if the account has already registered the coin store
+    const resources = await client.getAccountResources(address);
+    const hasTokenStore = resources.some(
+      (r) => r.type === `0x1::coin::CoinStore<${tokenTypeAddress}>`
+    );
+    
+    if (hasTokenStore) {
+      console.log(`Account already has ${tokenType} store registered`);
+      return true;
+    }
+    
+    console.log(`Account needs ${tokenType} store initialization`);
+    
+    // Register the token
+    if (window.aptos) {
+      const payload: Types.TransactionPayload = {
+        type: "entry_function_payload",
+        function: "0x1::managed_coin::register",
+        type_arguments: [tokenTypeAddress],
+        arguments: []
+      };
+      
+      const response = await window.aptos.signAndSubmitTransaction(payload);
+      console.log(`${tokenType} registration transaction submitted:`, response);
+      
+      // Wait for transaction to be confirmed
+      await client.waitForTransaction(response.hash);
+      console.log(`${tokenType} registration confirmed`);
+      
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error(`Error initializing ${tokenType} store:`, error);
+    return false;
+  }
+};
+
 // Check if wallet is connected
 export const isWalletConnected = async (): Promise<boolean> => {
   if (!window.aptos) return false;
@@ -77,7 +130,7 @@ export const isWalletConnected = async (): Promise<boolean> => {
 
 // Get wallet balance from Aptos blockchain
 export const getWalletBalance = async (address: string, tokenType: string = "APT"): Promise<number> => {
-  if (!window.aptos) return 0;
+  if (!address) return 0;
   
   try {
     if (tokenType === "APT") {
@@ -92,25 +145,104 @@ export const getWalletBalance = async (address: string, tokenType: string = "APT
         return balance / 100000000; // Convert from octas to APT (8 decimals)
       }
       return 0;
-    } else {
-      // This would be an API call to get Emojicoin balance
-      // For testing purposes, we'll return a mock balance
-      return 5000;
+    } else if (tokenType === "EMOJICOIN") {
+      // Get Emojicoin balance
+      const resources = await client.getAccountResources(address);
+      const emojiCoin = resources.find(
+        (r) => r.type === `0x1::coin::CoinStore<${EMOJICOIN_ADDRESS}>`
+      );
+      
+      if (emojiCoin) {
+        const balance = parseInt((emojiCoin.data as any).coin.value);
+        return balance / 100000000; // Assuming same 8 decimals as APT
+      }
+      return 0;
     }
+    
+    // Unknown token type
+    return 0;
   } catch (error) {
     console.error("Error getting wallet balance:", error);
     return 0;
   }
 };
 
-// Check if escrow wallet is sufficiently funded
-export const checkEscrowFunding = async (): Promise<boolean> => {
+// Get escrow wallet balances
+export const getEscrowWalletBalances = async (): Promise<{
+  apt: number;
+  emojicoin: number;
+  availableTokens: string[];
+}> => {
   try {
-    // In a real implementation, this would check the escrow wallet's balance
-    return true; // For testnet testing, assume the escrow is funded
+    console.log("Checking escrow wallet balances");
+    
+    // Default return value
+    const defaultReturn = {
+      apt: 0,
+      emojicoin: 0,
+      availableTokens: []
+    };
+    
+    if (!ESCROW_WALLET_ADDRESS) {
+      console.error("No escrow wallet address configured");
+      return defaultReturn;
+    }
+    
+    // Get APT balance
+    const aptBalance = await getWalletBalance(ESCROW_WALLET_ADDRESS, "APT");
+    console.log("Escrow APT balance:", aptBalance);
+    
+    // Get Emojicoin balance
+    const emojiBalance = await getWalletBalance(ESCROW_WALLET_ADDRESS, "EMOJICOIN");
+    console.log("Escrow Emojicoin balance:", emojiBalance);
+    
+    // Determine which tokens are available for betting
+    const availableTokens: string[] = [];
+    
+    if (aptBalance >= MIN_APT_BALANCE) {
+      availableTokens.push("APT");
+    }
+    
+    if (emojiBalance >= MIN_EMOJICOIN_BALANCE) {
+      availableTokens.push("EMOJICOIN");
+    }
+    
+    return {
+      apt: aptBalance,
+      emojicoin: emojiBalance,
+      availableTokens
+    };
   } catch (error) {
     console.error("Error checking escrow funding:", error);
-    return false;
+    return {
+      apt: 0,
+      emojicoin: 0,
+      availableTokens: []
+    };
+  }
+};
+
+// Check if escrow wallet is sufficiently funded
+export const checkEscrowFunding = async (): Promise<{
+  funded: boolean;
+  availableTokens: string[];
+}> => {
+  try {
+    const { apt, emojicoin, availableTokens } = await getEscrowWalletBalances();
+    
+    // Escrow is considered funded if at least one token type is available
+    const funded = availableTokens.length > 0;
+    
+    return {
+      funded,
+      availableTokens
+    };
+  } catch (error) {
+    console.error("Error checking escrow funding:", error);
+    return {
+      funded: false,
+      availableTokens: []
+    };
   }
 };
 
@@ -173,12 +305,30 @@ export const placeBet = async (
         
         throw error; // Re-throw for other errors
       }
-    } else {
-      // For testnet testing, we'll simulate a successful Emojicoin transfer
-      // In production, you'd implement the actual token transfer
-      console.log(`Simulating transfer of ${amount} ${tokenType} to escrow`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    } else if (tokenType === "EMOJICOIN") {
+      // Initialize Emojicoin store if needed
+      const { address } = await window.aptos.account();
+      await initializeTokenStore(address, tokenType);
+      
+      // Create transaction payload for Emojicoin transfer
+      const payload: Types.TransactionPayload = {
+        type: "entry_function_payload",
+        function: "0x1::coin::transfer",
+        type_arguments: [EMOJICOIN_ADDRESS],
+        arguments: [
+          ESCROW_WALLET_ADDRESS, 
+          Math.floor(amount * 100000000).toString() // Convert to smallest units (8 decimals)
+        ]
+      };
+      
+      // Sign and submit the transaction
+      const response = await window.aptos.signAndSubmitTransaction(payload);
+      console.log("Emojicoin transaction submitted:", response);
+      
       return true;
+    } else {
+      console.error(`Unsupported token type: ${tokenType}`);
+      return false;
     }
   } catch (error) {
     console.error("Error placing bet:", error);

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
 import PageFooter from "@/components/PageFooter";
@@ -34,8 +35,8 @@ const Index = () => {
   // Check escrow funding status on load and periodically
   useEffect(() => {
     const checkEscrowStatus = async () => {
-      const isFunded = await checkEscrowFunding();
-      setIsEscrowFunded(isFunded);
+      const { funded } = await checkEscrowFunding();
+      setIsEscrowFunded(funded);
     };
     
     checkEscrowStatus();

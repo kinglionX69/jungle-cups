@@ -9,6 +9,7 @@ interface GameControlsProps {
   onPlayAgain: () => void;
   walletAddress: string;
   isEscrowFunded: boolean;
+  availableTokens: string[];
 }
 
 const GameControls = ({ 
@@ -16,7 +17,8 @@ const GameControls = ({
   onPlaceBet, 
   onPlayAgain,
   walletAddress,
-  isEscrowFunded
+  isEscrowFunded,
+  availableTokens
 }: GameControlsProps) => {
   const {
     gameStarted,
@@ -91,6 +93,7 @@ const GameControls = ({
                 onPlaceBet={onPlaceBet}
                 disabled={!walletAddress || !canBet}
                 isEscrowFunded={isEscrowFunded}
+                availableTokens={availableTokens}
               />
             </div>
           ) : canBet && currentBet.amount > 0 && selectedCup === -1 ? (
