@@ -97,28 +97,34 @@
 /* Animation keyframes and classes */
 @keyframes cup-shuffle-1 {
   0% { transform: translateX(0); }
-  20% { transform: translateX(140px); }
-  40% { transform: translateX(40px); }
-  60% { transform: translateX(-100px); }
-  80% { transform: translateX(80px); }
+  15% { transform: translateX(160px) translateY(-10px); }
+  30% { transform: translateX(60px) translateY(5px); }
+  45% { transform: translateX(-120px) translateY(-5px); }
+  60% { transform: translateX(90px) translateY(10px); }
+  75% { transform: translateX(-70px) translateY(-5px); }
+  90% { transform: translateX(40px) translateY(5px); }
   100% { transform: translateX(0); }
 }
 
 @keyframes cup-shuffle-2 {
   0% { transform: translateX(0); }
-  20% { transform: translateX(-120px); }
-  40% { transform: translateX(90px); }
-  60% { transform: translateX(30px); }
-  80% { transform: translateX(-80px); }
+  15% { transform: translateX(-150px) translateY(5px); }
+  30% { transform: translateX(110px) translateY(-5px); }
+  45% { transform: translateX(40px) translateY(10px); }
+  60% { transform: translateX(-90px) translateY(-10px); }
+  75% { transform: translateX(60px) translateY(5px); }
+  90% { transform: translateX(-30px) translateY(-5px); }
   100% { transform: translateX(0); }
 }
 
 @keyframes cup-shuffle-3 {
   0% { transform: translateX(0); }
-  20% { transform: translateX(80px); }
-  40% { transform: translateX(-140px); }
-  60% { transform: translateX(70px); }
-  80% { transform: translateX(-30px); }
+  15% { transform: translateX(90px) translateY(-5px); }
+  30% { transform: translateX(-170px) translateY(10px); }
+  45% { transform: translateX(80px) translateY(-10px); }
+  60% { transform: translateX(-40px) translateY(5px); }
+  75% { transform: translateX(120px) translateY(-5px); }
+  90% { transform: translateX(-60px) translateY(10px); }
   100% { transform: translateX(0); }
 }
 
@@ -129,15 +135,15 @@
 }
 
 .animate-cup-shuffle-1 {
-  animation: cup-shuffle-1 2s ease-in-out;
+  animation: cup-shuffle-1 1.5s ease-in-out;
 }
 
 .animate-cup-shuffle-2 {
-  animation: cup-shuffle-2 2s ease-in-out;
+  animation: cup-shuffle-2 1.5s ease-in-out;
 }
 
 .animate-cup-shuffle-3 {
-  animation: cup-shuffle-3 2s ease-in-out;
+  animation: cup-shuffle-3 1.5s ease-in-out;
 }
 
 .animate-cup-reveal {

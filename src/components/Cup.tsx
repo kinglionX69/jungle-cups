@@ -46,6 +46,7 @@ const Cup = ({
           "transform transition-all duration-300"
         )}
         onClick={() => !isShuffling && !gameEnded && !isLifted && onClick(index)}
+        style={{ zIndex: isLifted ? 1 : 10 }} // Lower z-index when lifted to prevent text overlap
       >
         <div className="cup-base"></div>
       </div>

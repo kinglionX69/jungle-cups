@@ -41,6 +41,7 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
   const [areLifted, setAreLifted] = useState(false);
   const [canBet, setCanBet] = useState(false);
   const [initialReveal, setInitialReveal] = useState(false);
+  const [readyForNewBet, setReadyForNewBet] = useState(false);
   
   // Bet states
   const [currentBet, setCurrentBet] = useState({
@@ -58,6 +59,7 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
     setAreLifted(true);
     setCanBet(false);
     setInitialReveal(true);
+    setReadyForNewBet(false);
     
     // Randomize initial ball position
     const initialBallPosition = Math.floor(Math.random() * 3);
@@ -135,6 +137,8 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
       amount,
       tokenType,
     });
+
+    setReadyForNewBet(false);
     
     toast({
       title: "Bet Placed!",
@@ -178,6 +182,7 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
       }
       
       setGameEnded(true);
+      setReadyForNewBet(true);
       
       // Notify parent to update stats
       onStatsUpdated();
@@ -186,19 +191,30 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
   
   // Reset the game to play again
   const handlePlayAgain = () => {
-    setGameStarted(false);
-    setIsShuffling(false);
+    setCurrentBet({
+      amount: 0,
+      tokenType: "APT",
+    });
     setGameEnded(false);
     setSelectedCup(-1);
     setIsRevealed(false);
-    setAreLifted(false);
-    setCanBet(false);
+    setCanBet(true);
+    setReadyForNewBet(false);
     playClickSound();
+    
+    // Shuffle the cups again for a new round
+    const newBallPosition = Math.floor(Math.random() * 3);
+    setBallPosition(newBallPosition);
+    
+    toast({
+      title: "New Round",
+      description: "Place your bet for the next round!",
+    });
   };
 
   return (
     <div className="game-container">
-      <h2 className="text-2xl font-luckiest text-jungle-darkGreen mb-4">
+      <h2 className="text-2xl font-luckiest text-jungle-darkGreen mb-4 relative z-20">
         {!gameStarted 
           ? "Start a New Game"
           : initialReveal
@@ -229,6 +245,22 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated }: GameProps) => {
           <p className="text-sm text-muted-foreground mt-2">
             Watch carefully where the ball is placed, then the cups will shuffle!
           </p>
+        </div>
+      ) : readyForNewBet ? (
+        <div className="text-center">
+          <button 
+            onClick={handlePlayAgain} 
+            className="jungle-btn px-8 py-3 mb-6"
+          >
+            Play Again
+          </button>
+          <div className="max-w-md mx-auto mt-6">
+            <BetForm 
+              onPlaceBet={handlePlaceBet}
+              disabled={!walletAddress || !canBet}
+              isEscrowFunded={isEscrowFunded}
+            />
+          </div>
         </div>
       ) : gameEnded ? (
         <GameResult 
