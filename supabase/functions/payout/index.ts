@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
 import { AptosClient, TxnBuilderTypes, BCS, HexString } from "https://esm.sh/aptos@1.20.0";
@@ -23,11 +22,16 @@ const initializeAptosAccount = (privateKeyHex: string) => {
       privateKeyHex = privateKeyHex.slice(2);
     }
     
-    console.log("Creating account with SDK version:", aptos.VERSION);
+    console.log("Creating account with Aptos SDK version 1.20.0");
     
-    // Using the proper API from aptos 1.20.0
-    const privateKey = new aptos.Ed25519PrivateKey(privateKeyHex);
-    const account = new aptos.Account(privateKey);
+    // Convert the hex string to a Uint8Array
+    const privateKeyBytes = new HexString(privateKeyHex).toUint8Array();
+    
+    // Create the private key and account instances
+    const account = new aptos.Account(
+      privateKeyBytes, // Pass the bytes directly as constructor expects a Uint8Array
+      undefined // Address will be derived from the private key
+    );
     
     console.log("Account initialized with address:", account.address().toString());
     
@@ -177,6 +181,7 @@ serve(async (req) => {
         // Updated for aptos 1.20.0
         let signedTxn;
         try {
+          // The correct method in 1.20.0 is to pass the account object directly
           signedTxn = await client.signTransaction(escrowAccount, txnRequest);
           console.log("Transaction signed successfully");
         } catch (signError) {
