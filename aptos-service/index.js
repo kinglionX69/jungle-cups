@@ -55,6 +55,8 @@ const createAptosAccount = (privateKeyHex) => {
       privateKeyHex = privateKeyHex.slice(2);
     }
     
+    console.log(`Creating account from private key (first 4 chars: ${privateKeyHex.substring(0, 4)}...)`);
+    
     // Create account from private key
     const privateKeyBytes = new HexString(privateKeyHex).toUint8Array();
     return new AptosAccount(privateKeyBytes);
@@ -174,4 +176,13 @@ app.get('/status', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Aptos service running on port ${PORT}`);
   console.log(`Network: ${process.env.NETWORK || 'testnet'}`);
+  console.log(`Environment variables loaded: API_KEY=${!!process.env.API_KEY}, NODE_URL=${!!process.env.NODE_URL}`);
+  
+  // Only log the first few characters of private key if present (for debugging only)
+  if (process.env.ESCROW_PRIVATE_KEY) {
+    const keyPrefix = process.env.ESCROW_PRIVATE_KEY.substring(0, 4);
+    console.log(`ESCROW_PRIVATE_KEY is set (starts with: ${keyPrefix}...)`);
+  } else {
+    console.warn('⚠️ ESCROW_PRIVATE_KEY is not set! Transactions will fail.');
+  }
 });

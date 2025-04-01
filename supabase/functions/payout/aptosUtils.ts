@@ -41,7 +41,8 @@ export const callAptosService = async (endpoint: string, data: any) => {
       serviceUrl = serviceUrl.slice(0, -1);
     }
     
-    console.log(`Calling external Aptos service at ${serviceUrl}/${endpoint}`);
+    const fullUrl = `${serviceUrl}/${endpoint}`;
+    console.log(`Calling external Aptos service at ${fullUrl}`);
     
     // Prepare API key for authorization if available
     const apiKey = Deno.env.get("APTOS_SERVICE_API_KEY") || "";
@@ -54,27 +55,35 @@ export const callAptosService = async (endpoint: string, data: any) => {
     }
     
     // Make the request to the external service
-    const response = await fetch(`${serviceUrl}/${endpoint}`, {
+    const response = await fetch(fullUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(data)
     });
 
-    // Check for HTTP errors
+    // Check for HTTP errors with detailed logging
     if (!response.ok) {
       let errorText = await response.text();
+      let errorDetails = "";
+      
       try {
         // Try to parse as JSON for more detailed error information
         const errorJson = JSON.parse(errorText);
         errorText = errorJson.error || errorJson.message || errorText;
+        errorDetails = JSON.stringify(errorJson, null, 2);
       } catch (e) {
         // If parsing fails, use the raw error text
+        errorDetails = errorText;
       }
+      
+      console.error(`Service response error (${response.status}):`, errorDetails);
       throw new Error(`Aptos service returned ${response.status}: ${errorText}`);
     }
 
     // Parse and return the response
-    return await response.json();
+    const responseData = await response.json();
+    console.log("Service response success:", JSON.stringify(responseData, null, 2));
+    return responseData;
   } catch (error) {
     console.error("Error calling Aptos service:", error);
     throw error;
