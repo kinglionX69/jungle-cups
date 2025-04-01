@@ -75,18 +75,24 @@ Response:
 }
 ```
 
-## Deployment
+## Deployment on Vercel
 
-This service can be deployed to Vercel, Heroku, or any other Node.js hosting platform.
-
-For Vercel:
-1. Install Vercel CLI: `npm i -g vercel`
-2. Deploy: `vercel`
-3. Add your environment variables in the Vercel dashboard
+1. Push this repository to GitHub
+2. Connect your GitHub repository to Vercel
+3. During the import step, configure the following environment variables:
+   - `NODE_URL`: The Aptos node URL (default: https://fullnode.testnet.aptoslabs.com/v1)
+   - `NETWORK`: The network name (testnet or mainnet)
+   - `API_KEY`: A secure random string
+   - `ESCROW_PRIVATE_KEY`: Your escrow wallet private key
+4. Deploy the service
+5. Note the URL of your deployed service
+6. Update your Supabase Edge Function with the following secrets:
+   - `APTOS_SERVICE_URL`: The URL of your deployed service
+   - `APTOS_SERVICE_API_KEY`: The same API_KEY you set in Vercel
 
 ## Security Considerations
 
-- Never expose your private keys
+- Never expose your private keys in code or public repositories
 - Secure the API_KEY environment variable
 - In production, restrict CORS to your application domain
 - Use HTTPS for all communication
