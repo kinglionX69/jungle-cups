@@ -1,6 +1,6 @@
 
 import { corsHeaders } from "./cors.ts";
-import { callAptosService } from "./aptosUtils.ts";
+import { processWithdrawalTransaction } from "./transactionUtils.ts";
 import { waitForTransactionWithTimeout } from "./transactionUtils.ts";
 import { verifyPlayerBalance, createTransactionRecord, updateTransactionStatus, updatePlayerBalance } from "./dbOperations.ts";
 import { createSuccessResponse, createErrorResponse } from "./responseHelpers.ts";
@@ -15,21 +15,6 @@ export const handleWithdrawalTransaction = async (
 ) => {
   try {
     console.log(`Starting withdrawal process for ${amount} ${tokenType} to ${playerAddress}`);
-    
-    // Check if APTOS_SERVICE_URL is set
-    const serviceUrl = Deno.env.get("APTOS_SERVICE_URL");
-    if (!serviceUrl) {
-      console.error("APTOS_SERVICE_URL environment variable is not set");
-      return createErrorResponse(
-        500,
-        "Server configuration error",
-        "The Aptos service URL is not configured. Please contact support."
-      );
-    }
-    
-    // Additional debug info
-    console.log(`Using Aptos service URL: ${serviceUrl}`);
-    console.log(`API key available: ${!!Deno.env.get("APTOS_SERVICE_API_KEY")}`);
     
     // Generate a unique withdrawal ID
     const withdrawalId = `withdrawal_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
@@ -76,49 +61,45 @@ export const handleWithdrawalTransaction = async (
       const amountInOctas = Math.floor(amount * 100000000);
       console.log(`Amount in octas: ${amountInOctas}`);
 
-      // Step 4: Call external Node.js service to handle the Aptos transaction
+      // Step 4: Process the withdrawal transaction directly
       if (tokenType === "APT" || tokenType === "EMOJICOIN") {
-        console.log(`Requesting withdrawal of ${amount} ${tokenType} (${amountInOctas} octas) to ${playerAddress}`);
+        console.log(`Processing withdrawal of ${amount} ${tokenType} (${amountInOctas} octas) to ${playerAddress}`);
         
-        // Prepare the request to the external service
-        const aptosServiceRequest = {
-          operation: "withdraw",
-          tokenType: tokenType,
-          amount: amountInOctas,
-          recipientAddress: playerAddress,
-          privateKey: escrowPrivateKey
-        };
+        // Get the escrow wallet address from the private key
+        // In real implementation, this would use the Aptos SDK to derive the address
+        const escrowAddress = "0x2afbb09094a37b84d14bc9aaf7deb6dd586acc20b0e3ba8c8c5a7cafd9eb5a0d";
         
-        console.log("Calling external service with request:", {
-          ...aptosServiceRequest,
-          privateKey: "REDACTED"
-        });
-        
-        // Call the external service
+        // Process the transaction directly
         let transactionRes;
         try {
-          transactionRes = await callAptosService("processTransaction", aptosServiceRequest);
-          console.log("Transaction submitted via external service:", transactionRes);
-        } catch (serviceError) {
-          console.error("External service error:", serviceError);
+          transactionRes = await processWithdrawalTransaction(
+            escrowAddress,
+            playerAddress,
+            amountInOctas,
+            tokenType,
+            escrowPrivateKey
+          );
+          console.log("Transaction submitted:", transactionRes);
+        } catch (txError) {
+          console.error("Transaction error:", txError);
           
           // Update transaction as failed
           await updateTransactionStatus(
             supabase, 
             transactionRecord.id, 
             'failed', 
-            `external service error: ${serviceError.message}`
+            `transaction error: ${txError.message}`
           );
           
           return createErrorResponse(
-            502,
-            "External service error",
-            `The Aptos transaction service encountered an error: ${serviceError.message}`
+            500,
+            "Transaction error",
+            `The transaction couldn't be processed: ${txError.message}`
           );
         }
 
         if (!transactionRes.hash) {
-          const errorMessage = "External service did not return a transaction hash";
+          const errorMessage = "No transaction hash returned";
           console.error(errorMessage);
           
           // Update transaction as failed

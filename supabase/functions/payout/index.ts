@@ -22,12 +22,6 @@ serve(async (req) => {
     if (!escrowPrivateKey) {
       throw new Error("Escrow private key not configured");
     }
-    
-    // Check for the Aptos service URL
-    const aptosServiceUrl = Deno.env.get("APTOS_SERVICE_URL");
-    if (!aptosServiceUrl) {
-      console.warn("APTOS_SERVICE_URL is not set. Transactions will not be able to complete.");
-    }
 
     // Parse request URL to determine operation type
     const url = new URL(req.url);

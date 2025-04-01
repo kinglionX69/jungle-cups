@@ -1,55 +1,28 @@
 
-import { callAptosService } from "./aptosUtils.ts";
+import { createAndSignTransaction } from "./aptosUtils.ts";
 
-// Create transaction payload via external service
+// Create transaction payload
 export const createTransferPayload = (
   tokenType: string,
   recipientAddress: string,
   amountInOctas: number
 ) => {
-  // This function now just returns the parameters to be sent to the external service
-  return {
-    tokenType,
-    recipientAddress,
-    amountInOctas
-  };
-};
-
-// Prepare raw transaction via external service
-export const createRawTransaction = async (
-  senderAddress: string,
-  entryFunctionPayload: any
-) => {
-  // This function now just returns the parameters to be sent to the external service
-  return {
-    senderAddress,
-    payload: entryFunctionPayload
-  };
-};
-
-// Sign and submit transaction via external service
-export const signAndSubmitTransaction = async (
-  rawTxn: any,
-  escrowAccount: any
-) => {
-  try {
-    // Call the external Node.js service to process the transaction
-    console.log("Calling external service for signAndSubmitTransaction with:", {
-      rawTransaction: rawTxn,
-      privateKeyProvided: !!Deno.env.get("ESCROW_PRIVATE_KEY")
-    });
-    
-    const result = await callAptosService("signAndSubmitTransaction", {
-      rawTransaction: rawTxn,
-      privateKey: Deno.env.get("ESCROW_PRIVATE_KEY")
-    });
-    
-    console.log("External service response:", result);
-    return result;
-  } catch (error) {
-    console.error("Error in signAndSubmitTransaction:", error);
-    throw error;
+  // Determine the token type address
+  let tokenTypeAddress;
+  if (tokenType === "APT") {
+    tokenTypeAddress = "0x1::aptos_coin::AptosCoin";
+  } else if (tokenType === "EMOJICOIN") {
+    tokenTypeAddress = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27::coin_factory::Emojicoin";
+  } else {
+    throw new Error(`Unsupported token type: ${tokenType}`);
   }
+
+  // Return transaction payload
+  return {
+    function: "0x1::coin::transfer",
+    type_arguments: [tokenTypeAddress],
+    arguments: [recipientAddress, amountInOctas.toString()]
+  };
 };
 
 // Wait for transaction with timeout and better error handling
@@ -93,6 +66,37 @@ export const waitForTransactionWithTimeout = async (
     throw new Error("Transaction confirmation timeout");
   } catch (error) {
     console.error("Error in waitForTransactionWithTimeout:", error);
+    throw error;
+  }
+};
+
+// Direct transaction submission without external service
+export const processWithdrawalTransaction = async (
+  senderAddress: string,
+  recipientAddress: string,
+  amount: number,
+  tokenType: string,
+  privateKey: string
+) => {
+  try {
+    console.log(`Processing withdrawal transaction of ${amount} ${tokenType} to ${recipientAddress}`);
+    
+    // Use the Aptos SDK (to be implemented) to create and submit transaction
+    const txResult = await createAndSignTransaction(
+      senderAddress,
+      recipientAddress,
+      amount,
+      tokenType,
+      privateKey
+    );
+    
+    return {
+      success: txResult.success,
+      hash: txResult.hash,
+      details: `Transaction submitted for ${amount} ${tokenType} to ${recipientAddress}`
+    };
+  } catch (error) {
+    console.error("Error processing withdrawal transaction:", error);
     throw error;
   }
 };
