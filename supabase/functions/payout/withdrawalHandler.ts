@@ -27,6 +27,10 @@ export const handleWithdrawalTransaction = async (
       );
     }
     
+    // Additional debug info
+    console.log(`Using Aptos service URL: ${serviceUrl}`);
+    console.log(`API key available: ${!!Deno.env.get("APTOS_SERVICE_API_KEY")}`);
+    
     // Generate a unique withdrawal ID
     const withdrawalId = `withdrawal_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
     

@@ -35,7 +35,13 @@ export const callAptosService = async (endpoint: string, data: any) => {
       throw new Error("APTOS_SERVICE_URL environment variable is not set");
     }
 
-    console.log(`Calling external Aptos service at ${APTOS_SERVICE_URL}/${endpoint}`);
+    // Fix the URL path to ensure there are no double slashes
+    let serviceUrl = APTOS_SERVICE_URL;
+    if (serviceUrl.endsWith('/')) {
+      serviceUrl = serviceUrl.slice(0, -1);
+    }
+    
+    console.log(`Calling external Aptos service at ${serviceUrl}/${endpoint}`);
     
     // Prepare API key for authorization if available
     const apiKey = Deno.env.get("APTOS_SERVICE_API_KEY") || "";
@@ -48,7 +54,7 @@ export const callAptosService = async (endpoint: string, data: any) => {
     }
     
     // Make the request to the external service
-    const response = await fetch(`${APTOS_SERVICE_URL}/${endpoint}`, {
+    const response = await fetch(`${serviceUrl}/${endpoint}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(data)
