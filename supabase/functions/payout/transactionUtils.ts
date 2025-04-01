@@ -32,33 +32,54 @@ export const signAndSubmitTransaction = async (
   rawTxn: any,
   escrowAccount: any
 ) => {
-  // Call the external Node.js service to process the transaction
-  return await callAptosService("signAndSubmitTransaction", {
-    rawTransaction: rawTxn,
-    privateKey: Deno.env.get("ESCROW_PRIVATE_KEY")
-  });
+  try {
+    // Call the external Node.js service to process the transaction
+    console.log("Calling external service for signAndSubmitTransaction with:", {
+      rawTransaction: rawTxn,
+      privateKeyProvided: !!Deno.env.get("ESCROW_PRIVATE_KEY")
+    });
+    
+    const result = await callAptosService("signAndSubmitTransaction", {
+      rawTransaction: rawTxn,
+      privateKey: Deno.env.get("ESCROW_PRIVATE_KEY")
+    });
+    
+    console.log("External service response:", result);
+    return result;
+  } catch (error) {
+    console.error("Error in signAndSubmitTransaction:", error);
+    throw error;
+  }
 };
 
-// Wait for transaction with timeout
+// Wait for transaction with timeout and better error handling
 export const waitForTransactionWithTimeout = async (
   transactionHash: string,
   timeoutMs: number = 30000
 ) => {
   try {
+    console.log(`Waiting for transaction ${transactionHash} with timeout ${timeoutMs}ms`);
     const startTime = Date.now();
+    
+    const nodeUrl = Deno.env.get("NODE_URL") || "https://fullnode.testnet.aptoslabs.com/v1";
+    console.log(`Using node URL: ${nodeUrl}`);
     
     while (Date.now() - startTime < timeoutMs) {
       try {
         // Call the Aptos fullnode REST API directly for transaction status
-        const response = await fetch(`${Deno.env.get("NODE_URL") || "https://fullnode.testnet.aptoslabs.com/v1"}/transactions/by_hash/${transactionHash}`);
+        const response = await fetch(`${nodeUrl}/transactions/by_hash/${transactionHash}`);
         
         if (response.ok) {
           const txData = await response.json();
+          console.log(`Transaction status check result:`, txData);
           
           // Check if the transaction is confirmed
           if (txData.success !== undefined) {
             return txData;
           }
+        } else {
+          const errorText = await response.text();
+          console.error(`Error response from node: ${response.status}`, errorText);
         }
         
         // Wait a bit before the next attempt

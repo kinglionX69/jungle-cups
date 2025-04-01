@@ -143,10 +143,21 @@ export const withdrawWinnings = async (
       
       if (error) {
         console.error("Error calling withdrawal function:", error);
+        // Enhanced error handling to provide more details
+        const errorDetails = error.message || "Unknown error";
+        let userMessage = "Error processing withdrawal. Please try again later.";
+        let technicalDetails = "The server encountered an error processing your request.";
+        
+        // Try to extract more detailed information
+        if (error.message && error.message.includes("non-2xx")) {
+          userMessage = "The server returned an error response. This might be due to service maintenance or configuration issues.";
+          technicalDetails = "Edge Function returned a non-2xx status code. Check the Edge Function logs for more details.";
+        }
+        
         return {
           success: false,
-          message: `Error processing withdrawal: ${error.message || "Unknown error"}`,
-          details: "The server encountered an error processing your request. Please try again later."
+          message: userMessage,
+          details: `${errorDetails}. ${technicalDetails}`
         };
       }
       

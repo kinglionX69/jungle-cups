@@ -1,33 +1,44 @@
 
-import { client } from "./aptosUtils.ts";
+import { corsHeaders } from "./cors.ts";
+import { NETWORK } from "./aptosUtils.ts";
 
-// Create successful response
+// Create successful response for withdrawal or payout
 export const createSuccessResponse = (
   amount: number,
   tokenType: string,
   playerAddress: string,
   transactionHash: string
 ) => {
+  // Determine the explorer URL based on the network
+  const explorerBaseUrl = NETWORK === "mainnet" 
+    ? "https://explorer.aptoslabs.com" 
+    : "https://explorer.aptoslabs.com/txn";
+  
+  const explorerUrl = `${explorerBaseUrl}/${transactionHash}?network=${NETWORK}`;
+  
   return {
-    success: true,
     status: 200,
-    message: `Successfully processed withdrawal of ${amount} ${tokenType} to ${playerAddress}`,
-    transactionHash: transactionHash,
-    explorerUrl: `https://explorer.aptoslabs.com/txn/${transactionHash}?network=${client.nodeUrl.includes('testnet') ? 'testnet' : 'mainnet'}`,
-    details: "Transaction successfully submitted to the blockchain."
+    success: true,
+    message: `Successfully processed ${amount} ${tokenType} transaction`,
+    playerAddress,
+    transactionHash,
+    explorerUrl,
+    details: `Transaction has been submitted to the blockchain and confirmed. You can view it on the explorer at ${explorerUrl}`
   };
 };
 
-// Create error response
+// Create standardized error response
 export const createErrorResponse = (
-  status: number,
+  statusCode: number,
   error: string,
-  details: string = "An unexpected error occurred in the withdrawal process."
+  details: string
 ) => {
+  console.error(`Error (${statusCode}): ${error} - ${details}`);
+  
   return {
+    status: statusCode,
     success: false,
-    status: status,
-    error: error,
-    details: details
+    error,
+    details
   };
 };

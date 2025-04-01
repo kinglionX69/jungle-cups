@@ -28,7 +28,7 @@ export const client = {
 // Function to create API request to external Node.js service for Aptos operations
 export const callAptosService = async (endpoint: string, data: any) => {
   try {
-    // Replace this URL with your actual Node.js service URL
+    // Get the Aptos service URL from environment
     const APTOS_SERVICE_URL = Deno.env.get("APTOS_SERVICE_URL");
     
     if (!APTOS_SERVICE_URL) {
@@ -37,20 +37,37 @@ export const callAptosService = async (endpoint: string, data: any) => {
 
     console.log(`Calling external Aptos service at ${APTOS_SERVICE_URL}/${endpoint}`);
     
+    // Prepare API key for authorization if available
+    const apiKey = Deno.env.get("APTOS_SERVICE_API_KEY") || "";
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+    
+    // Make the request to the external service
     const response = await fetch(`${APTOS_SERVICE_URL}/${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get("APTOS_SERVICE_API_KEY") || ""}`
-      },
+      headers,
       body: JSON.stringify(data)
     });
 
+    // Check for HTTP errors
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText = await response.text();
+      try {
+        // Try to parse as JSON for more detailed error information
+        const errorJson = JSON.parse(errorText);
+        errorText = errorJson.error || errorJson.message || errorText;
+      } catch (e) {
+        // If parsing fails, use the raw error text
+      }
       throw new Error(`Aptos service returned ${response.status}: ${errorText}`);
     }
 
+    // Parse and return the response
     return await response.json();
   } catch (error) {
     console.error("Error calling Aptos service:", error);
@@ -58,7 +75,7 @@ export const callAptosService = async (endpoint: string, data: any) => {
   }
 };
 
-// No longer directly initializing Aptos accounts in Deno
+// No longer directly initializing Aptos account in Deno
 export const initializeAptosAccount = (privateKeyHex: string) => {
   console.log("Account initialization will be handled by the Node.js service");
   return {
