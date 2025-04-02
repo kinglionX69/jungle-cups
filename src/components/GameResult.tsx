@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Star, Trophy, CircleX } from "lucide-react";
 import { useEffect } from "react";
 import confetti from "canvas-confetti";
+import { useGame } from "@/contexts/GameContext";
 
 interface GameResultProps {
   won: boolean;
@@ -12,6 +13,8 @@ interface GameResultProps {
 }
 
 const GameResult = ({ won, amount, tokenType, onPlayAgain }: GameResultProps) => {
+  const { setShowReadyButton } = useGame();
+
   useEffect(() => {
     if (won) {
       // Launch confetti if the player won
@@ -43,6 +46,12 @@ const GameResult = ({ won, amount, tokenType, onPlayAgain }: GameResultProps) =>
       frame();
     }
   }, [won]);
+
+  const handlePlayAgain = () => {
+    // Show the "Ready" button instead of starting a new game immediately
+    setShowReadyButton(true);
+    onPlayAgain();
+  };
 
   return (
     <div className="stats-card flex flex-col items-center p-6 animate-fade-in">
@@ -83,7 +92,7 @@ const GameResult = ({ won, amount, tokenType, onPlayAgain }: GameResultProps) =>
       
       <Button 
         className="jungle-btn mt-4" 
-        onClick={onPlayAgain}
+        onClick={handlePlayAgain}
       >
         Play Again
       </Button>

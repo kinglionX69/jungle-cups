@@ -15,6 +15,7 @@ export const initialGameState: GameState = {
   canBet: false,
   initialReveal: false,
   readyForNewGame: false,
+  showReadyButton: false,
   
   // Bet states
   currentBet: {

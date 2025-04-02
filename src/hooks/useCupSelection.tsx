@@ -23,6 +23,7 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
     setIsRevealed,
     setGameEnded,
     setReadyForNewGame,
+    setShowReadyButton,
     ballPosition,
     isShuffling,
     gameEnded,
@@ -98,6 +99,9 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
       }
       
       setGameEnded(true);
+      
+      // Show the ready for new game button instead of auto-starting
+      setShowReadyButton(true);
       setReadyForNewGame(true);
       
       if (updatePlayerStats) {

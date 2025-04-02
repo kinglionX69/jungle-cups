@@ -20,6 +20,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [canBet, setCanBet] = useState(initialGameState.canBet);
   const [initialReveal, setInitialReveal] = useState(initialGameState.initialReveal);
   const [readyForNewGame, setReadyForNewGame] = useState(initialGameState.readyForNewGame);
+  const [showReadyButton, setShowReadyButton] = useState(initialGameState.showReadyButton);
   
   // Bet states
   const [currentBet, setCurrentBet] = useState(initialGameState.currentBet);
@@ -38,6 +39,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     canBet,
     initialReveal,
     readyForNewGame,
+    showReadyButton,
     
     // Bet states
     currentBet,
@@ -54,6 +56,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setCanBet,
     setInitialReveal,
     setReadyForNewGame,
+    setShowReadyButton,
     setCurrentBet,
   }), [
     gameStarted,
@@ -67,6 +70,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     canBet,
     initialReveal,
     readyForNewGame,
+    showReadyButton,
     currentBet
   ]);
 

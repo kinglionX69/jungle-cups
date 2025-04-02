@@ -11,6 +11,7 @@ export const useGameState = () => {
     setCanBet,
     setInitialReveal,
     setReadyForNewGame,
+    setShowReadyButton,
     setBallPosition,
     setIsShuffling,
     setPlayerWon,
@@ -22,7 +23,8 @@ export const useGameState = () => {
     areLifted,
     currentBet,
     canBet,
-    initialReveal
+    initialReveal,
+    showReadyButton
   } = useGame();
 
   // Reset game state for new round
@@ -35,6 +37,7 @@ export const useGameState = () => {
     setCanBet(false);
     setInitialReveal(false);
     setReadyForNewGame(false);
+    setShowReadyButton(false);
     setCurrentBet({
       amount: 0,
       tokenType: "APT",
@@ -51,6 +54,7 @@ export const useGameState = () => {
     setCanBet,
     setInitialReveal,
     setReadyForNewGame,
+    setShowReadyButton,
     setBallPosition,
     setIsShuffling,
     setPlayerWon,
@@ -65,6 +69,7 @@ export const useGameState = () => {
     currentBet,
     canBet,
     initialReveal,
+    showReadyButton,
     
     // State management functions
     resetGameState

@@ -2,6 +2,7 @@
 import { useGame } from "@/contexts/GameContext";
 import BetForm from "@/components/BetForm";
 import GameResult from "@/components/GameResult";
+import { Button } from "@/components/ui/button";
 
 interface GameControlsProps {
   onStartGame: () => void;
@@ -31,13 +32,16 @@ const GameControls = ({
     canBet,
     selectedCup,
     isRevealed,
-    readyForNewGame
+    readyForNewGame,
+    showReadyButton
   } = useGame();
 
   // Game title based on current state
   const getGameTitle = () => {
     if (!gameStarted) {
       return "Start a New Game";
+    } else if (showReadyButton) {
+      return "Ready for a New Round?";
     } else if (initialReveal) {
       return areLifted ? "Watch Where the Ball Is..." : "Cups Coming Down...";
     } else if (isShuffling) {
@@ -70,6 +74,19 @@ const GameControls = ({
           
           <p className="text-sm text-muted-foreground mt-2 relative z-30">
             Watch carefully where the ball is placed, then the cups will shuffle!
+          </p>
+        </div>
+      ) : showReadyButton ? (
+        <div className="text-center">
+          <Button 
+            onClick={onStartGame} 
+            className="jungle-btn px-8 py-3 mb-6 animate-pulse"
+          >
+            I'm Ready
+          </Button>
+          
+          <p className="text-sm text-muted-foreground mt-2 relative z-30">
+            Click when you're ready to start a new round!
           </p>
         </div>
       ) : readyForNewGame ? (

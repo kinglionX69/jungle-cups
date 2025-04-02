@@ -13,6 +13,7 @@ export interface GameState {
   canBet: boolean;
   initialReveal: boolean;
   readyForNewGame: boolean;
+  showReadyButton: boolean;
   
   // Bet states
   currentBet: {
@@ -34,6 +35,7 @@ export interface GameActions {
   setCanBet: (value: boolean) => void;
   setInitialReveal: (value: boolean) => void;
   setReadyForNewGame: (value: boolean) => void;
+  setShowReadyButton: (value: boolean) => void;
   setCurrentBet: (bet: { amount: number; tokenType: string }) => void;
 }
 
