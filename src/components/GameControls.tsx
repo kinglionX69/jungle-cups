@@ -30,6 +30,7 @@ const GameControls = ({
     currentBet,
     canBet,
     selectedCup,
+    isRevealed,
     readyForNewGame
   } = useGame();
 
@@ -41,6 +42,8 @@ const GameControls = ({
       return areLifted ? "Watch Where the Ball Is..." : "Cups Coming Down...";
     } else if (isShuffling) {
       return "Shuffling Cups...";
+    } else if (selectedCup !== -1 && !isRevealed) {
+      return "Drum Roll Please...";
     } else if (gameEnded) {
       return playerWon ? "You Found It! 🎉" : "Wrong Cup 😢";
     } else if (canBet && currentBet.amount === 0) {
@@ -99,6 +102,10 @@ const GameControls = ({
           ) : canBet && currentBet.amount > 0 && selectedCup === -1 ? (
             <p className="text-center mt-4 mb-12 animate-pulse relative z-30">
               Click on a cup to make your guess!
+            </p>
+          ) : selectedCup !== -1 && !isRevealed ? (
+            <p className="text-center mt-4 mb-12 animate-pulse relative z-30 font-bold text-jungle-orange">
+              Will you find the ball? Revealing...
             </p>
           ) : !canBet && !gameEnded ? (
             <p className="text-center mt-4 mb-12 animate-pulse relative z-30">

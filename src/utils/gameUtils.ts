@@ -53,6 +53,21 @@ export const playClickSound = () => {
   audio.play().catch(e => console.error("Error playing sound:", e));
 };
 
+// Play anticipation sound
+export const playAnticipationSound = () => {
+  const audio = new Audio("/sounds/click.mp3");
+  audio.volume = 0.2;
+  const interval = setInterval(() => {
+    audio.currentTime = 0;
+    audio.play().catch(e => console.error("Error playing sound:", e));
+  }, 400);
+  
+  // Stop the anticipation sound after 2 seconds
+  setTimeout(() => {
+    clearInterval(interval);
+  }, 1900);
+};
+
 // Game timing constants (in milliseconds)
 export const TIMING = {
   INITIAL_REVEAL: 2000,  // Time showing the ball at the beginning (reduced from 3000)

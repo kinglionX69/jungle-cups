@@ -1,9 +1,11 @@
+
 import { useToast } from "@/components/ui/use-toast";
 import { 
   didPlayerWin, 
   playClickSound, 
   playWinSound, 
-  playLoseSound 
+  playLoseSound,
+  playAnticipationSound
 } from "@/utils/gameUtils";
 import { transferWinnings } from "@/utils/escrowUtils";
 import { useGameState } from "./useGameState";
@@ -50,6 +52,10 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
     const won = didPlayerWin(index, ballPosition);
     setPlayerWon(won);
     
+    // Play anticipation sound
+    playAnticipationSound();
+    
+    // Create anticipation with a longer delay before revealing
     setTimeout(async () => {
       setIsRevealed(true);
       
@@ -99,7 +105,7 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
       }
       
       onStatsUpdated();
-    }, 1000);
+    }, 2000); // Increased from 1000ms to 2000ms for more anticipation
   };
   
   return {

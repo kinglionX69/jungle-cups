@@ -24,6 +24,7 @@ const Cup = ({
   isLifted,
 }: CupProps) => {
   const [shuffleAnimation, setShuffleAnimation] = useState("");
+  const [showAnticipation, setShowAnticipation] = useState(false);
   
   useEffect(() => {
     if (isShuffling) {
@@ -32,6 +33,19 @@ const Cup = ({
       setShuffleAnimation("");
     }
   }, [isShuffling, index]);
+
+  // Add anticipation effect when a cup is selected but not yet revealed
+  useEffect(() => {
+    if (selected && !isRevealed) {
+      setShowAnticipation(true);
+      // Remove anticipation once the cup is revealed
+      if (isRevealed) {
+        setShowAnticipation(false);
+      }
+    } else {
+      setShowAnticipation(false);
+    }
+  }, [selected, isRevealed]);
 
   // Determine if the cup is clickable - prevent clicks during:
   // 1. Shuffling
@@ -59,6 +73,7 @@ const Cup = ({
           shuffleAnimation,
           selected && "border-jungle-yellow border-4 ring-2 ring-yellow-400",
           isRevealed && selected && "animate-cup-reveal",
+          showAnticipation && "animate-anticipation",
           isLifted && "transform -translate-y-12 transition-transform duration-700",
           isClickable && "animate-bounce",
           isClickable && "cursor-pointer",
@@ -73,6 +88,13 @@ const Cup = ({
         {/* Add subtle wood texture effect */}
         <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-yellow-100 to-transparent rounded-t-[100px] pointer-events-none"></div>
       </div>
+      
+      {/* Anticipation effect - glowing aura around selected cup */}
+      {showAnticipation && (
+        <div className="absolute inset-0 -z-10 animate-pulse">
+          <div className="absolute inset-0 bg-jungle-yellow/30 rounded-full blur-xl transform scale-110"></div>
+        </div>
+      )}
       
       {/* Ball shown below cup when lifted, or inside cup when revealed */}
       {hasBall && (isLifted || (isRevealed && selected)) && (
