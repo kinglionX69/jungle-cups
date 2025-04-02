@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ESCROW_WALLET_ADDRESS, EMOJICOIN_ADDRESS } from "./aptosConfig";
 import { initializeAccount, initializeTokenStore } from "./tokenManagement";
@@ -129,7 +130,6 @@ export const withdrawWinnings = async (
     
     // Call the Supabase Edge Function to process the withdrawal
     try {
-      // First, show a better message to the user about the process
       console.log("Calling Supabase Edge Function to process withdrawal directly");
       
       const { data, error } = await supabase.functions.invoke('payout/withdraw', {

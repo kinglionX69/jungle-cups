@@ -8,7 +8,7 @@ import { PlayerStats } from "@/types/gameTypes";
 interface WithdrawalResult {
   success: boolean;
   message?: string;
-  details?: string; // Adding the details property
+  details?: string;
   txHash?: string;
   explorerUrl?: string;
 }
@@ -56,6 +56,12 @@ export const useStatsWithdrawal = (
         });
         return false;
       }
+      
+      // Show initial processing toast
+      toast({
+        title: "Processing Withdrawal",
+        description: "Your request is being processed on the blockchain...",
+      });
       
       // Call the withdraw function from transactionUtils
       const result = await withdrawWinnings(amount, tokenType) as WithdrawalResult;
