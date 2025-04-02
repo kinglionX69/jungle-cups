@@ -42,8 +42,8 @@ const GameOverlay = () => {
       }
     >
       {(isShuffling || initialReveal) && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <p className="text-lg font-bold text-jungle-darkGreen animate-pulse">
+        <div className="absolute bottom-10 inset-x-0 flex items-center justify-center">
+          <p className="text-lg font-bold text-jungle-darkGreen animate-pulse bg-white/80 px-4 py-2 rounded-full shadow-md">
             {getMessage()}
           </p>
         </div>
