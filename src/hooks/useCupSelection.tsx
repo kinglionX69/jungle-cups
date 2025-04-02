@@ -55,7 +55,7 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
     // Play anticipation sound
     playAnticipationSound();
     
-    // Create anticipation with a longer delay before revealing
+    // Create anticipation with a shorter delay before revealing
     setTimeout(async () => {
       setIsRevealed(true);
       
@@ -105,7 +105,7 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
       }
       
       onStatsUpdated();
-    }, 2000); // Increased from 1000ms to 2000ms for more anticipation
+    }, 1200); // Reduced from 2000ms to 1200ms for faster reveal after anticipation
   };
   
   return {

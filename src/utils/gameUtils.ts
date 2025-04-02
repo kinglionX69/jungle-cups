@@ -60,12 +60,12 @@ export const playAnticipationSound = () => {
   const interval = setInterval(() => {
     audio.currentTime = 0;
     audio.play().catch(e => console.error("Error playing sound:", e));
-  }, 400);
+  }, 300); // Faster clicking for more tension
   
-  // Stop the anticipation sound after 2 seconds
+  // Stop the anticipation sound after 1.1 seconds (matches the reveal timing)
   setTimeout(() => {
     clearInterval(interval);
-  }, 1900);
+  }, 1100);
 };
 
 // Game timing constants (in milliseconds)

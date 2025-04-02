@@ -143,6 +143,15 @@
   100% { transform: translateY(0); }
 }
 
+/* New wobble animation for false hints */
+@keyframes wobble {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px) rotate(-2deg); }
+  50% { transform: translateX(3px) rotate(1.5deg); }
+  75% { transform: translateX(-2px) rotate(-1deg); }
+  100% { transform: translateX(0); }
+}
+
 .animate-cup-shuffle-1 {
   animation: cup-shuffle-1 1.5s ease-in-out;
 }
@@ -161,6 +170,10 @@
 
 .animate-anticipation {
   animation: anticipation 0.5s ease-in-out infinite;
+}
+
+.animate-wobble {
+  animation: wobble 0.4s ease-in-out;
 }
 
 .animate-fade-in {

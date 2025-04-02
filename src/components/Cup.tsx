@@ -25,6 +25,7 @@ const Cup = ({
 }: CupProps) => {
   const [shuffleAnimation, setShuffleAnimation] = useState("");
   const [showAnticipation, setShowAnticipation] = useState(false);
+  const [showWobble, setShowWobble] = useState(false);
   
   useEffect(() => {
     if (isShuffling) {
@@ -45,7 +46,27 @@ const Cup = ({
     } else {
       setShowAnticipation(false);
     }
-  }, [selected, isRevealed]);
+    
+    // Add wobble effect to wrong cups during anticipation phase
+    if (!isRevealed && !isShuffling && !isLifted && selectedCupExists() && !selected) {
+      // Only wobble if this cup doesn't have the ball (false positive hint)
+      if (!hasBall) {
+        setTimeout(() => {
+          setShowWobble(true);
+          // Stop wobble after a short time
+          setTimeout(() => setShowWobble(false), 400);
+        }, Math.random() * 400); // Stagger the wobble timing
+      }
+    } else {
+      setShowWobble(false);
+    }
+  }, [selected, isRevealed, hasBall, isShuffling, isLifted]);
+
+  // Check if any cup is selected (for anticipation coordination)
+  const selectedCupExists = () => {
+    // If this cup is in anticipation state, it means a cup is selected
+    return showAnticipation || selected;
+  };
 
   // Determine if the cup is clickable - prevent clicks during:
   // 1. Shuffling
@@ -74,6 +95,7 @@ const Cup = ({
           selected && "border-jungle-yellow border-4 ring-2 ring-yellow-400",
           isRevealed && selected && "animate-cup-reveal",
           showAnticipation && "animate-anticipation",
+          showWobble && "animate-wobble",
           isLifted && "transform -translate-y-12 transition-transform duration-700",
           isClickable && "animate-bounce",
           isClickable && "cursor-pointer",
