@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Trophy, Coins, Smartphone } from "lucide-react";
@@ -213,14 +212,8 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
           }
         }}
       >
-        {isMobile ? (
-          <>
-            <Smartphone className="mr-2 h-5 w-5" />
-            Open Petra Wallet
-          </>
-        ) : (
-          "Install Petra Wallet"
-        )}
+        <Smartphone className="mr-2 h-5 w-5" />
+        Connect Wallet
       </Button>
     );
   }
@@ -270,7 +263,7 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
       onClick={connectWallet}
     >
       {isMobile && <Smartphone className="mr-2 h-5 w-5" />}
-      Connect Wallet to {NETWORK.charAt(0).toUpperCase() + NETWORK.slice(1)}
+      Connect Wallet
     </Button>
   );
 };

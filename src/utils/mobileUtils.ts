@@ -11,7 +11,7 @@ export const isInPetraMobileBrowser = (): boolean => {
   return userAgent.includes("PetraWallet") || userAgent.includes("Petra/");
 };
 
-// Generate deep link to open Petra mobile app
+// Generate deep link to open Petra mobile app with current URL
 export const getPetraMobileDeepLink = (url: string): string => {
   // Encode the current URL to be used in the deep link
   const currentUrl = encodeURIComponent(url || window.location.href);
