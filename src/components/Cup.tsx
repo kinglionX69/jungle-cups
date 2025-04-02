@@ -83,10 +83,25 @@ const Cup = ({
         onClick={handleCupClick}
         style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }} // Lower z-index during shuffling or initial reveal
       >
+        {/* Cup number on the cup itself */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="font-bungee text-2xl text-jungle-darkGreen bg-jungle-yellow rounded-full w-10 h-10 flex items-center justify-center border-2 border-yellow-700">
+            {index + 1}
+          </span>
+        </div>
         <div className="cup-base"></div>
         
-        {/* Add subtle wood texture effect */}
-        <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-yellow-100 to-transparent rounded-t-[100px] pointer-events-none"></div>
+        {/* Improved cup design with subtle details */}
+        <div className="absolute w-full h-full">
+          {/* Add subtle wood texture effect */}
+          <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-yellow-100 to-transparent rounded-t-[100px] pointer-events-none"></div>
+          
+          {/* Add subtle highlight */}
+          <div className="absolute top-4 left-4 right-4 h-8 bg-white/10 rounded-full blur-sm"></div>
+          
+          {/* Add subtle shadow */}
+          <div className="absolute bottom-8 left-2 right-2 h-8 bg-black/20 rounded-full blur-md"></div>
+        </div>
       </div>
       
       {/* Anticipation effect - glowing aura around selected cup */}
@@ -106,8 +121,6 @@ const Cup = ({
           <div className="absolute top-1 left-2 w-2 h-2 bg-white/40 rounded-full"></div>
         </div>
       )}
-      
-      <p className="mt-2 font-bungee text-lg relative z-20 text-jungle-darkGreen">{index + 1}</p>
     </div>
   );
 };

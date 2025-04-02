@@ -65,7 +65,7 @@
   }
 
   .cup {
-    @apply bg-jungle-brown w-32 h-40 rounded-t-[100px] cursor-pointer relative
+    @apply bg-gradient-to-b from-jungle-brown to-yellow-700 w-32 h-40 rounded-t-[100px] cursor-pointer relative
     border-4 border-yellow-700 shadow-lg transition-transform duration-300 hover:scale-105;
   }
 
@@ -74,7 +74,7 @@
   }
 
   .ball {
-    @apply absolute w-10 h-10 rounded-full bg-jungle-yellow border-2 border-yellow-600 shadow-inner;
+    @apply absolute w-10 h-10 rounded-full bg-gradient-to-b from-jungle-yellow to-yellow-600 border-2 border-yellow-600 shadow-inner;
   }
 
   .game-container {
