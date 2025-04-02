@@ -1,12 +1,19 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Trophy, Coins } from "lucide-react";
+import { Trophy, Coins, Smartphone } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   NETWORK, 
   requestTestnetTokens, 
   initializeAccount 
 } from "@/utils/aptosUtils";
+import { 
+  isMobileDevice, 
+  isInPetraMobileBrowser, 
+  redirectToPetraMobile 
+} from "@/utils/mobileUtils";
 
 interface WalletConnectProps {
   onConnect: (wallet: string) => void;
@@ -19,6 +26,7 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(true);
   const [isInitializing, setIsInitializing] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Check if Petra wallet is installed
@@ -79,13 +87,32 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
   };
 
   const connectWallet = async () => {
-    if (!window.aptos) {
+    // For mobile devices not in Petra browser, redirect to Petra app
+    if (isMobile && isMobileDevice() && !isInPetraMobileBrowser()) {
       toast({
-        title: "Wallet Not Found",
-        description: "Please install Petra wallet extension",
-        variant: "destructive",
+        title: "Opening Petra Wallet",
+        description: "Redirecting you to the Petra mobile app...",
       });
-      window.open("https://petra.app/", "_blank");
+      redirectToPetraMobile();
+      return;
+    }
+    
+    if (!window.aptos) {
+      if (isMobile) {
+        toast({
+          title: "Wallet Not Found",
+          description: "Please install Petra wallet app",
+          variant: "destructive",
+        });
+        window.open("https://petra.app/", "_blank");
+      } else {
+        toast({
+          title: "Wallet Not Found",
+          description: "Please install Petra wallet extension",
+          variant: "destructive",
+        });
+        window.open("https://petra.app/", "_blank");
+      }
       return;
     }
     
@@ -171,18 +198,37 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
     }
   };
 
+  // Mobile-specific UI adjustments
+  const buttonClasses = isMobile ? "w-full justify-center py-3 text-base" : "";
+
   if (!isInstalled) {
     return (
-      <Button className="jungle-btn" onClick={() => window.open("https://petra.app/", "_blank")}>
-        Install Petra Wallet
+      <Button 
+        className={`jungle-btn ${buttonClasses}`} 
+        onClick={() => {
+          if (isMobile) {
+            redirectToPetraMobile();
+          } else {
+            window.open("https://petra.app/", "_blank");
+          }
+        }}
+      >
+        {isMobile ? (
+          <>
+            <Smartphone className="mr-2 h-5 w-5" />
+            Open Petra Wallet
+          </>
+        ) : (
+          "Install Petra Wallet"
+        )}
       </Button>
     );
   }
 
   if (connected) {
     return (
-      <div className="flex flex-col sm:flex-row gap-2 items-center">
-        <div className={`flex items-center ${isCorrectNetwork ? "bg-jungle-green" : "bg-red-500"} text-white px-4 py-2 rounded-full`}>
+      <div className={`flex flex-col ${isMobile ? 'w-full gap-2' : 'sm:flex-row gap-2 items-center'}`}>
+        <div className={`flex items-center ${isCorrectNetwork ? "bg-jungle-green" : "bg-red-500"} text-white px-4 py-2 rounded-full ${isMobile ? 'w-full justify-center' : ''}`}>
           <Trophy className="mr-2 h-5 w-5" />
           <span className="truncate max-w-[180px]">{`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}</span>
         </div>
@@ -193,12 +239,12 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
             {NETWORK.toUpperCase()}
           </span>
         )}
-        <div className="flex gap-2">
+        <div className={`flex gap-2 ${isMobile ? 'w-full' : ''}`}>
           {isCorrectNetwork && NETWORK === "testnet" && (
             <Button 
               variant="outline" 
               size="sm" 
-              className="border-2 border-jungle-green" 
+              className={`border-2 border-jungle-green ${isMobile ? 'flex-1' : ''}`}
               onClick={getTestnetTokens}
               disabled={isInitializing}
             >
@@ -206,7 +252,11 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
               {isInitializing ? "Initializing..." : "Get Test Tokens"}
             </Button>
           )}
-          <Button variant="outline" className="border-2 border-jungle-orange" onClick={disconnectWallet}>
+          <Button 
+            variant="outline" 
+            className={`border-2 border-jungle-orange ${isMobile ? 'flex-1' : ''}`} 
+            onClick={disconnectWallet}
+          >
             Disconnect
           </Button>
         </div>
@@ -215,7 +265,11 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
   }
 
   return (
-    <Button className="jungle-btn" onClick={connectWallet}>
+    <Button 
+      className={`jungle-btn ${buttonClasses}`} 
+      onClick={connectWallet}
+    >
+      {isMobile && <Smartphone className="mr-2 h-5 w-5" />}
       Connect Wallet to {NETWORK.charAt(0).toUpperCase() + NETWORK.slice(1)}
     </Button>
   );
