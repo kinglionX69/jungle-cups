@@ -12,16 +12,16 @@ const Logo = ({ className = "" }: { className?: string }) => {
       <div className="relative">
         {/* Three cups stacked - using the uploaded images for first two */}
         <div className="w-14 h-12 relative -mb-2 z-30 transform rotate-[-15deg] translate-x-2">
-          <img src={cup1Image} alt="Cup 1" className="w-full h-full object-contain" />
+          <img src={cup1Image} alt="Cup 1" className="w-full h-full object-contain bg-transparent" />
         </div>
         <div className="w-14 h-12 relative -mb-2 z-20">
-          <img src={cup2Image} alt="Cup 2" className="w-full h-full object-contain" />
+          <img src={cup2Image} alt="Cup 2" className="w-full h-full object-contain bg-transparent" />
         </div>
         <div className="w-12 h-10 bg-jungle-brown rounded-t-full border-2 border-yellow-700 relative z-10 transform rotate-[15deg] -translate-x-2 shadow-md"></div>
         
         {/* Ball peeking out - using uploaded lion image */}
         <div className="w-8 h-8 absolute bottom-0 right-0 z-40">
-          <img src={ballImage} alt="Ball" className="w-full h-full object-contain" />
+          <img src={ballImage} alt="Ball" className="w-full h-full object-contain bg-transparent" />
         </div>
       </div>
       <h1 className="text-3xl sm:text-4xl font-luckiest ml-3 drop-shadow-lg">

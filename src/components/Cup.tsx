@@ -123,7 +123,7 @@ const Cup = ({
           <img 
             src={getCupImage()} 
             alt={`Cup ${index + 1}`} 
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain" 
           />
         </div>
       ) : (

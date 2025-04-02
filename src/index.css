@@ -68,9 +68,12 @@
     border-4 border-yellow-700 shadow-lg transition-transform duration-300 hover:scale-105;
   }
   
-  /* New class for image-based cups */
   .cup-image {
-    @apply cursor-pointer shadow-lg transition-transform duration-300 hover:scale-105;
+    @apply cursor-pointer shadow-lg transition-transform duration-300 hover:scale-105 bg-transparent;
+  }
+
+  .cup-image img {
+    @apply w-full h-full object-contain bg-transparent;
   }
 
   .cup-base {
@@ -79,6 +82,10 @@
 
   .ball {
     @apply absolute flex items-center justify-center;
+  }
+
+  .ball img {
+    @apply bg-transparent;
   }
 
   .game-container {
@@ -138,7 +145,6 @@
   100% { transform: translateY(-60px); }
 }
 
-/* New anticipation animation */
 @keyframes anticipation {
   0% { transform: translateY(0); }
   25% { transform: translateY(-5px); }
@@ -147,7 +153,6 @@
   100% { transform: translateY(0); }
 }
 
-/* New wobble animation for false hints */
 @keyframes wobble {
   0% { transform: translateX(0); }
   25% { transform: translateX(-5px) rotate(-2deg); }
