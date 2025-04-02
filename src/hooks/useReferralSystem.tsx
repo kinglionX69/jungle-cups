@@ -142,8 +142,8 @@ export const useReferralSystem = (walletAddress: string) => {
       }
       
       toast({
-        title: "Referral Applied!",
-        description: "Thanks for growing the Pride! When your friend plays their first game with your code, your referral will reflect. Refer 10 friends to win 1 APT!",
+        title: "Success!",
+        description: "Referral code applied successfully.",
       });
       
       return true;
