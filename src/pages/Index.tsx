@@ -7,12 +7,11 @@ import StatsCard from "@/components/StatsCard";
 import ReferralCard from "@/components/ReferralCard";
 import { useToast } from "@/components/ui/use-toast";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
+import { useReferralSystem } from "@/hooks/useReferralSystem";
 
 import {
   checkEscrowFunding,
   getLeaderboardData,
-  getReferralFromUrl,
-  trackReferral,
 } from "@/utils/aptosUtils";
 
 const Index = () => {
@@ -24,6 +23,9 @@ const Index = () => {
   
   // Use player stats hook
   const { stats, isLoading, isWithdrawing, updateStats, addReferral, withdrawFunds } = usePlayerStats(walletAddress);
+  
+  // Use referral system hook
+  const { isProcessing } = useReferralSystem(walletAddress);
   
   // Leaderboard data - keeping this state for later reintegration
   const [leaderboardData, setLeaderboardData] = useState({
@@ -51,19 +53,6 @@ const Index = () => {
     setWalletAddress(address);
     
     if (address) {
-      // Check for referral code
-      const referralAddress = getReferralFromUrl();
-      if (referralAddress && referralAddress !== address) {
-        await trackReferral(address, referralAddress);
-        // Track this referral in our stats system - provide an empty string as placeholder for now
-        await addReferral(referralAddress);
-        
-        toast({
-          title: "Referral Detected",
-          description: "You've been referred by another player!",
-        });
-      }
-      
       // Load leaderboard data (keeping this for later reintegration)
       const leaderboard = await getLeaderboardData();
       if (leaderboard) {

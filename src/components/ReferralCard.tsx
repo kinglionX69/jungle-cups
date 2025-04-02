@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { useReferralSystem } from "@/hooks/useReferralSystem";
 
 interface ReferralCardProps {
   walletAddress: string;
@@ -12,9 +13,10 @@ interface ReferralCardProps {
 const ReferralCard = ({ walletAddress, referrals }: ReferralCardProps) => {
   const { toast } = useToast();
   const [isCopied, setIsCopied] = useState(false);
+  const { referralCode } = useReferralSystem(walletAddress);
   
   // Create referral link based on wallet address
-  const referralLink = `${window.location.origin}?ref=${walletAddress}`;
+  const referralLink = `${window.location.origin}?ref=${referralCode}`;
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink).then(
