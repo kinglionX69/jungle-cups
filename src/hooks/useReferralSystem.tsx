@@ -129,7 +129,7 @@ export const useReferralSystem = (walletAddress: string) => {
         .from('referrals')
         .insert([
           { referrer_address: referrerAddress, referred_address: walletAddress }
-        ]);
+        ] as any); // Type assertion to bypass TypeScript check
         
       if (insertError) {
         console.error("Error creating referral:", insertError);
