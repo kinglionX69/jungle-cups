@@ -31,6 +31,9 @@ const Cup = ({
   const cup1Image = "/lovable-uploads/3f7aa2ea-d29b-4cf6-bfcf-b727b6905b84.png";
   const cup2Image = "/lovable-uploads/fd90dd73-5d4f-4bca-ad3b-0683d39ee2cd.png";
   
+  // Ball image
+  const ballImage = "/lovable-uploads/2b7b2c72-28d9-4d98-9913-f85587df0f8c.png";
+  
   useEffect(() => {
     if (isShuffling) {
       setShuffleAnimation(`animate-cup-shuffle-${index + 1}`);
@@ -175,8 +178,12 @@ const Cup = ({
           "ball absolute left-1/2 transform -translate-x-1/2 animate-fade-in",
           isLifted ? "bottom-0" : "bottom-12"
         )}>
-          {/* Add subtle highlight to the ball */}
-          <div className="absolute top-1 left-2 w-2 h-2 bg-white/40 rounded-full"></div>
+          {/* Use image for the ball instead of CSS styling */}
+          <img 
+            src={ballImage} 
+            alt="Ball" 
+            className="w-12 h-12 object-contain" 
+          />
         </div>
       )}
     </div>
