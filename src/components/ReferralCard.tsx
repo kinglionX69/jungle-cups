@@ -85,9 +85,6 @@ const ReferralCard = ({ walletAddress, referrals }: ReferralCardProps) => {
         <CardTitle className="text-xl text-center">Referral Program</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-center">
-          Share your referral link and earn 5% bonus on the first 3 wins of new users!
-        </p>
         
         <div className="flex flex-col space-y-2">
           <span className="text-sm text-muted-foreground">Your referral code:</span>
