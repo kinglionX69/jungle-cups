@@ -68,6 +68,11 @@
     @apply bg-gradient-to-b from-jungle-brown to-yellow-700 w-32 h-40 rounded-t-[100px] cursor-pointer relative
     border-4 border-yellow-700 shadow-lg transition-transform duration-300 hover:scale-105;
   }
+  
+  /* New class for image-based cups */
+  .cup-image {
+    @apply cursor-pointer shadow-lg transition-transform duration-300 hover:scale-105;
+  }
 
   .cup-base {
     @apply absolute bottom-0 left-0 w-full h-6 bg-jungle-yellow rounded-b-lg border-t-4 border-yellow-700;

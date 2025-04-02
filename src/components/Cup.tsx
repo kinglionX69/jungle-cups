@@ -27,6 +27,10 @@ const Cup = ({
   const [showAnticipation, setShowAnticipation] = useState(false);
   const [showWobble, setShowWobble] = useState(false);
   
+  // Images for cups 1 and 2
+  const cup1Image = "/lovable-uploads/3f7aa2ea-d29b-4cf6-bfcf-b727b6905b84.png";
+  const cup2Image = "/lovable-uploads/fd90dd73-5d4f-4bca-ad3b-0683d39ee2cd.png";
+  
   useEffect(() => {
     if (isShuffling) {
       setShuffleAnimation(`animate-cup-shuffle-${index + 1}`);
@@ -86,45 +90,77 @@ const Cup = ({
     }
   };
 
+  // Get cup image based on index
+  const getCupImage = () => {
+    if (index === 0) return cup1Image; // Cup 1
+    if (index === 1) return cup2Image; // Cup 2
+    return null; // Cup 3 will use CSS styling
+  };
+
   return (
     <div className="flex flex-col items-center relative">
-      <div
-        className={cn(
-          "cup",
-          shuffleAnimation,
-          selected && "border-jungle-yellow border-4 ring-2 ring-yellow-400",
-          isRevealed && selected && "animate-cup-reveal",
-          showAnticipation && "animate-anticipation",
-          showWobble && "animate-wobble",
-          isLifted && "transform -translate-y-12 transition-transform duration-700",
-          isClickable && "animate-bounce",
-          isClickable && "cursor-pointer",
-          !isClickable && "cursor-default",
-          "transform transition-all duration-300"
-        )}
-        onClick={handleCupClick}
-        style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }} // Lower z-index during shuffling or initial reveal
-      >
-        {/* Cup number on the cup itself */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="font-bungee text-2xl text-jungle-darkGreen bg-jungle-yellow rounded-full w-10 h-10 flex items-center justify-center border-2 border-yellow-700">
-            {index + 1}
-          </span>
+      {/* Use image for cups 1 and 2, CSS for cup 3 */}
+      {(index === 0 || index === 1) ? (
+        <div
+          className={cn(
+            "cup-image",
+            shuffleAnimation,
+            selected && "ring-4 ring-yellow-400",
+            isRevealed && selected && "animate-cup-reveal",
+            showAnticipation && "animate-anticipation",
+            showWobble && "animate-wobble",
+            isLifted && "transform -translate-y-12 transition-transform duration-700",
+            isClickable && "cursor-pointer",
+            !isClickable && "cursor-default",
+            "transform transition-all duration-300 w-36 h-40 relative"
+          )}
+          onClick={handleCupClick}
+          style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }}
+        >
+          <img 
+            src={getCupImage()} 
+            alt={`Cup ${index + 1}`} 
+            className="w-full h-full object-contain"
+          />
         </div>
-        <div className="cup-base"></div>
-        
-        {/* Improved cup design with subtle details */}
-        <div className="absolute w-full h-full">
-          {/* Add subtle wood texture effect */}
-          <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-yellow-100 to-transparent rounded-t-[100px] pointer-events-none"></div>
+      ) : (
+        <div
+          className={cn(
+            "cup",
+            shuffleAnimation,
+            selected && "border-jungle-yellow border-4 ring-2 ring-yellow-400",
+            isRevealed && selected && "animate-cup-reveal",
+            showAnticipation && "animate-anticipation",
+            showWobble && "animate-wobble",
+            isLifted && "transform -translate-y-12 transition-transform duration-700",
+            isClickable && "cursor-pointer",
+            !isClickable && "cursor-default",
+            "transform transition-all duration-300"
+          )}
+          onClick={handleCupClick}
+          style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }}
+        >
+          {/* Cup number on the cup itself */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="font-bungee text-2xl text-jungle-darkGreen bg-jungle-yellow rounded-full w-10 h-10 flex items-center justify-center border-2 border-yellow-700">
+              {index + 1}
+            </span>
+          </div>
+          <div className="cup-base"></div>
           
-          {/* Add subtle highlight */}
-          <div className="absolute top-4 left-4 right-4 h-8 bg-white/10 rounded-full blur-sm"></div>
-          
-          {/* Add subtle shadow */}
-          <div className="absolute bottom-8 left-2 right-2 h-8 bg-black/20 rounded-full blur-md"></div>
+          {/* Improved cup design with subtle details */}
+          <div className="absolute w-full h-full">
+            {/* Add subtle wood texture effect */}
+            <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-yellow-100 to-transparent rounded-t-[100px] pointer-events-none"></div>
+            
+            {/* Add subtle highlight */}
+            <div className="absolute top-4 left-4 right-4 h-8 bg-white/10 rounded-full blur-sm"></div>
+            
+            {/* Add subtle shadow */}
+            <div className="absolute bottom-8 left-2 right-2 h-8 bg-black/20 rounded-full blur-md"></div>
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Anticipation effect - glowing aura around selected cup */}
       {showAnticipation && (
