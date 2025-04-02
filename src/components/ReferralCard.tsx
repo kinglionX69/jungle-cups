@@ -22,7 +22,7 @@ const ReferralCard = ({ walletAddress, referrals }: ReferralCardProps) => {
     isProcessing 
   } = useReferralSystem(walletAddress);
   
-  // Calculate progress percentage (0-100%)
+  // Calculate progress percentage (0-100%) - ensure it's a number
   const progressPercentage = Math.min(referrals * 10, 100);
   
   const copyToClipboard = () => {

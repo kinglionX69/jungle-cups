@@ -9,7 +9,9 @@ import {
 import { 
   isMobileDevice, 
   isInPetraMobileBrowser, 
-  redirectToPetraMobile 
+  redirectToPetraMobile,
+  hasWalletCallbackParams,
+  getWalletAddressFromURL
 } from "@/utils/mobileUtils";
 
 interface UseWalletConnectionProps {
@@ -22,6 +24,23 @@ export function useWalletConnection({ onConnect, walletAddress }: UseWalletConne
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(true);
   const [isInitializing, setIsInitializing] = useState(false);
   const { toast } = useToast();
+
+  // Check for wallet callback params on component mount
+  useEffect(() => {
+    if (hasWalletCallbackParams()) {
+      const address = getWalletAddressFromURL();
+      if (address && !walletAddress) {
+        console.log("Detected wallet address from URL params:", address);
+        onConnect(address);
+        
+        // Clean up URL parameters
+        if (window.history && window.history.replaceState) {
+          const cleanUrl = window.location.href.split('?')[0];
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Check if Petra wallet is installed

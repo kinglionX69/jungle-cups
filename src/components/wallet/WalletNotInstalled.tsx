@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Smartphone } from "lucide-react";
-import { redirectToPetraMobile } from "@/utils/mobileUtils";
+import { redirectToPetraMobile, isMobileDevice } from "@/utils/mobileUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface WalletNotInstalledProps {
@@ -16,7 +16,7 @@ const WalletNotInstalled = ({ onClick }: WalletNotInstalledProps) => {
     <Button 
       className={`jungle-btn ${buttonClasses}`} 
       onClick={() => {
-        if (isMobile) {
+        if (isMobileDevice()) {
           redirectToPetraMobile();
         } else {
           window.open("https://petra.app/", "_blank");
