@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -62,11 +61,9 @@ const Cup = ({
     }
   }, [isShuffling, index]);
 
-  // Add anticipation effect when a cup is selected but not yet revealed
   useEffect(() => {
     if (selected && !isRevealed) {
       setShowAnticipation(true);
-      // Remove anticipation once the cup is revealed
       if (isRevealed) {
         setShowAnticipation(false);
       }
@@ -74,35 +71,24 @@ const Cup = ({
       setShowAnticipation(false);
     }
     
-    // Add wobble effect to wrong cups during anticipation phase
     if (!isRevealed && !isShuffling && !isLifted && selectedCupExists() && !selected) {
-      // Only wobble if this cup doesn't have the ball (false positive hint)
       if (!hasBall) {
         setTimeout(() => {
           setShowWobble(true);
-          // Stop wobble after a short time
           setTimeout(() => setShowWobble(false), 400);
-        }, Math.random() * 400); // Stagger the wobble timing
+        }, Math.random() * 400);
       }
     } else {
       setShowWobble(false);
     }
   }, [selected, isRevealed, hasBall, isShuffling, isLifted]);
 
-  // Check if any cup is selected (for anticipation coordination)
   const selectedCupExists = () => {
-    // If this cup is in anticipation state, it means a cup is selected
     return showAnticipation || selected;
   };
 
-  // Determine if the cup is clickable - prevent clicks during:
-  // 1. Shuffling
-  // 2. Game ended
-  // 3. When cups are lifted for initial reveal
-  // 4. When cups are being revealed after selection
   const isClickable = !isShuffling && !gameEnded && !isLifted && !isRevealed;
 
-  // Handle cup click with additional checks
   const handleCupClick = () => {
     if (isClickable) {
       onClick(index);
@@ -113,16 +99,14 @@ const Cup = ({
     }
   };
 
-  // Get cup image based on index
   const getCupImage = () => {
-    if (index === 0) return cup1Image; // Cup 1
-    if (index === 1) return cup2Image; // Cup 2
-    return cup3Image; // Cup 3 - now using the image instead of CSS
+    if (index === 0) return cup1Image;
+    if (index === 1) return cup2Image;
+    return cup3Image;
   };
 
   return (
     <div className="flex flex-col items-center relative">
-      {/* Use images for all cups now */}
       <div
         className={cn(
           "cup-image",
@@ -150,20 +134,17 @@ const Cup = ({
         />
       </div>
       
-      {/* Anticipation effect - glowing aura around selected cup */}
       {showAnticipation && (
         <div className="absolute inset-0 -z-10 animate-pulse">
           <div className="absolute inset-0 bg-jungle-yellow/30 rounded-full blur-xl transform scale-110"></div>
         </div>
       )}
       
-      {/* Ball shown below cup when lifted, or inside cup when revealed */}
       {hasBall && (isLifted || (isRevealed && selected)) && (
         <div className={cn(
           "ball absolute left-1/2 transform -translate-x-1/2 animate-fade-in",
           isLifted ? "bottom-0" : "bottom-12"
         )}>
-          {/* Use new image for the ball */}
           <img 
             src={ballImage} 
             alt="Ball" 
