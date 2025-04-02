@@ -22,19 +22,17 @@ const ReferralCard = ({ walletAddress, referrals }: ReferralCardProps) => {
     isProcessing 
   } = useReferralSystem(walletAddress);
   
-  // Create referral link based on wallet address with the new format
-  const referralLink = `${window.location.origin}?ref=${referralCode}`;
-  
   // Calculate progress percentage (0-100%)
   const progressPercentage = Math.min(referrals * 10, 100);
   
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(referralLink).then(
+    // Changed to copy only the referral code, not the full URL
+    navigator.clipboard.writeText(referralCode).then(
       () => {
         setIsCopied(true);
         toast({
           title: "Copied!",
-          description: "Referral link copied to clipboard",
+          description: "Referral code copied to clipboard",
         });
         
         setTimeout(() => setIsCopied(false), 3000);
@@ -43,7 +41,7 @@ const ReferralCard = ({ walletAddress, referrals }: ReferralCardProps) => {
         console.error("Could not copy text: ", err);
         toast({
           title: "Error",
-          description: "Failed to copy referral link",
+          description: "Failed to copy referral code",
           variant: "destructive",
         });
       }
