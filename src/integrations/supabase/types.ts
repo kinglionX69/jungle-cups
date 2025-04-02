@@ -87,12 +87,62 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          is_activated: boolean | null
+          referred_address: string
+          referrer_address: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_activated?: boolean | null
+          referred_address: string
+          referrer_address: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_activated?: boolean | null
+          referred_address?: string
+          referrer_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_referred"
+            columns: ["referred_address"]
+            isOneToOne: true
+            referencedRelation: "player_stats"
+            referencedColumns: ["wallet_address"]
+          },
+          {
+            foreignKeyName: "fk_referrer"
+            columns: ["referrer_address"]
+            isOneToOne: false
+            referencedRelation: "player_stats"
+            referencedColumns: ["wallet_address"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      activate_referral: {
+        Args: {
+          referred_wallet: string
+        }
+        Returns: undefined
+      }
+      count_activated_referrals: {
+        Args: {
+          player_wallet: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

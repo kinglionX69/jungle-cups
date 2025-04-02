@@ -3,6 +3,7 @@ import { playClickSound } from "@/utils/gameUtils";
 import { useGameSequence } from "./useGameSequence";
 import { useBetHandler } from "./useBetHandler";
 import { useCupSelection } from "./useCupSelection";
+import { useReferralSystem } from "./useReferralSystem";
 
 interface UseGameLogicProps {
   walletAddress: string;
@@ -19,9 +20,11 @@ export const useGameLogic = ({
 }: UseGameLogicProps) => {
   const { startGameSequence } = useGameSequence();
   const { handlePlaceBet } = useBetHandler(walletAddress);
+  const { activateReferral } = useReferralSystem(walletAddress);
   const { handleCupSelect } = useCupSelection({ 
     onStatsUpdated,
-    updatePlayerStats
+    updatePlayerStats,
+    activateReferral
   });
   
   // Start a new round

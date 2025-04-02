@@ -7,7 +7,7 @@ interface ImagePreloaderProps {
 
 export const useImagePreloader = ({ imageUrls }: ImagePreloaderProps) => {
   const [imagesLoaded, setImagesLoaded] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   useEffect(() => {
     if (!imageUrls.length) {
@@ -16,39 +16,42 @@ export const useImagePreloader = ({ imageUrls }: ImagePreloaderProps) => {
     }
 
     let loadedCount = 0;
-    const imageElements: HTMLImageElement[] = [];
+    const totalImages = imageUrls.length;
 
-    const onLoad = () => {
-      loadedCount += 1;
-      setProgress(Math.round((loadedCount / imageUrls.length) * 100));
-      
-      // Check if all images have loaded
-      if (loadedCount === imageUrls.length) {
-        console.log("All images have been preloaded");
+    const preloadImage = (url: string) => {
+      return new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        
+        img.onload = () => {
+          loadedCount++;
+          setLoadingProgress((loadedCount / totalImages) * 100);
+          resolve();
+        };
+        
+        img.onerror = () => {
+          console.error(`Failed to load image: ${url}`);
+          loadedCount++;
+          setLoadingProgress((loadedCount / totalImages) * 100);
+          resolve(); // Still resolve to continue loading other images
+        };
+        
+        img.src = url;
+      });
+    };
+
+    const preloadAllImages = async () => {
+      try {
+        // Use Promise.all to load all images in parallel
+        await Promise.all(imageUrls.map(url => preloadImage(url)));
         setImagesLoaded(true);
+      } catch (error) {
+        console.error("Error preloading images:", error);
+        setImagesLoaded(true); // Continue anyway to not block the app
       }
     };
 
-    // Preload images
-    imageUrls.forEach(src => {
-      const img = new Image();
-      img.src = src;
-      img.onload = onLoad;
-      img.onerror = () => {
-        console.error(`Failed to load image: ${src}`);
-        onLoad(); // Count errors as loaded to avoid hanging
-      };
-      imageElements.push(img);
-    });
-
-    // Cleanup function
-    return () => {
-      imageElements.forEach(img => {
-        img.onload = null;
-        img.onerror = null;
-      });
-    };
+    preloadAllImages();
   }, [imageUrls]);
 
-  return { imagesLoaded, progress };
+  return { imagesLoaded, loadingProgress };
 };

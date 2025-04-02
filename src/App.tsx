@@ -21,7 +21,7 @@ const App = () => {
     "/lovable-uploads/1dbfd59c-8518-41c7-893a-3f6ee1f27680.png", // Background
   ];
 
-  const { imagesLoaded } = useImagePreloader({ imageUrls: gameImages });
+  const { imagesLoaded, loadingProgress } = useImagePreloader({ imageUrls: gameImages });
   const [showLoader, setShowLoader] = useState(true);
   
   useEffect(() => {
@@ -38,7 +38,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {showLoader && <LoadingScreen />}
+        {showLoader && <LoadingScreen progress={loadingProgress} />}
         <Toaster />
         <Sonner />
         <BrowserRouter>

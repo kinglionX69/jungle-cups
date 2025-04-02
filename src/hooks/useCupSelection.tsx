@@ -13,9 +13,14 @@ import { useGameState } from "./useGameState";
 interface UseCupSelectionProps {
   onStatsUpdated: () => void;
   updatePlayerStats?: (won: boolean, betAmount: number, tokenType: string) => Promise<any>;
+  activateReferral?: () => Promise<boolean>;
 }
 
-export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSelectionProps) => {
+export const useCupSelection = ({ 
+  onStatsUpdated, 
+  updatePlayerStats,
+  activateReferral
+}: UseCupSelectionProps) => {
   const { toast } = useToast();
   const {
     setSelectedCup,
@@ -59,6 +64,15 @@ export const useCupSelection = ({ onStatsUpdated, updatePlayerStats }: UseCupSel
     // Create anticipation with a shorter delay before revealing
     setTimeout(async () => {
       setIsRevealed(true);
+      
+      // Activate user's referral if this is their first game
+      if (activateReferral) {
+        activateReferral().then(success => {
+          if (success) {
+            console.log("Referral activated");
+          }
+        });
+      }
       
       if (won) {
         playWinSound();
