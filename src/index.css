@@ -54,9 +54,13 @@
   button {
     @apply font-bungee;
   }
+  
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    backface-visibility: hidden;
+  }
 }
 
-/* Custom components */
 @layer components {
   .jungle-btn {
     @apply bg-jungle-orange hover:bg-jungle-yellow text-white font-bungee py-3 px-6 rounded-full 
@@ -69,11 +73,15 @@
   }
   
   .cup-image {
-    @apply cursor-pointer shadow-lg transition-transform duration-300 hover:scale-105 bg-transparent;
+    @apply cursor-pointer transition-transform duration-300 hover:scale-105;
+    box-shadow: none;
+    background-color: transparent !important;
+    transition: opacity 0.3s ease;
   }
 
   .cup-image img {
-    @apply w-full h-full object-contain bg-transparent;
+    @apply w-full h-full object-contain;
+    background-color: transparent !important;
   }
 
   .cup-base {
@@ -85,7 +93,7 @@
   }
 
   .ball img {
-    @apply bg-transparent;
+    background-color: transparent !important;
   }
 
   .game-container {
@@ -105,7 +113,6 @@
   }
 }
 
-/* Animation keyframes and classes */
 @keyframes cup-shuffle-1 {
   0% { transform: translateX(0); }
   15% { transform: translateX(160px) translateY(-10px); }

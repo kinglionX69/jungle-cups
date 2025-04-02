@@ -26,6 +26,7 @@ const Cup = ({
   const [shuffleAnimation, setShuffleAnimation] = useState("");
   const [showAnticipation, setShowAnticipation] = useState(false);
   const [showWobble, setShowWobble] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // Images for cups 1 and 2
   const cup1Image = "/lovable-uploads/3f7aa2ea-d29b-4cf6-bfcf-b727b6905b84.png";
@@ -33,6 +34,24 @@ const Cup = ({
   
   // Ball image
   const ballImage = "/lovable-uploads/2b7b2c72-28d9-4d98-9913-f85587df0f8c.png";
+  
+  // Preload images to prevent blank screens
+  useEffect(() => {
+    const preloadImages = () => {
+      const imageUrls = [cup1Image, cup2Image, ballImage];
+      imageUrls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => {
+          if (url === getCupImage()) {
+            setImageLoaded(true);
+          }
+        };
+      });
+    };
+    
+    preloadImages();
+  }, []);
   
   useEffect(() => {
     if (isShuffling) {
@@ -115,7 +134,9 @@ const Cup = ({
             isLifted && "transform -translate-y-12 transition-transform duration-700",
             isClickable && "cursor-pointer",
             !isClickable && "cursor-default",
-            "transform transition-all duration-300 w-36 h-40 relative"
+            "transform transition-all duration-300 w-36 h-40 relative",
+            !imageLoaded && "opacity-0",
+            imageLoaded && "opacity-100"
           )}
           onClick={handleCupClick}
           style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }}
@@ -123,7 +144,9 @@ const Cup = ({
           <img 
             src={getCupImage()} 
             alt={`Cup ${index + 1}`} 
-            className="w-full h-full object-contain" 
+            className="w-full h-full object-contain"
+            style={{ backgroundColor: 'transparent' }}
+            onLoad={() => setImageLoaded(true)}
           />
         </div>
       ) : (
@@ -183,6 +206,7 @@ const Cup = ({
             src={ballImage} 
             alt="Ball" 
             className="w-12 h-12 object-contain" 
+            style={{ backgroundColor: 'transparent' }}
           />
         </div>
       )}
