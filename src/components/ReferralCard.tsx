@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { useReferralSystem } from "@/hooks/useReferralSystem";
-import { Clipboard, Users } from "lucide-react";
 
 interface ReferralCardProps {
   walletAddress: string;
@@ -27,12 +26,13 @@ const ReferralCard = ({ walletAddress, referrals }: ReferralCardProps) => {
   const progressPercentage = Math.min(referrals * 10, 100);
   
   const copyToClipboard = () => {
+    // Changed to copy only the referral code, not the full URL
     navigator.clipboard.writeText(referralCode).then(
       () => {
         setIsCopied(true);
         toast({
           title: "Copied!",
-          description: "Thanks for growing the Pride! Refer 10 friends to win 1 APT!",
+          description: "Thanks for growing the Pride! When your friend plays their first game with your code, your referral will reflect. Refer 10 friends to win 1 APT!",
         });
         
         setTimeout(() => setIsCopied(false), 3000);
@@ -81,73 +81,67 @@ const ReferralCard = ({ walletAddress, referrals }: ReferralCardProps) => {
 
   return (
     <Card className="stats-card">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl text-center flex items-center justify-center gap-2">
-          <Users className="h-5 w-5 text-jungle-green" />
-          Referrals
-        </CardTitle>
+      <CardHeader>
+        <CardTitle className="text-xl text-center">Referral Program</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Progress and Status */}
-        <div className="bg-white/50 rounded-lg p-2 border border-jungle-green/10">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-sm font-medium">Progress: {referrals}/10</span>
-            <span className="text-sm font-medium">{progressPercentage}%</span>
+      <CardContent className="space-y-4">
+        
+        <div className="flex flex-col space-y-2">
+          <span className="text-sm text-muted-foreground">Your referral code:</span>
+          <div className="flex items-center">
+            <div className="bg-white rounded-l-lg border border-r-0 border-jungle-green px-3 py-2 truncate flex-1">
+              {referralCode}
+            </div>
+            <Button 
+              onClick={copyToClipboard}
+              className="rounded-l-none rounded-r-lg bg-jungle-green hover:bg-jungle-darkGreen"
+            >
+              {isCopied ? "Copied!" : "Copy"}
+            </Button>
+          </div>
+        </div>
+        
+        {/* Referral Code Input */}
+        <div className="pt-2 space-y-2">
+          <span className="text-sm text-muted-foreground">Have a referral code?</span>
+          <div className="flex items-center gap-2">
+            <Input
+              value={referralCodeInput}
+              onChange={(e) => setReferralCodeInput(e.target.value)}
+              placeholder="Enter referral code"
+              className="flex-1"
+            />
+            <Button 
+              onClick={handleApplyReferralCode}
+              disabled={isProcessing || !referralCodeInput}
+              className="bg-jungle-yellow hover:bg-jungle-yellow/80 text-jungle-darkGreen"
+            >
+              Apply
+            </Button>
+          </div>
+        </div>
+        
+        {/* Referral Progress */}
+        <div className="space-y-2 pt-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Referral Progress:</span>
+            <span className="text-sm font-bold">{referrals}/10</span>
           </div>
           <Progress value={progressPercentage} className="h-2" />
-          <p className="text-xs text-center mt-1 text-muted-foreground">
-            Refer 10 friends to win 1 APT!
+          <p className="text-xs text-muted-foreground text-center">
+            Refer 10 friends to win 1 APT bonus!
           </p>
         </div>
         
-        {/* Referral Code */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Input 
-              value={referralCode}
-              readOnly
-              className="pr-10 bg-white/80 border-jungle-green/30"
-            />
-            <Button 
-              size="sm"
-              variant="ghost" 
-              className="absolute right-0 top-0 h-full px-2"
-              onClick={copyToClipboard}
-            >
-              <Clipboard className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button 
-            size="sm"
-            onClick={copyToClipboard}
-            className="bg-jungle-green hover:bg-jungle-darkGreen whitespace-nowrap"
-          >
-            {isCopied ? "Copied!" : "Copy"}
-          </Button>
+        <div className="flex items-center justify-between pt-2">
+          <span>Active Referrals:</span>
+          <span className="font-bold text-jungle-green text-xl">{referrals}</span>
         </div>
         
-        {/* Apply Referral */}
-        <div className="flex gap-2">
-          <Input
-            value={referralCodeInput}
-            onChange={(e) => setReferralCodeInput(e.target.value)}
-            placeholder="Enter referral code"
-            className="flex-1 bg-white/80 border-jungle-green/30"
-            size="sm"
-          />
-          <Button 
-            size="sm"
-            onClick={handleApplyReferralCode}
-            disabled={isProcessing || !referralCodeInput}
-            className="bg-jungle-yellow hover:bg-jungle-yellow/80 text-jungle-darkGreen whitespace-nowrap"
-          >
-            Apply
-          </Button>
-        </div>
-        
-        <div className="text-xs text-muted-foreground">
-          Referrals become active when your friends play their first game. You can use a different code for each bet.
-        </div>
+        <p className="text-xs text-muted-foreground text-center">
+          Referrals only become active when your friends play their first game.
+          You can use a different referral code for each bet you make.
+        </p>
       </CardContent>
     </Card>
   );
