@@ -32,7 +32,7 @@ const ReferralCard = ({ walletAddress, referrals }: ReferralCardProps) => {
         setIsCopied(true);
         toast({
           title: "Copied!",
-          description: "Referral code copied to clipboard",
+          description: "Thanks for growing the Pride! When your friend plays their first game with your code, your referral will reflect. Refer 10 friends to win 1 APT!",
         });
         
         setTimeout(() => setIsCopied(false), 3000);
@@ -74,7 +74,7 @@ const ReferralCard = ({ walletAddress, referrals }: ReferralCardProps) => {
       setReferralCodeInput("");
       toast({
         title: "Success!",
-        description: "Thanks for growing the Pride! When your friend plays their first game with your code, your referral will reflect. Refer 10 friends to win 1 APT!",
+        description: "Referral code applied successfully.",
       });
     }
   };
