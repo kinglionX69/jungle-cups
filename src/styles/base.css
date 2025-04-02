@@ -1,0 +1,63 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 120 40% 95%;
+    --foreground: 140 10% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 139 72% 35%;
+    --primary-foreground: 120 100% 98%;
+
+    --secondary: 36 100% 50%;
+    --secondary-foreground: 36 10% 15%;
+
+    --muted: 120 10% 90%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 36 100% 50%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 139 72% 35%;
+
+    --radius: 1rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-jungle-background text-foreground font-bungee bg-[url('/lovable-uploads/1dbfd59c-8518-41c7-893a-3f6ee1f27680.png')] bg-cover bg-center bg-fixed;
+    background-blend-mode: overlay;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-luckiest text-jungle-darkGreen drop-shadow-sm;
+  }
+
+  button {
+    @apply font-bungee;
+  }
+  
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    backface-visibility: hidden;
+  }
+}
