@@ -1,5 +1,4 @@
-
-import { createAndSignTransaction } from "./aptosUtils.ts";
+import { createAndSignTransaction, client } from "./aptosUtils.ts";
 
 // Create transaction payload
 export const createTransferPayload = (
@@ -25,7 +24,7 @@ export const createTransferPayload = (
   };
 };
 
-// Improved function to wait for transaction with better error handling
+// Improved function to wait for transaction with better error handling and real blockchain checking
 export const waitForTransactionWithTimeout = async (
   transactionHash: string,
   timeoutMs: number = 30000
@@ -33,20 +32,39 @@ export const waitForTransactionWithTimeout = async (
   try {
     console.log(`Waiting for transaction ${transactionHash} with timeout ${timeoutMs}ms`);
     
-    // For testing purposes with mock transactions, we'll simulate a successful completion
-    // In production, this would poll the blockchain for the transaction status
+    const startTime = Date.now();
+    let transactionPending = true;
+    let txResult = null;
     
-    // Simulate blockchain confirmation delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    while (transactionPending && Date.now() - startTime < timeoutMs) {
+      try {
+        // Poll the transaction status from the blockchain
+        txResult = await client.getTransactionByHash(transactionHash);
+        
+        if (txResult && txResult.type === "user_transaction") {
+          // Check if transaction is completed
+          transactionPending = false;
+          console.log("Transaction confirmed:", txResult);
+          return txResult;
+        }
+        
+        // Wait a bit before polling again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (pollError) {
+        if (pollError.status === 404) {
+          // Transaction not found yet, keep waiting
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          throw pollError;
+        }
+      }
+    }
     
-    // Return a mock success response
-    return {
-      success: true,
-      vm_status: "Executed successfully",
-      gas_used: "1000",
-      version: "1234567",
-      hash: transactionHash
-    };
+    if (transactionPending) {
+      throw new Error(`Transaction timed out after ${timeoutMs}ms`);
+    }
+    
+    return txResult;
   } catch (error) {
     console.error("Error in waitForTransactionWithTimeout:", error);
     throw error;

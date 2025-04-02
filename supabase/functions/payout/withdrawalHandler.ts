@@ -4,6 +4,7 @@ import { processWithdrawalTransaction } from "./transactionUtils.ts";
 import { waitForTransactionWithTimeout } from "./transactionUtils.ts";
 import { verifyPlayerBalance, createTransactionRecord, updateTransactionStatus, updatePlayerBalance } from "./dbOperations.ts";
 import { createSuccessResponse, createErrorResponse } from "./responseHelpers.ts";
+import { createAptosAccount } from "./aptosUtils.ts";
 
 // Process withdrawal transactions
 export const handleWithdrawalTransaction = async (
@@ -65,15 +66,35 @@ export const handleWithdrawalTransaction = async (
       if (tokenType === "APT" || tokenType === "EMOJICOIN") {
         console.log(`Processing withdrawal of ${amount} ${tokenType} (${amountInOctas} octas) to ${playerAddress}`);
         
-        // Get the escrow wallet address from the private key
-        // In real implementation, this would use the Aptos SDK to derive the address
-        const escrowAddress = "0x2afbb09094a37b84d14bc9aaf7deb6dd586acc20b0e3ba8c8c5a7cafd9eb5a0d";
+        // Get the escrow wallet address
+        let escrowAccount;
+        try {
+          escrowAccount = createAptosAccount(escrowPrivateKey);
+          const escrowAddress = escrowAccount.address().hex();
+          console.log(`Using escrow wallet address: ${escrowAddress}`);
+        } catch (accountError) {
+          console.error("Error creating escrow account:", accountError);
+          
+          // Update transaction as failed
+          await updateTransactionStatus(
+            supabase, 
+            transactionRecord.id, 
+            'failed', 
+            `escrow account error: ${accountError.message}`
+          );
+          
+          return createErrorResponse(
+            500,
+            "Escrow account error",
+            "There was an error initializing the payment account. Please try again later."
+          );
+        }
         
         // Process the transaction directly
         let transactionRes;
         try {
           transactionRes = await processWithdrawalTransaction(
-            escrowAddress,
+            escrowAccount.address().hex(),
             playerAddress,
             amountInOctas,
             tokenType,
@@ -117,42 +138,65 @@ export const handleWithdrawalTransaction = async (
           );
         }
 
-        // Step 5: Simulate waiting for transaction completion
+        // Step 5: Wait for transaction confirmation
         try {
           console.log(`Waiting for transaction ${transactionRes.hash} to be confirmed`);
           const txResult = await waitForTransactionWithTimeout(transactionRes.hash);
           console.log("Transaction confirmed:", txResult);
           
-          // For testing, always consider transaction successful
-          // Update player balance
-          console.log("Updating player balance in database");
-          await updatePlayerBalance(
-            supabase, 
-            playerAddress, 
-            tokenType, 
-            availableBalance, 
-            amount
-          );
+          // Check if transaction was successful
+          const success = txResult && 
+            txResult.success === true && 
+            txResult.vm_status === "Executed successfully";
+            
+          if (success) {
+            // Update player balance
+            console.log("Updating player balance in database");
+            await updatePlayerBalance(
+              supabase, 
+              playerAddress, 
+              tokenType, 
+              availableBalance, 
+              amount
+            );
 
-          // Update transaction status to completed
-          console.log("Updating transaction status to completed");
-          await updateTransactionStatus(
-            supabase, 
-            transactionRecord.id, 
-            'completed', 
-            transactionRes.hash
-          );
+            // Update transaction status to completed
+            console.log("Updating transaction status to completed");
+            await updateTransactionStatus(
+              supabase, 
+              transactionRecord.id, 
+              'completed', 
+              transactionRes.hash
+            );
 
-          // Return success response with mock explorer URL
-          const explorerUrl = `https://explorer.aptoslabs.com/txn/${transactionRes.hash}?network=testnet`;
-          return {
-            success: true,
-            status: 200,
-            transactionHash: transactionRes.hash,
-            explorerUrl: explorerUrl,
-            message: `Successfully withdrew ${amount} ${tokenType} to your wallet`,
-            details: `Transaction confirmed on the blockchain.`
-          };
+            // Return success response with explorer URL
+            const explorerUrl = `https://explorer.aptoslabs.com/txn/${transactionRes.hash}?network=testnet`;
+            return {
+              success: true,
+              status: 200,
+              transactionHash: transactionRes.hash,
+              explorerUrl: explorerUrl,
+              message: `Successfully withdrew ${amount} ${tokenType} to your wallet`,
+              details: `Transaction confirmed on the blockchain.`
+            };
+          } else {
+            const errorMessage = "Transaction failed on blockchain";
+            console.error(errorMessage, txResult);
+            
+            // Update transaction as failed
+            await updateTransactionStatus(
+              supabase, 
+              transactionRecord.id, 
+              'failed', 
+              `${errorMessage}: ${txResult.vm_status}`
+            );
+            
+            return createErrorResponse(
+              500,
+              errorMessage,
+              `The transaction was submitted but failed on the blockchain: ${txResult.vm_status}`
+            );
+          }
         } catch (waitError) {
           console.error("Error waiting for transaction:", waitError);
           
