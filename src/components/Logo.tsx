@@ -5,7 +5,7 @@ const Logo = ({ className = "" }: { className?: string }) => {
   // Images for cup and ball
   const cup1Image = "/lovable-uploads/3f7aa2ea-d29b-4cf6-bfcf-b727b6905b84.png";
   const cup2Image = "/lovable-uploads/fd90dd73-5d4f-4bca-ad3b-0683d39ee2cd.png";
-  const ballImage = "/lovable-uploads/2b7b2c72-28d9-4d98-9913-f85587df0f8c.png";
+  const ballImage = "/lovable-uploads/691ee6e4-5edb-458c-91da-1ac2fb0bb0a5.png";
   
   const [imagesLoaded, setImagesLoaded] = useState(false);
   
@@ -55,7 +55,7 @@ const Logo = ({ className = "" }: { className?: string }) => {
         </div>
         <div className="w-12 h-10 bg-jungle-brown rounded-t-full border-2 border-yellow-700 relative z-10 transform rotate-[15deg] -translate-x-2 shadow-md"></div>
         
-        {/* Ball peeking out - using uploaded lion image */}
+        {/* Ball peeking out - using new lion ball image */}
         <div className="w-8 h-8 absolute bottom-0 right-0 z-40">
           <img 
             src={ballImage} 

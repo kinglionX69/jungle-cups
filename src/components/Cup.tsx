@@ -28,17 +28,18 @@ const Cup = ({
   const [showWobble, setShowWobble] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   
-  // Images for cups 1 and 2
+  // Images for cups 1, 2 and 3
   const cup1Image = "/lovable-uploads/3f7aa2ea-d29b-4cf6-bfcf-b727b6905b84.png";
   const cup2Image = "/lovable-uploads/fd90dd73-5d4f-4bca-ad3b-0683d39ee2cd.png";
+  const cup3Image = "/lovable-uploads/6c1f9c73-4732-4a6e-90b0-82e808afc3ab.png";
   
-  // Ball image
-  const ballImage = "/lovable-uploads/2b7b2c72-28d9-4d98-9913-f85587df0f8c.png";
+  // Ball image - using the new design
+  const ballImage = "/lovable-uploads/691ee6e4-5edb-458c-91da-1ac2fb0bb0a5.png";
   
   // Preload images to prevent blank screens
   useEffect(() => {
     const preloadImages = () => {
-      const imageUrls = [cup1Image, cup2Image, ballImage];
+      const imageUrls = [cup1Image, cup2Image, cup3Image, ballImage];
       imageUrls.forEach(url => {
         const img = new Image();
         img.src = url;
@@ -116,77 +117,38 @@ const Cup = ({
   const getCupImage = () => {
     if (index === 0) return cup1Image; // Cup 1
     if (index === 1) return cup2Image; // Cup 2
-    return null; // Cup 3 will use CSS styling
+    return cup3Image; // Cup 3 - now using the image instead of CSS
   };
 
   return (
     <div className="flex flex-col items-center relative">
-      {/* Use image for cups 1 and 2, CSS for cup 3 */}
-      {(index === 0 || index === 1) ? (
-        <div
-          className={cn(
-            "cup-image",
-            shuffleAnimation,
-            selected && "ring-4 ring-yellow-400",
-            isRevealed && selected && "animate-cup-reveal",
-            showAnticipation && "animate-anticipation",
-            showWobble && "animate-wobble",
-            isLifted && "transform -translate-y-12 transition-transform duration-700",
-            isClickable && "cursor-pointer",
-            !isClickable && "cursor-default",
-            "transform transition-all duration-300 w-36 h-40 relative",
-            !imageLoaded && "opacity-0",
-            imageLoaded && "opacity-100"
-          )}
-          onClick={handleCupClick}
-          style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }}
-        >
-          <img 
-            src={getCupImage()} 
-            alt={`Cup ${index + 1}`} 
-            className="w-full h-full object-contain"
-            style={{ backgroundColor: 'transparent' }}
-            onLoad={() => setImageLoaded(true)}
-          />
-        </div>
-      ) : (
-        <div
-          className={cn(
-            "cup",
-            shuffleAnimation,
-            selected && "border-jungle-yellow border-4 ring-2 ring-yellow-400",
-            isRevealed && selected && "animate-cup-reveal",
-            showAnticipation && "animate-anticipation",
-            showWobble && "animate-wobble",
-            isLifted && "transform -translate-y-12 transition-transform duration-700",
-            isClickable && "cursor-pointer",
-            !isClickable && "cursor-default",
-            "transform transition-all duration-300"
-          )}
-          onClick={handleCupClick}
-          style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }}
-        >
-          {/* Cup number on the cup itself */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="font-bungee text-2xl text-jungle-darkGreen bg-jungle-yellow rounded-full w-10 h-10 flex items-center justify-center border-2 border-yellow-700">
-              {index + 1}
-            </span>
-          </div>
-          <div className="cup-base"></div>
-          
-          {/* Improved cup design with subtle details */}
-          <div className="absolute w-full h-full">
-            {/* Add subtle wood texture effect */}
-            <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-yellow-100 to-transparent rounded-t-[100px] pointer-events-none"></div>
-            
-            {/* Add subtle highlight */}
-            <div className="absolute top-4 left-4 right-4 h-8 bg-white/10 rounded-full blur-sm"></div>
-            
-            {/* Add subtle shadow */}
-            <div className="absolute bottom-8 left-2 right-2 h-8 bg-black/20 rounded-full blur-md"></div>
-          </div>
-        </div>
-      )}
+      {/* Use images for all cups now */}
+      <div
+        className={cn(
+          "cup-image",
+          shuffleAnimation,
+          selected && "ring-4 ring-yellow-400",
+          isRevealed && selected && "animate-cup-reveal",
+          showAnticipation && "animate-anticipation",
+          showWobble && "animate-wobble",
+          isLifted && "transform -translate-y-12 transition-transform duration-700",
+          isClickable && "cursor-pointer",
+          !isClickable && "cursor-default",
+          "transform transition-all duration-300 w-36 h-40 relative",
+          !imageLoaded && "opacity-0",
+          imageLoaded && "opacity-100"
+        )}
+        onClick={handleCupClick}
+        style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }}
+      >
+        <img 
+          src={getCupImage()} 
+          alt={`Cup ${index + 1}`} 
+          className="w-full h-full object-contain"
+          style={{ backgroundColor: 'transparent' }}
+          onLoad={() => setImageLoaded(true)}
+        />
+      </div>
       
       {/* Anticipation effect - glowing aura around selected cup */}
       {showAnticipation && (
@@ -201,7 +163,7 @@ const Cup = ({
           "ball absolute left-1/2 transform -translate-x-1/2 animate-fade-in",
           isLifted ? "bottom-0" : "bottom-12"
         )}>
-          {/* Use image for the ball instead of CSS styling */}
+          {/* Use new image for the ball */}
           <img 
             src={ballImage} 
             alt="Ball" 

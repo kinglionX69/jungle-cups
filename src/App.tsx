@@ -17,7 +17,8 @@ const App = () => {
   const gameImages = [
     "/lovable-uploads/3f7aa2ea-d29b-4cf6-bfcf-b727b6905b84.png", // Cup 1
     "/lovable-uploads/fd90dd73-5d4f-4bca-ad3b-0683d39ee2cd.png", // Cup 2
-    "/lovable-uploads/2b7b2c72-28d9-4d98-9913-f85587df0f8c.png", // Ball
+    "/lovable-uploads/6c1f9c73-4732-4a6e-90b0-82e808afc3ab.png", // Cup 3
+    "/lovable-uploads/691ee6e4-5edb-458c-91da-1ac2fb0bb0a5.png", // Ball
     "/lovable-uploads/1dbfd59c-8518-41c7-893a-3f6ee1f27680.png", // Background
   ];
 
