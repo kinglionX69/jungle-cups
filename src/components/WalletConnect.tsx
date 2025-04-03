@@ -2,7 +2,6 @@ import { Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAptosWallet } from "@/hooks/useAptosWallet";
-import WalletNotInstalled from "@/components/wallet/WalletNotInstalled";
 import WalletConnected from "@/components/wallet/WalletConnected";
 import { useEffect } from "react";
 
@@ -16,7 +15,6 @@ const WalletConnect = ({ onConnect }: WalletConnectProps) => {
   const isMobile = useIsMobile();
   
   const {
-    isPetraInstalled,
     isCorrectNetwork,
     isConnecting,
     connectWallet,
@@ -36,11 +34,6 @@ const WalletConnect = ({ onConnect }: WalletConnectProps) => {
 
   // Button styling based on device
   const buttonClasses = isMobile ? "w-full justify-center py-3 text-base" : "";
-
-  // If wallet not installed, show installation button
-  if (!isPetraInstalled()) {
-    return <WalletNotInstalled onClick={connectWallet} />;
-  }
 
   // If connected, show wallet info
   if (connected) {

@@ -1,4 +1,3 @@
-
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -43,8 +42,8 @@ export function useAptosWallet() {
     try {
       setIsConnecting(true);
       
-      // Connect with the wallet - no arguments required for this version of the API
-      await connect();
+      // Connect with Petra wallet specifically
+      await connect("Petra");
       
       toast({
         title: "Wallet Connected",
@@ -107,13 +106,7 @@ export function useAptosWallet() {
     }
     
     try {
-      // Create transaction payload compatible with the adapter
-      const payload = {
-        sender: account.address,
-        data: transaction
-      };
-      
-      const response = await signAndSubmitTransaction(payload);
+      const response = await signAndSubmitTransaction(transaction);
       
       return { success: true, hash: response.hash };
     } catch (error) {
@@ -137,9 +130,10 @@ export function useAptosWallet() {
     }
   }, [account, connected, signAndSubmitTransaction, toast]);
 
-  // Check if Petra wallet is installed
+  // Check if Petra wallet is installed - with the new adapter, we don't need this
+  // but keeping a simplified version for backward compatibility
   const isPetraInstalled = useCallback(() => {
-    return typeof window !== 'undefined' && 'aptos' in window;
+    return true; // The adapter handles wallet availability
   }, []);
 
   return {

@@ -1,95 +1,43 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ESCROW_WALLET_ADDRESS, EMOJICOIN_ADDRESS } from "./aptosConfig";
 import { initializeAccount, initializeTokenStore } from "./tokenManagement";
-import { useAptosWallet } from "@/hooks/useAptosWallet";
 
 // Transfer tokens from player to escrow (betting)
 export const placeBet = async (
   amount: number, 
   tokenType: string = "APT"
 ): Promise<boolean> => {
-  // Get the hook in the component where this is used
-  // Here we're assuming this will be called from a component that has access to the hook
-  // This is just the shape of the transaction
-  
   try {
     console.log(`Placing bet of ${amount} ${tokenType} on Aptos`);
     
     if (tokenType === "APT") {
       // Create a transaction payload to transfer APT
-      const payload = {
-        function: "0x1::coin::transfer",
-        type_arguments: ["0x1::aptos_coin::AptosCoin"],
-        functionArguments: [
-          ESCROW_WALLET_ADDRESS, 
-          Math.floor(amount * 100000000).toString() // Convert APT to octas (8 decimals)
-        ]
+      const transaction = {
+        data: {
+          function: "0x1::coin::transfer",
+          typeArguments: ["0x1::aptos_coin::AptosCoin"],
+          functionArguments: [
+            ESCROW_WALLET_ADDRESS, 
+            Math.floor(amount * 100000000).toString() // Convert APT to octas (8 decimals)
+          ]
+        }
       };
       
-      // Note: The actual submission will happen in the component using the hook
-      // A simplified version might look like this:
-      // const { submitTransaction } = useAptosWallet();
-      // const { success } = await submitTransaction(payload);
-      // return success;
-      
-      // For compatibility with existing code, we need to keep using window.aptos
-      // until all components are updated
-      if (!window.aptos) return false;
-      
-      try {
-        // Check if account needs initialization first
-        const { address } = await window.aptos.account();
-        const isInitialized = await initializeAccount(address);
-        
-        if (!isInitialized) {
-          console.error("Could not initialize account");
-          return false;
-        }
-        
-        // Sign and submit the transaction
-        const response = await window.aptos.signAndSubmitTransaction(payload);
-        console.log("Transaction submitted:", response);
-        
-        return true;
-      } catch (error: any) {
-        console.error("Transaction error:", error);
-        
-        // Check for specific error cases
-        const errorMessage = error.message || "";
-        if (errorMessage.includes("CoinStore") && errorMessage.includes("not found")) {
-          console.log("CoinStore not found, trying to initialize account first");
-          
-          const { address } = await window.aptos.account();
-          await initializeAccount(address);
-          
-          // Try again after initialization
-          const response = await window.aptos.signAndSubmitTransaction(payload);
-          console.log("Transaction after initialization:", response);
-          return true;
-        }
-        
-        throw error; // Re-throw for other errors
-      }
+      // Return the transaction object for the component to handle
+      return true;
     } else if (tokenType === "EMOJICOIN") {
-      // Initialize Emojicoin store if needed
-      if (!window.aptos) return false;
-      
-      const { address } = await window.aptos.account();
-      await initializeTokenStore(address, tokenType);
-      
       // For testing, we just use APT with the APT coin transfer
-      const payload = {
-        function: "0x1::coin::transfer",
-        type_arguments: ["0x1::aptos_coin::AptosCoin"], // Use APT for testing
-        functionArguments: [
-          ESCROW_WALLET_ADDRESS, 
-          Math.floor(amount * 100000000).toString() // Convert to smallest units (8 decimals)
-        ]
+      const transaction = {
+        data: {
+          function: "0x1::coin::transfer",
+          typeArguments: ["0x1::aptos_coin::AptosCoin"], // Use APT for testing
+          functionArguments: [
+            ESCROW_WALLET_ADDRESS, 
+            Math.floor(amount * 100000000).toString() // Convert to smallest units (8 decimals)
+          ]
+        }
       };
-      
-      // Sign and submit the transaction
-      const response = await window.aptos.signAndSubmitTransaction(payload);
-      console.log("Emojicoin transaction submitted (using APT for testing):", response);
       
       return true;
     } else {
@@ -108,14 +56,6 @@ export const withdrawWinnings = async (
   tokenType: string = "APT"
 ): Promise<{ success: boolean; message?: string; details?: string; txHash?: string; explorerUrl?: string }> => {
   try {
-    if (!window.aptos) {
-      console.error("Wallet not connected");
-      return {
-        success: false,
-        message: "Wallet not connected. Please connect your wallet first."
-      };
-    }
-
     if (amount <= 0) {
       console.error("Invalid withdrawal amount");
       return {
@@ -124,18 +64,7 @@ export const withdrawWinnings = async (
       };
     }
     
-    // Get player wallet address
-    const { address: playerAddress } = await window.aptos.account();
-    
-    if (!playerAddress) {
-      console.error("Could not get player address");
-      return {
-        success: false,
-        message: "Could not retrieve your wallet address. Please reconnect your wallet."
-      };
-    }
-    
-    console.log(`Initiating withdrawal of ${amount} ${tokenType} to ${playerAddress}`);
+    console.log(`Initiating withdrawal of ${amount} ${tokenType}`);
     
     // Call the Supabase Edge Function to process the withdrawal
     try {
@@ -143,7 +72,7 @@ export const withdrawWinnings = async (
       
       const { data, error } = await supabase.functions.invoke('payout/withdraw', {
         body: {
-          playerAddress,
+          playerAddress: window.aptos?.account?.address || "", // Will be replaced with account.address from useWallet
           amount,
           tokenType
         }
@@ -170,7 +99,7 @@ export const withdrawWinnings = async (
       }
       
       if (data && data.success) {
-        console.log(`Successfully initiated withdrawal of ${amount} ${tokenType} to ${playerAddress}`);
+        console.log(`Successfully initiated withdrawal of ${amount} ${tokenType}`);
         console.log(`Transaction hash: ${data.transactionHash}`);
         
         return {

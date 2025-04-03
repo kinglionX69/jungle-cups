@@ -1,34 +1,20 @@
 
 import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
-import { PropsWithChildren, useEffect, useState } from "react";
-import { Network } from "@aptos-labs/ts-sdk";
+import { PropsWithChildren } from "react";
 
 export const WalletProvider = ({ children }: PropsWithChildren) => {
-  // We're not using plugins since we're having issues with the wallet-standard package
-  // Instead, we'll rely on window.aptos which is provided by Petra and other wallets
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    // Small delay to ensure the browser has loaded any wallet extensions
-    const timeout = setTimeout(() => {
-      setIsReady(true);
-    }, 300);
-    
-    return () => clearTimeout(timeout);
-  }, []);
-
-  if (!isReady) {
-    return null; // Wait until we've checked for wallet availability
-  }
+  const dappInfo = {
+    aptosConnect: {
+      dappName: "Jungle Cups Game",
+      dappImageURI: "/lovable-uploads/3f7aa2ea-d29b-4cf6-bfcf-b727b6905b84.png", // Cup image as the dApp logo
+    },
+  };
 
   return (
     <AptosWalletAdapterProvider
-      autoConnect={true}
-      plugins={[]} // Empty plugins array instead of optInWallets
-      network={Network.TESTNET}
-      onError={(error) => {
-        console.error("Wallet adapter error:", error);
-      }}
+      dappInfo={dappInfo}
+      autoConnect
+      optInWallets={["Petra"]}
     >
       {children}
     </AptosWalletAdapterProvider>
