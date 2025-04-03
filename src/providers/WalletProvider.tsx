@@ -16,7 +16,7 @@ export const WalletProvider = ({ children }: PropsWithChildren) => {
 
   return (
     <AptosWalletAdapterProvider
-      wallets={wallets}
+      plugins={wallets}
       autoConnect={true}
       onError={(error) => {
         console.error('Wallet adapter error:', error);

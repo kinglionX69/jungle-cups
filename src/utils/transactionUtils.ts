@@ -1,8 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ESCROW_WALLET_ADDRESS, EMOJICOIN_ADDRESS } from "./aptosConfig";
-import { initializeAccount, initializeTokenStore } from "./tokenManagement";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { ESCROW_WALLET_ADDRESS } from "./aptosConfig";
 
 // Transfer tokens from player to escrow (betting)
 export const placeBet = async (
@@ -74,13 +72,7 @@ export const withdrawWinnings = async (
         if (window.aptos) {
           const accountInfo = await window.aptos.account();
           if (accountInfo && accountInfo.address) {
-            playerAddress = accountInfo.address;
-          }
-        } else {
-          // Fallback to older method if needed
-          const wallet = await window.aptos?.connect();
-          if (wallet && wallet.address) {
-            playerAddress = wallet.address;
+            playerAddress = accountInfo.address.toString();
           }
         }
       } catch (walletError) {

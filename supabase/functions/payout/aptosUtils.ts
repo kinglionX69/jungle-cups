@@ -1,16 +1,22 @@
 
-import { AptosClient, AptosAccount, AccountAddress, Ed25519PrivateKey, TypeTag, EntryFunction, TransactionPayloadEntryFunction, RawTransaction, SignedTransaction } from "https://esm.sh/@aptos-labs/ts-sdk@1.5.1";
+import { Aptos, Network, AptosConfig, AccountAddress, TransactionBuilderRemoteABI, EntryFunctionArgumentTypes } from "https://esm.sh/@aptos-labs/ts-sdk@1.5.1";
+import { Ed25519PrivateKey } from "https://esm.sh/@aptos-labs/ts-sdk@1.5.1";
 
 // Aptos client configuration
 export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
-export const client = new AptosClient({ baseUrl: NODE_URL, network: 'testnet' });
+const config = new AptosConfig({ network: Network.TESTNET });
+export const client = new Aptos(config);
 
 // Create Aptos account from private key
-export const createAptosAccount = (privateKey: string): AptosAccount => {
+export const createAptosAccount = (privateKey: string) => {
   // Remove '0x' prefix if present
   const privateKeyHex = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey;
-  const privateKeyBytes = new Ed25519PrivateKey(privateKeyHex);
-  return new AptosAccount(privateKeyBytes);
+  const privateKeyObj = new Ed25519PrivateKey(privateKeyHex);
+  return {
+    privateKey: privateKeyObj,
+    publicKey: privateKeyObj.publicKey(),
+    address: AccountAddress.fromHex(privateKeyObj.publicKey().toAddress().toString())
+  };
 };
 
 // Create and sign a transaction using a private key
@@ -41,43 +47,28 @@ export const createAndSignTransaction = async (
     const sender = AccountAddress.fromHex(senderAddress);
     const recipient = AccountAddress.fromHex(recipientAddress);
     
-    // Get account sequence number (nonce)
-    const sequenceNumber = await client.getAccountSequenceNumber({ accountAddress: sender });
+    // Create transaction builder
+    const builder = new TransactionBuilderRemoteABI(config, {sender});
     
-    // Calculate gas price
-    const gasEstimation = await client.estimateGasPrice();
-    
-    // Create entry function for coin transfer
-    const typeTag = new TypeTag(tokenTypeAddress);
-    const entryFunction = EntryFunction.natural(
-      "0x1::coin",
-      "transfer",
-      [typeTag],
-      [recipient.hex(), amount.toString()]
+    // Create the transaction payload
+    const rawTxn = await builder.build(
+      "0x1::coin::transfer",
+      [tokenTypeAddress],
+      [recipient, BigInt(amount)]
     );
     
-    // Create transaction payload
-    const payload = new TransactionPayloadEntryFunction(entryFunction);
+    // Sign the transaction
+    const signer = {
+      signTransaction: async (txn) => {
+        const signedTx = await txn.sign(account.privateKey);
+        return signedTx;
+      }
+    };
     
-    // Create raw transaction
-    const chainId = await client.getChainId();
-    const expirationTimestampSecs = Math.floor(Date.now() / 1000) + 600; // 10 minutes
+    const signedTxn = await signer.signTransaction(rawTxn);
     
-    const rawTxn = new RawTransaction(
-      sender,
-      BigInt(sequenceNumber),
-      payload,
-      BigInt(10000), // Max gas amount
-      BigInt(gasEstimation.gasUnitPrice),
-      BigInt(expirationTimestampSecs),
-      BigInt(chainId)
-    );
-    
-    // Sign transaction
-    const signedTxn = SignedTransaction.create(rawTxn, account);
-    
-    // Submit transaction
-    const pendingTxn = await client.submitTransaction({ transaction: signedTxn });
+    // Submit the transaction
+    const pendingTxn = await client.submitSignedTransaction(signedTxn);
     
     console.log(`Transaction submitted with hash: ${pendingTxn.hash}`);
     

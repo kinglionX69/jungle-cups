@@ -19,7 +19,7 @@ export const createTransferPayload = (
   // Return transaction payload
   return {
     function: "0x1::coin::transfer",
-    type_arguments: [tokenTypeAddress],
+    typeArguments: [tokenTypeAddress],
     arguments: [recipientAddress, amountInOctas.toString()]
   };
 };
@@ -39,7 +39,7 @@ export const waitForTransactionWithTimeout = async (
     while (transactionPending && Date.now() - startTime < timeoutMs) {
       try {
         // Poll the transaction status from the blockchain using new SDK
-        txResult = await client.getTransactionByHash({ hash: transactionHash });
+        txResult = await client.getTransactionByHash(transactionHash);
         
         if (txResult && txResult.type === "user_transaction") {
           // Check if transaction is completed
