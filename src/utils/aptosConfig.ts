@@ -1,5 +1,5 @@
 
-import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
+import { AptosClient, Network, FaucetClient } from "@aptos-labs/ts-sdk";
 
 // Configuration for Aptos network
 export const NETWORK = "testnet";
@@ -15,8 +15,13 @@ export const MIN_APT_BALANCE = 1; // 1 APT
 export const MIN_EMOJICOIN_BALANCE = 1000; // 1000 Emojicoin
 
 // Initialize Aptos client with new SDK
-const config = new AptosConfig({ network: Network.TESTNET });
-export const client = new Aptos(config);
+export const client = new AptosClient({ baseUrl: NODE_URL, network: Network.TESTNET });
+
+// Initialize Faucet client for testnet
+export const faucetClient = new FaucetClient({
+  baseUrl: FAUCET_URL,
+  nodeUrl: NODE_URL
+});
 
 // Helper function to handle API errors with clear error messages
 export const handleApiError = (error: any): string => {
@@ -25,7 +30,7 @@ export const handleApiError = (error: any): string => {
 
 // Perform API request with retry logic using multiple nodes
 export const retryRequest = async <T>(
-  requestFn: (client: Aptos) => Promise<T>,
+  requestFn: (client: AptosClient) => Promise<T>,
   maxRetries: number = 3
 ): Promise<T> => {
   // Try with the primary node first

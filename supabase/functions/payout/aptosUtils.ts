@@ -1,5 +1,5 @@
 
-import { AptosAccount, AptosClient, HexString, TxnBuilderTypes, BCS } from "https://esm.sh/aptos@1.20.0";
+import { AptosClient, AptosAccount, AccountAddress, Ed25519PrivateKey, TypeTag, EntryFunction, TransactionPayloadEntryFunction, RawTransaction, SignedTransaction } from "https://esm.sh/@aptos-labs/ts-sdk@1.5.1";
 
 // Aptos client configuration
 export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
@@ -7,7 +7,9 @@ export const client = new AptosClient(NODE_URL);
 
 // Create Aptos account from private key
 export const createAptosAccount = (privateKey: string): AptosAccount => {
-  const privateKeyBytes = HexString.ensure(privateKey).toUint8Array();
+  // Remove '0x' prefix if present
+  const privateKeyHex = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey;
+  const privateKeyBytes = new Ed25519PrivateKey(privateKeyHex);
   return new AptosAccount(privateKeyBytes);
 };
 
@@ -35,53 +37,53 @@ export const createAndSignTransaction = async (
       throw new Error(`Unsupported token type: ${tokenType}`);
     }
     
+    // Parse addresses
+    const sender = AccountAddress.fromHex(senderAddress);
+    const recipient = AccountAddress.fromHex(recipientAddress);
+    
     // Get account sequence number (nonce)
-    const { sequence_number: sequenceNumber } = await client.getAccount(account.address());
+    const sequenceNumber = await client.getAccountSequenceNumber({ accountAddress: sender });
     
-    // Calculate gas price to ensure we're not underpaying
-    const gasUnitPrice = await client.estimateGasPrice();
+    // Calculate gas price
+    const gasEstimation = await client.estimateGasPrice();
     
-    // Create transfer transaction payload
-    const entryFunctionPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-      TxnBuilderTypes.EntryFunction.natural(
-        "0x1::coin",
-        "transfer",
-        [new TxnBuilderTypes.TypeTag(TxnBuilderTypes.StructTag.fromString(tokenTypeAddress))],
-        [
-          BCS.bcsToBytes(TxnBuilderTypes.AccountAddress.fromHex(HexString.ensure(recipientAddress))),
-          BCS.bcsSerializeUint64(amount),
-        ]
-      )
+    // Create entry function for coin transfer
+    const typeTag = new TypeTag(tokenTypeAddress);
+    const entryFunction = EntryFunction.natural(
+      "0x1::coin",
+      "transfer",
+      [typeTag],
+      [recipient.hex(), amount.toString()]
     );
+    
+    // Create transaction payload
+    const payload = new TransactionPayloadEntryFunction(entryFunction);
     
     // Create raw transaction
-    const rawTxn = new TxnBuilderTypes.RawTransaction(
-      TxnBuilderTypes.AccountAddress.fromHex(account.address()),
+    const chainId = await client.getChainId();
+    const expirationTimestampSecs = Math.floor(Date.now() / 1000) + 600; // 10 minutes
+    
+    const rawTxn = new RawTransaction(
+      sender,
       BigInt(sequenceNumber),
-      entryFunctionPayload,
-      BigInt(10000), // Max gas units
-      BigInt(gasUnitPrice.gas_estimate), // Gas unit price
-      BigInt(Math.floor(Date.now() / 1000) + 600), // Expiration timestamp (10 minutes)
-      new TxnBuilderTypes.ChainId(2) // Testnet chain ID
+      payload,
+      BigInt(10000), // Max gas amount
+      BigInt(gasEstimation.gasUnitPrice),
+      BigInt(expirationTimestampSecs),
+      BigInt(chainId)
     );
     
-    // Sign the transaction
-    const signedTxn = BCS.bcsToBytes(new TxnBuilderTypes.SignedTransaction(
-      rawTxn,
-      new TxnBuilderTypes.Ed25519Signature(
-        account.signBuffer(BCS.bcsToBytes(rawTxn)).toUint8Array()
-      ),
-      new TxnBuilderTypes.Ed25519PublicKey(account.pubKey().toUint8Array())
-    ));
+    // Sign transaction
+    const signedTxn = SignedTransaction.create(rawTxn, account);
     
-    // Submit the transaction
-    const response = await client.submitSignedBCSTransaction(signedTxn);
+    // Submit transaction
+    const pendingTxn = await client.submitTransaction({ transaction: signedTxn });
     
-    console.log(`Transaction submitted with hash: ${response.hash}`);
+    console.log(`Transaction submitted with hash: ${pendingTxn.hash}`);
     
     return {
       success: true,
-      hash: response.hash,
+      hash: pendingTxn.hash,
       details: `Transaction submitted from ${senderAddress} to ${recipientAddress} for ${amount} ${tokenType}`
     };
   } catch (error) {

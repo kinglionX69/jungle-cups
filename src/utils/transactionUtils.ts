@@ -13,30 +13,26 @@ export const placeBet = async (
     
     if (tokenType === "APT") {
       // Create a transaction payload to transfer APT
-      const transaction = {
-        data: {
-          function: "0x1::coin::transfer",
-          typeArguments: ["0x1::aptos_coin::AptosCoin"],
-          functionArguments: [
-            ESCROW_WALLET_ADDRESS, 
-            Math.floor(amount * 100000000).toString() // Convert APT to octas (8 decimals)
-          ]
-        }
+      const payload = {
+        function: "0x1::coin::transfer",
+        typeArguments: ["0x1::aptos_coin::AptosCoin"],
+        functionArguments: [
+          ESCROW_WALLET_ADDRESS, 
+          Math.floor(amount * 100000000).toString() // Convert APT to octas (8 decimals)
+        ]
       };
       
       // Return the transaction object for the component to handle
       return true;
     } else if (tokenType === "EMOJICOIN") {
       // For testing, we just use APT with the APT coin transfer
-      const transaction = {
-        data: {
-          function: "0x1::coin::transfer",
-          typeArguments: ["0x1::aptos_coin::AptosCoin"], // Use APT for testing
-          functionArguments: [
-            ESCROW_WALLET_ADDRESS, 
-            Math.floor(amount * 100000000).toString() // Convert to smallest units (8 decimals)
-          ]
-        }
+      const payload = {
+        function: "0x1::coin::transfer",
+        typeArguments: ["0x1::aptos_coin::AptosCoin"], // Use APT for testing
+        functionArguments: [
+          ESCROW_WALLET_ADDRESS, 
+          Math.floor(amount * 100000000).toString() // Convert to smallest units (8 decimals)
+        ]
       };
       
       return true;
@@ -77,13 +73,13 @@ export const withdrawWinnings = async (
         if (window.aptos) {
           const accountInfo = await window.aptos.account();
           if (accountInfo && accountInfo.address) {
-            playerAddress = accountInfo.address.toString();
+            playerAddress = accountInfo.address;
           }
         } else {
           // Try to get address from wallet adapter
           const wallet = await window.aptos?.connect();
           if (wallet && wallet.address) {
-            playerAddress = wallet.address.toString();
+            playerAddress = wallet.address;
           }
         }
       } catch (walletError) {

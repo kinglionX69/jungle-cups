@@ -105,6 +105,6 @@ export function useAptosWallet() {
     submitTransaction: signAndSubmitTransaction,
     isPetraInstalled: () => true, // The adapter handles wallet availability
     wallet: wallet?.name || "",
-    walletAddress: account?.address?.toString() || ""
+    walletAddress: account?.address || ""
   };
 }

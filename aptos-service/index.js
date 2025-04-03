@@ -2,7 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { AptosClient, AptosAccount, TxnBuilderTypes, TransactionBuilder, HexString } = require('aptos');
+const { AptosClient, AptosAccount, AccountAddress, Ed25519PrivateKey, TypeTag, EntryFunction, TransactionPayloadEntryFunction } = require('@aptos-labs/ts-sdk');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,7 +39,7 @@ app.use(validateApiKey);
 
 // Aptos client setup
 const NODE_URL = process.env.NODE_URL || 'https://fullnode.testnet.aptoslabs.com/v1';
-const client = new AptosClient(NODE_URL);
+const client = new AptosClient({ baseUrl: NODE_URL });
 console.log(`Aptos client initialized with node URL: ${NODE_URL}`);
 
 // Helper to create Aptos account from private key
@@ -57,9 +57,9 @@ const createAptosAccount = (privateKeyHex) => {
     
     console.log(`Creating account from private key (first 4 chars: ${privateKeyHex.substring(0, 4)}...)`);
     
-    // Create account from private key
-    const privateKeyBytes = new HexString(privateKeyHex).toUint8Array();
-    return new AptosAccount(privateKeyBytes);
+    // Create account from private key using new SDK
+    const privateKey = new Ed25519PrivateKey(privateKeyHex);
+    return new AptosAccount(privateKey);
   } catch (error) {
     console.error('Error creating Aptos account:', error);
     throw new Error(`Failed to initialize Aptos account: ${error.message}`);
@@ -85,7 +85,7 @@ app.post('/processTransaction', async (req, res) => {
     let escrowAccount;
     try {
       escrowAccount = createAptosAccount(privateKey);
-      console.log(`Escrow account initialized with address: ${escrowAccount.address().hex()}`);
+      console.log(`Escrow account initialized with address: ${escrowAccount.accountAddress.hex()}`);
     } catch (error) {
       console.error('Failed to initialize escrow account:', error);
       return res.status(500).json({ 
@@ -114,28 +114,45 @@ app.post('/processTransaction', async (req, res) => {
     }
     
     if (operation === 'withdraw') {
-      // Build coin transfer transaction
-      const payload = {
-        function: "0x1::coin::transfer",
-        type_arguments: [tokenTypeAddress],
-        arguments: [recipientAddress, amount.toString()]
-      };
-      
       try {
-        // Create the transaction
-        const rawTxn = await client.generateTransaction(escrowAccount.address(), payload);
+        // Parse recipient address
+        const recipient = AccountAddress.fromHex(recipientAddress);
+        
+        // Create entry function for coin transfer
+        const typeTag = new TypeTag(tokenTypeAddress);
+        const entryFunction = EntryFunction.natural(
+          "0x1::coin",
+          "transfer",
+          [typeTag],
+          [recipient.hex(), amount.toString()]
+        );
+        
+        // Create transaction payload
+        const payload = new TransactionPayloadEntryFunction(entryFunction);
+        
+        // Submit transaction
+        const rawTxn = await client.generateRawTransaction({
+          sender: escrowAccount.accountAddress,
+          data: payload
+        });
         
         // Sign the transaction
-        const signedTxn = await client.signTransaction(escrowAccount, rawTxn);
+        const signedTxn = await client.signTransaction({
+          signer: escrowAccount,
+          transaction: rawTxn
+        });
         
         // Submit the transaction
-        const transactionRes = await client.submitTransaction(signedTxn);
-        console.log(`Transaction submitted with hash: ${transactionRes.hash}`);
+        const pendingTxn = await client.submitTransaction({
+          transaction: signedTxn
+        });
+        
+        console.log(`Transaction submitted with hash: ${pendingTxn.hash}`);
         
         // Return successful response with transaction hash
         return res.status(200).json({
           success: true,
-          hash: transactionRes.hash,
+          hash: pendingTxn.hash,
           details: `Transaction submitted for ${amount} ${tokenType} to ${recipientAddress}`
         });
       } catch (error) {

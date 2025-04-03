@@ -1,4 +1,5 @@
 import { createAndSignTransaction, client } from "./aptosUtils.ts";
+import { AccountAddress } from "https://esm.sh/@aptos-labs/ts-sdk@1.5.1";
 
 // Create transaction payload
 export const createTransferPayload = (
@@ -39,7 +40,7 @@ export const waitForTransactionWithTimeout = async (
     while (transactionPending && Date.now() - startTime < timeoutMs) {
       try {
         // Poll the transaction status from the blockchain
-        txResult = await client.getTransactionByHash(transactionHash);
+        txResult = await client.getTransactionByHash({ hash: transactionHash });
         
         if (txResult && txResult.type === "user_transaction") {
           // Check if transaction is completed
