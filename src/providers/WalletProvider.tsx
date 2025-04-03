@@ -25,7 +25,7 @@ export const WalletProvider = ({ children }: PropsWithChildren) => {
     <AptosWalletAdapterProvider
       autoConnect={true}
       plugins={[]} // Empty plugins array instead of optInWallets
-      dappConfig={{ network: Network.TESTNET }}
+      network={Network.TESTNET}
       onError={(error) => {
         console.error("Wallet adapter error:", error);
       }}

@@ -43,8 +43,8 @@ export function useAptosWallet() {
     try {
       setIsConnecting(true);
       
-      // Connect with an empty object as required by the API
-      await connect({});
+      // Connect with the wallet - no arguments required for this version of the API
+      await connect();
       
       toast({
         title: "Wallet Connected",
