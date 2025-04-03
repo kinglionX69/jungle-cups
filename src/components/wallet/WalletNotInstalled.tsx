@@ -12,16 +12,20 @@ const WalletNotInstalled = ({ onClick }: WalletNotInstalledProps) => {
   const isMobile = useIsMobile();
   const buttonClasses = isMobile ? "w-full justify-center py-3 text-base" : "";
 
+  const handleClick = () => {
+    if (isMobileDevice()) {
+      console.log("Mobile device detected, redirecting to Petra mobile");
+      redirectToPetraMobile();
+    } else {
+      console.log("Desktop device detected, opening Petra website");
+      window.open("https://petra.app/", "_blank");
+    }
+  };
+
   return (
     <Button 
       className={`jungle-btn ${buttonClasses}`} 
-      onClick={() => {
-        if (isMobileDevice()) {
-          redirectToPetraMobile();
-        } else {
-          window.open("https://petra.app/", "_blank");
-        }
-      }}
+      onClick={handleClick}
     >
       <Smartphone className="mr-2 h-5 w-5" />
       Connect Wallet

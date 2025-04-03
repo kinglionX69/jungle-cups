@@ -22,7 +22,8 @@ export const getPetraMobileDeepLink = (url: string): string => {
 // Generate universal link format for iOS
 export const getPetraUniversalLink = (url: string): string => {
   const currentUrl = encodeURIComponent(url || window.location.href);
-  return `https://petra.app/ul/dapp?url=${currentUrl}`;
+  // Using the explore URL format as suggested
+  return `https://petra.app/explore?link=${currentUrl}`;
 };
 
 // Redirect to Petra mobile app with smart fallback mechanism
@@ -34,6 +35,8 @@ export const redirectToPetraMobile = () => {
   // Use the appropriate link based on platform
   const linkToUse = isIOS ? universalLink : deepLink;
   
+  console.log("Redirecting to Petra mobile with link:", linkToUse);
+  
   // Attempt to open the Petra mobile app
   window.location.href = linkToUse;
   
@@ -42,8 +45,11 @@ export const redirectToPetraMobile = () => {
     // Check if we're still on the same page
     if (document.hidden || document.visibilityState === "hidden") {
       // User switched to the app, don't do anything
+      console.log("User switched to Petra app");
       return;
     }
+    
+    console.log("Fallback to app store");
     
     // Redirect to download page based on platform
     if (isIOS) {
@@ -56,6 +62,7 @@ export const redirectToPetraMobile = () => {
   // Clear the timeout if the page visibility changes (indicating the app opened)
   document.addEventListener("visibilitychange", () => {
     clearTimeout(timeout);
+    console.log("Visibility changed, clearing timeout");
   }, { once: true });
 };
 
@@ -70,4 +77,3 @@ export const getWalletAddressFromURL = (): string | null => {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get('walletAddress');
 };
-
