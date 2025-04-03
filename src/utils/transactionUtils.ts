@@ -1,14 +1,16 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ESCROW_WALLET_ADDRESS, EMOJICOIN_ADDRESS } from "./aptosConfig";
 import { initializeAccount, initializeTokenStore } from "./tokenManagement";
+import { useAptosWallet } from "@/hooks/useAptosWallet";
 
 // Transfer tokens from player to escrow (betting)
 export const placeBet = async (
   amount: number, 
   tokenType: string = "APT"
 ): Promise<boolean> => {
-  if (!window.aptos) return false;
+  // Get the hook in the component where this is used
+  // Here we're assuming this will be called from a component that has access to the hook
+  // This is just the shape of the transaction
   
   try {
     console.log(`Placing bet of ${amount} ${tokenType} on Aptos`);
@@ -16,14 +18,23 @@ export const placeBet = async (
     if (tokenType === "APT") {
       // Create a transaction payload to transfer APT
       const payload = {
-        type: "entry_function_payload",
         function: "0x1::coin::transfer",
         type_arguments: ["0x1::aptos_coin::AptosCoin"],
-        arguments: [
+        functionArguments: [
           ESCROW_WALLET_ADDRESS, 
           Math.floor(amount * 100000000).toString() // Convert APT to octas (8 decimals)
         ]
       };
+      
+      // Note: The actual submission will happen in the component using the hook
+      // A simplified version might look like this:
+      // const { submitTransaction } = useAptosWallet();
+      // const { success } = await submitTransaction(payload);
+      // return success;
+      
+      // For compatibility with existing code, we need to keep using window.aptos
+      // until all components are updated
+      if (!window.aptos) return false;
       
       try {
         // Check if account needs initialization first
@@ -60,19 +71,17 @@ export const placeBet = async (
         throw error; // Re-throw for other errors
       }
     } else if (tokenType === "EMOJICOIN") {
-      // For testing purposes, we treat Emojicoin like APT
-      // This will be replaced with actual Emojicoin code when moving to mainnet
-      
       // Initialize Emojicoin store if needed
+      if (!window.aptos) return false;
+      
       const { address } = await window.aptos.account();
       await initializeTokenStore(address, tokenType);
       
       // For testing, we just use APT with the APT coin transfer
       const payload = {
-        type: "entry_function_payload",
         function: "0x1::coin::transfer",
         type_arguments: ["0x1::aptos_coin::AptosCoin"], // Use APT for testing
-        arguments: [
+        functionArguments: [
           ESCROW_WALLET_ADDRESS, 
           Math.floor(amount * 100000000).toString() // Convert to smallest units (8 decimals)
         ]

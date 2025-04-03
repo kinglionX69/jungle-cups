@@ -1,8 +1,7 @@
-
 import { Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useWalletConnection } from "@/hooks/useWalletConnection";
+import { useAptosWallet } from "@/hooks/useAptosWallet";
 import WalletNotInstalled from "@/components/wallet/WalletNotInstalled";
 import WalletConnected from "@/components/wallet/WalletConnected";
 import { useEffect } from "react";
@@ -13,44 +12,33 @@ interface WalletConnectProps {
   walletAddress: string;
 }
 
-const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectProps) => {
+const WalletConnect = ({ onConnect }: WalletConnectProps) => {
   const isMobile = useIsMobile();
   
   const {
-    isInstalled,
+    isPetraInstalled,
     isCorrectNetwork,
-    isInitializing,
+    isConnecting,
     connectWallet,
     disconnectWallet,
-    getTestnetTokens,
-    isConnecting,
-    isRequestingTokens,
-    checkWalletStatus
-  } = useWalletConnection({
-    onConnect,
-    walletAddress
-  });
+    walletAddress,
+    connected
+  } = useAptosWallet();
 
-  // Periodically check wallet status when connected
+  // Update the parent component when connection status changes
   useEffect(() => {
-    if (connected) {
-      // Initial check
-      checkWalletStatus();
-      
-      // Check every 15 seconds
-      const interval = setInterval(() => {
-        checkWalletStatus();
-      }, 15000);
-      
-      return () => clearInterval(interval);
+    if (connected && walletAddress) {
+      onConnect(walletAddress);
+    } else if (!connected) {
+      onConnect("");
     }
-  }, [connected, checkWalletStatus]);
+  }, [connected, walletAddress, onConnect]);
 
   // Button styling based on device
   const buttonClasses = isMobile ? "w-full justify-center py-3 text-base" : "";
 
   // If wallet not installed, show installation button
-  if (!isInstalled) {
+  if (!isPetraInstalled()) {
     return <WalletNotInstalled onClick={connectWallet} />;
   }
 
@@ -60,10 +48,10 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
       <WalletConnected
         walletAddress={walletAddress}
         isCorrectNetwork={isCorrectNetwork}
-        isInitializing={isInitializing}
-        onGetTestTokens={getTestnetTokens}
+        isInitializing={false}
+        onGetTestTokens={() => window.open("https://aptoslabs.com/testnet-faucet", "_blank")}
         onDisconnect={disconnectWallet}
-        isRequestingTokens={isRequestingTokens}
+        isRequestingTokens={false}
       />
     );
   }

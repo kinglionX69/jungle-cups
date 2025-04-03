@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,10 +9,11 @@ import NotFound from "./pages/NotFound";
 import LoadingScreen from "./components/LoadingScreen";
 import { useImagePreloader } from "./hooks/useImagePreloader";
 import { useIsMobile } from "./hooks/use-mobile";
+import WalletProvider from "./providers/WalletProvider";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+function App() {
   const isMobile = useIsMobile();
   
   // Only include essential game assets - reduced list
@@ -54,20 +54,22 @@ const App = () => {
   }, [imagesLoaded]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        {showLoader && <LoadingScreen progress={loadingProgress} />}
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <WalletProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          {showLoader && <LoadingScreen progress={loadingProgress} />}
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </WalletProvider>
   );
-};
+}
 
 export default App;
