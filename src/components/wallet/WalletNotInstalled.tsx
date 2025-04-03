@@ -1,7 +1,6 @@
-
 import { Button } from "@/components/ui/button";
 import { Smartphone } from "lucide-react";
-import { redirectToPetraMobile, isMobileDevice } from "@/utils/mobileUtils";
+import { redirectToPetraMobile, isMobileDevice, isInPetraMobileBrowser } from "@/utils/mobileUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface WalletNotInstalledProps {
@@ -13,6 +12,12 @@ const WalletNotInstalled = ({ onClick }: WalletNotInstalledProps) => {
   const buttonClasses = isMobile ? "w-full justify-center py-3 text-base" : "";
 
   const handleClick = () => {
+    if (isInPetraMobileBrowser()) {
+      console.log("Already in Petra browser, trying to connect");
+      onClick();
+      return;
+    }
+    
     if (isMobileDevice()) {
       console.log("Mobile device detected, redirecting to Petra mobile");
       redirectToPetraMobile();

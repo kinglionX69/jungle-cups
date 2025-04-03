@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -101,7 +100,40 @@ export function useWalletConnection({ onConnect, walletAddress }: UseWalletConne
   };
 
   const connectWallet = async () => {
-    // For mobile devices not in Petra browser, redirect to Petra app
+    // Important: If already in Petra browser, just connect directly instead of redirecting
+    if (isInPetraMobileBrowser()) {
+      console.log("Already in Petra mobile browser, connecting directly");
+      if (!window.aptos) {
+        toast({
+          title: "Wallet Not Available",
+          description: "Cannot find Petra wallet in this browser",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      try {
+        // Connect to wallet
+        const response = await window.aptos.connect();
+        onConnect(response.address);
+        
+        toast({
+          title: "Wallet Connected",
+          description: "Successfully connected to Petra wallet",
+        });
+        return;
+      } catch (error) {
+        console.error("Error connecting to wallet in Petra browser:", error);
+        toast({
+          title: "Connection Failed",
+          description: "Could not connect to your wallet. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    // For other mobile devices, redirect to Petra app
     if (isMobileDevice() && !isInPetraMobileBrowser()) {
       toast({
         title: "Opening Petra Wallet",
@@ -111,6 +143,7 @@ export function useWalletConnection({ onConnect, walletAddress }: UseWalletConne
       return;
     }
     
+    // For desktop devices
     if (!window.aptos) {
       toast({
         title: "Wallet Not Found",
@@ -121,6 +154,7 @@ export function useWalletConnection({ onConnect, walletAddress }: UseWalletConne
       return;
     }
     
+    // Standard wallet connection flow
     try {
       // Connect to wallet
       const response = await window.aptos.connect();

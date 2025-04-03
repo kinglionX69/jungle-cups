@@ -23,7 +23,7 @@ export const useImagePreloader = ({ imageUrls, timeout = 5000 }: ImagePreloaderP
     const failedImagesList: string[] = [];
     let timeoutId: NodeJS.Timeout;
 
-    // Set a maximum loading time
+    // Set a maximum loading time - safety fallback
     timeoutId = setTimeout(() => {
       console.log("Image loading timed out, proceeding anyway");
       setImagesLoaded(true);
@@ -34,33 +34,15 @@ export const useImagePreloader = ({ imageUrls, timeout = 5000 }: ImagePreloaderP
       return new Promise<void>((resolve) => {
         const img = new Image();
         
-        img.onload = () => {
+        // Set a shorter timeout per image - 2 seconds max
+        const imgTimeout = setTimeout(() => {
+          console.log(`Image load timed out: ${url}`);
           loadedCount++;
+          failedImagesList.push(url);
           const progress = Math.min(Math.round((loadedCount / totalImages) * 100), 100);
           setLoadingProgress(progress);
           resolve();
-        };
-        
-        img.onerror = () => {
-          console.error(`Failed to load image: ${url}`);
-          failedImagesList.push(url);
-          loadedCount++;
-          const progress = Math.min(Math.round((loadedCount / totalImages) * 100), 100);
-          setLoadingProgress(progress);
-          resolve(); // Still resolve to continue loading other images
-        };
-        
-        // Set a small timeout for each image to prevent blocking
-        const imgTimeout = setTimeout(() => {
-          console.log(`Image load timed out: ${url}`);
-          if (!img.complete) {
-            failedImagesList.push(url);
-            loadedCount++;
-            const progress = Math.min(Math.round((loadedCount / totalImages) * 100), 100);
-            setLoadingProgress(progress);
-            resolve();
-          }
-        }, 3000); // 3 second timeout per image
+        }, 2000); // Shorter 2 second timeout per image
         
         img.onload = () => {
           clearTimeout(imgTimeout);
@@ -86,16 +68,9 @@ export const useImagePreloader = ({ imageUrls, timeout = 5000 }: ImagePreloaderP
 
     const preloadAllImages = async () => {
       try {
-        // Load images sequentially on mobile to prevent overwhelming the connection
-        const isMobile = window.innerWidth < 768;
-        
-        if (isMobile) {
-          for (const url of imageUrls) {
-            await preloadImage(url);
-          }
-        } else {
-          // Use Promise.all to load all images in parallel on desktop
-          await Promise.all(imageUrls.map(url => preloadImage(url)));
+        // Always load images sequentially to reduce memory pressure
+        for (const url of imageUrls) {
+          await preloadImage(url);
         }
         
         setFailedImages(failedImagesList);
