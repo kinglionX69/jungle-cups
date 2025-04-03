@@ -1,5 +1,5 @@
 
-import { client, EMOJICOIN_ADDRESS, handleApiError } from "./aptosConfig";
+import { client, EMOJICOIN_ADDRESS, handleApiError, retryRequest } from "./aptosConfig";
 
 // Initialize account with APT coin if needed
 export const initializeAccount = async (address: string): Promise<boolean> => {
@@ -12,7 +12,10 @@ export const initializeAccount = async (address: string): Promise<boolean> => {
     console.log(`Checking if account ${address} needs initialization`);
     
     // Check if the account has already registered the coin store
-    const resources = await client.getAccountResources(address);
+    const resources = await retryRequest(async (client) => {
+      return await client.getAccountResources(address);
+    });
+    
     const hasAptosCoin = resources.some(
       (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
     );
@@ -47,9 +50,11 @@ export const initializeAccount = async (address: string): Promise<boolean> => {
         console.log("Coin registration transaction submitted:", response);
         
         // Wait for transaction to be confirmed
-        await client.waitForTransaction(response.hash, { timeoutSecs: 30 });
-        console.log("Coin registration confirmed");
+        await retryRequest(async (client) => {
+          return await client.waitForTransaction(response.hash, { timeoutSecs: 30 });
+        });
         
+        console.log("Coin registration confirmed");
         return true;
       } catch (error) {
         attempts++;
@@ -113,8 +118,11 @@ export const getWalletBalance = async (address: string, tokenType: string = "APT
   
   try {
     if (tokenType === "APT") {
-      // Get native APT balance from chain
-      const resources = await client.getAccountResources(address);
+      // Get native APT balance from chain with retry logic
+      const resources = await retryRequest(async (client) => {
+        return await client.getAccountResources(address);
+      });
+      
       const aptosCoin = resources.find(
         (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
       );
@@ -130,7 +138,10 @@ export const getWalletBalance = async (address: string, tokenType: string = "APT
       return 0;
     } else if (tokenType === "EMOJICOIN") {
       // For testing, we're using APT for Emojicoin
-      const resources = await client.getAccountResources(address);
+      const resources = await retryRequest(async (client) => {
+        return await client.getAccountResources(address);
+      });
+      
       const aptosCoin = resources.find(
         (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
       );

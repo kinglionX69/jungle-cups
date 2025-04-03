@@ -4,7 +4,8 @@ import {
   ESCROW_WALLET_ADDRESS, 
   MIN_APT_BALANCE, 
   MIN_EMOJICOIN_BALANCE,
-  EMOJICOIN_ADDRESS
+  EMOJICOIN_ADDRESS,
+  retryRequest
 } from "./aptosConfig";
 import { getWalletBalance } from "./tokenManagement";
 
@@ -29,7 +30,7 @@ export const getEscrowWalletBalances = async (): Promise<{
       return defaultReturn;
     }
     
-    // Get APT balance
+    // Get APT balance with retry
     const aptBalance = await getWalletBalance(ESCROW_WALLET_ADDRESS, "APT");
     console.log("Escrow APT balance:", aptBalance);
     
@@ -105,29 +106,48 @@ export const transferWinnings = async (
     // Generate a unique game ID for tracking
     const gameId = `game_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
     
-    // Call the Supabase Edge Function to process the payout
-    const { data, error } = await supabase.functions.invoke('payout', {
-      body: {
-        playerAddress,
-        amount,
-        tokenType,
-        gameId
+    // Call the Supabase Edge Function to process the payout with retry logic
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        const { data, error } = await supabase.functions.invoke('payout', {
+          body: {
+            playerAddress,
+            amount,
+            tokenType,
+            gameId
+          }
+        });
+        
+        if (error) {
+          console.error("Error calling payout function:", error);
+          throw error;
+        }
+        
+        if (data && data.success) {
+          console.log(`Successfully initiated payout of ${amount} ${tokenType} to ${playerAddress}`);
+          console.log(`Transaction hash: ${data.transactionHash}`);
+          return true;
+        } else {
+          console.error(`Payout failed: ${data?.error || 'Unknown error'}`);
+          throw new Error(data?.error || 'Unknown error');
+        }
+      } catch (error) {
+        attempts++;
+        console.error(`Attempt ${attempts}/${maxAttempts} failed:`, error);
+        
+        if (attempts >= maxAttempts) {
+          return false;
+        }
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
-    });
-    
-    if (error) {
-      console.error("Error calling payout function:", error);
-      return false;
     }
     
-    if (data && data.success) {
-      console.log(`Successfully initiated payout of ${amount} ${tokenType} to ${playerAddress}`);
-      console.log(`Transaction hash: ${data.transactionHash}`);
-      return true;
-    } else {
-      console.error(`Payout failed: ${data?.error || 'Unknown error'}`);
-      return false;
-    }
+    return false;
   } catch (error) {
     console.error("Error transferring winnings:", error);
     return false;
