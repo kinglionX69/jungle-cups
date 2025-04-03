@@ -8,7 +8,7 @@ export const WalletProvider = ({ children }: PropsWithChildren) => {
   const wallets = [new PetraWallet()];
   
   // Define dApp info for wallet display
-  const appInfo = {
+  const dappInfo = {
     name: "Jungle Cups Game",
     url: window.location.origin,
     iconUrl: "/lovable-uploads/2b7b2c72-28d9-4d98-9913-f85587df0f8c.png",
@@ -16,12 +16,12 @@ export const WalletProvider = ({ children }: PropsWithChildren) => {
 
   return (
     <AptosWalletAdapterProvider
-      plugins={wallets}
+      wallets={wallets}
       autoConnect={true}
       onError={(error) => {
         console.error('Wallet adapter error:', error);
       }}
-      appInfo={appInfo}
+      dappInfo={dappInfo}
     >
       {children}
     </AptosWalletAdapterProvider>

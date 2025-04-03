@@ -16,7 +16,6 @@ export const MIN_EMOJICOIN_BALANCE = 1000; // 1000 Emojicoin
 
 // Initialize Aptos client with new SDK
 export const client = new Aptos({
-  nodeUrl: NODE_URL,
   network: Network.TESTNET
 });
 
