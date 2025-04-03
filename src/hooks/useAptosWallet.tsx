@@ -1,4 +1,3 @@
-
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -10,9 +9,9 @@ export function useAptosWallet() {
     disconnect, 
     account, 
     connected, 
-    network, 
-    signAndSubmitTransaction,
-    wallet 
+    network,
+    wallet,
+    signAndSubmitTransaction
   } = useWallet();
   
   const [isConnecting, setIsConnecting] = useState(false);
@@ -43,8 +42,7 @@ export function useAptosWallet() {
     try {
       setIsConnecting(true);
       
-      // The connect function doesn't take any parameters in the current version
-      // Based on the error, it seems to want a WalletName type but we don't provide that
+      // Connect without parameters as per the new SDK
       await connect();
       
       toast({
