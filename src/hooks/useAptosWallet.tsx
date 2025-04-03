@@ -43,9 +43,9 @@ export function useAptosWallet() {
     try {
       setIsConnecting(true);
       
-      // The connect function requires at least an empty object as an argument
-      // This will attempt to connect to the first available wallet
-      await connect({});
+      // The connect function doesn't take any parameters in the current version
+      // Based on the error, it seems to want a WalletName type but we don't provide that
+      await connect();
       
       toast({
         title: "Wallet Connected",
