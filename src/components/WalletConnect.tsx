@@ -1,4 +1,3 @@
-
 import { Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -27,11 +26,7 @@ const WalletConnect = ({ onConnect }: WalletConnectProps) => {
   // Update the parent component when connection status changes
   useEffect(() => {
     if (connected && walletAddress) {
-      // Convert AccountAddress to string if needed
-      const addressString = typeof walletAddress === 'string' 
-        ? walletAddress 
-        : walletAddress.toString();
-      onConnect(addressString);
+      onConnect(walletAddress);
     } else if (!connected) {
       onConnect("");
     }
@@ -42,14 +37,9 @@ const WalletConnect = ({ onConnect }: WalletConnectProps) => {
 
   // If connected, show wallet info
   if (connected) {
-    // Convert AccountAddress to string if needed
-    const addressString = typeof walletAddress === 'string' 
-      ? walletAddress 
-      : walletAddress.toString();
-      
     return (
       <WalletConnected
-        walletAddress={addressString}
+        walletAddress={walletAddress}
         isCorrectNetwork={isCorrectNetwork}
         isInitializing={false}
         onGetTestTokens={() => window.open("https://aptoslabs.com/testnet-faucet", "_blank")}

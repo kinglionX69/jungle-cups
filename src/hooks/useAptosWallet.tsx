@@ -1,3 +1,4 @@
+
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -37,7 +38,7 @@ export function useAptosWallet() {
 
   // Connect to wallet with error handling
   const connectWallet = useCallback(async () => {
-    if (isConnecting || connected) return;
+    if (isConnecting || connected) return false;
     
     try {
       setIsConnecting(true);
@@ -94,48 +95,6 @@ export function useAptosWallet() {
     }
   }, [disconnect, toast]);
 
-  // Submit transaction with error handling
-  const submitTransaction = useCallback(async (transaction: any) => {
-    if (!connected || !account) {
-      toast({
-        title: "Wallet Not Connected",
-        description: "Please connect your wallet to submit transactions",
-        variant: "destructive",
-      });
-      return { success: false };
-    }
-    
-    try {
-      const response = await signAndSubmitTransaction(transaction);
-      
-      return { success: true, hash: response.hash };
-    } catch (error) {
-      console.error("Transaction error:", error);
-      
-      let errorMessage = "Transaction failed. Please try again.";
-      
-      if (error instanceof Error) {
-        if (error.message.includes("User rejected")) {
-          errorMessage = "Transaction rejected. Please approve the transaction in your wallet.";
-        }
-      }
-      
-      toast({
-        title: "Transaction Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      
-      return { success: false };
-    }
-  }, [account, connected, signAndSubmitTransaction, toast]);
-
-  // Check if Petra wallet is installed - with the new adapter, we don't need this
-  // but keeping a simplified version for backward compatibility
-  const isPetraInstalled = useCallback(() => {
-    return true; // The adapter handles wallet availability
-  }, []);
-
   return {
     account,
     connected,
@@ -143,9 +102,9 @@ export function useAptosWallet() {
     isCorrectNetwork,
     connectWallet,
     disconnectWallet,
-    submitTransaction,
-    isPetraInstalled,
+    submitTransaction: signAndSubmitTransaction,
+    isPetraInstalled: () => true, // The adapter handles wallet availability
     wallet: wallet?.name || "",
-    walletAddress: account?.address || ""
+    walletAddress: account?.address?.toString() || ""
   };
 }

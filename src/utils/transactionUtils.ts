@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ESCROW_WALLET_ADDRESS, EMOJICOIN_ADDRESS } from "./aptosConfig";
 import { initializeAccount, initializeTokenStore } from "./tokenManagement";
@@ -73,11 +72,11 @@ export const withdrawWinnings = async (
       // Get wallet address from the connected account
       let playerAddress = "";
       try {
-        // Using the modern Aptos wallet adapter which returns an address object directly
+        // Modern Aptos wallet adapter returns address as a property of the account object
         if (window.aptos) {
           const accountInfo = await window.aptos.account();
-          if (accountInfo && typeof accountInfo === 'object' && 'address' in accountInfo) {
-            playerAddress = accountInfo.address;
+          if (accountInfo && accountInfo.address) {
+            playerAddress = accountInfo.address.toString();
           }
         }
       } catch (walletError) {
