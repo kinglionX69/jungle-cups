@@ -15,12 +15,10 @@ export const MIN_EMOJICOIN_BALANCE = 1000; // 1000 Emojicoin
 // Initialize Aptos client with error handling and timeouts
 import { AptosClient, ApiError } from "aptos";
 
-// Create client with timeout and retry logic
+// Create client with proper configuration options
 export const client = new AptosClient(NODE_URL, {
-  HEADERS: { 'Accept': 'application/json' },
+  // Use correct configuration options accepted by the AptosClient
   WITH_CREDENTIALS: false,
-  TIMEOUT: 10000, // 10 second timeout
-  MAX_RETRIES: 3,
 });
 
 // Helper function to handle API errors with clear error messages
