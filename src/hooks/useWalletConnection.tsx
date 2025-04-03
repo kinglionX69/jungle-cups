@@ -4,6 +4,7 @@ import { useWalletInitialization } from "./wallet/useWalletInitialization";
 import { useWalletUrlCallback } from "./wallet/useWalletUrlCallback";
 import { useTestnetTokens } from "./wallet/useTestnetTokens";
 import { useWalletConnector } from "./wallet/useWalletConnector";
+import { useState } from "react";
 
 interface UseWalletConnectionProps {
   onConnect: (wallet: string) => void;
@@ -11,11 +12,14 @@ interface UseWalletConnectionProps {
 }
 
 export function useWalletConnection({ onConnect, walletAddress }: UseWalletConnectionProps) {
-  // Use smaller, focused hooks
+  const [connecting, setConnecting] = useState(false);
+  
+  // Wallet status - checks if wallet is installed and on correct network
   const { isInstalled, isCorrectNetwork } = useWalletStatus({ 
     walletAddress 
   });
   
+  // Wallet initialization - handles setting up the wallet after connection
   const { isInitializing, initializeWallet } = useWalletInitialization({ 
     walletAddress 
   });
@@ -26,22 +30,36 @@ export function useWalletConnection({ onConnect, walletAddress }: UseWalletConne
     walletAddress 
   });
   
+  // Testnet token functionality
   const { getTestnetTokens } = useTestnetTokens({ 
     walletAddress, 
     initializeWallet 
   });
   
-  const { connectWallet, disconnectWallet } = useWalletConnector({ 
+  // Wallet connection and disconnection
+  const { connectWallet, disconnectWallet, isConnecting } = useWalletConnector({ 
     onConnect, 
     initializeWallet 
   });
+  
+  // Wrapped connect function to handle state
+  const handleConnect = async () => {
+    if (connecting || isConnecting) return;
+    setConnecting(true);
+    try {
+      await connectWallet();
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   return {
     isInstalled,
     isCorrectNetwork,
     isInitializing,
-    connectWallet,
+    connectWallet: handleConnect,
     disconnectWallet,
-    getTestnetTokens
+    getTestnetTokens,
+    isConnecting: connecting || isConnecting
   };
 }
