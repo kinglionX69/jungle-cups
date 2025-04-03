@@ -10,7 +10,7 @@ import NotFound from "./pages/NotFound";
 import LoadingScreen from "./components/LoadingScreen";
 import { useImagePreloader } from "./hooks/useImagePreloader";
 import { useIsMobile } from "./hooks/use-mobile";
-import { WalletProvider } from "./utils/walletAdapter";
+import { WalletProvider } from "./providers/WalletProvider";
 
 const queryClient = new QueryClient();
 

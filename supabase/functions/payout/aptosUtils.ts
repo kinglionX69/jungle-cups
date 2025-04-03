@@ -1,93 +1,91 @@
 
-// Network settings
+import { AptosAccount, AptosClient, HexString, TxnBuilderTypes, BCS } from "https://esm.sh/aptos@1.20.0";
+
+// Aptos client configuration
 export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
-export const NETWORK = "testnet";
-export const EMOJICOIN_ADDRESS = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27::coin_factory::Emojicoin";
-
-// Aptos SDK imports for Edge Functions (using Deno compatibility)
-import { 
-  AptosClient, 
-  AptosAccount, 
-  TxnBuilderTypes, 
-  BCS, 
-  HexString,
-  AccountAddress,
-  TransactionBuilderEd25519,
-  Ed25519PrivateKey
-} from "https://esm.sh/aptos@1.20.0";
-
-// Initialize Aptos client for REST API calls
 export const client = new AptosClient(NODE_URL);
 
-// Helper to create Aptos account from private key
-export const createAptosAccount = (privateKeyHex: string): AptosAccount => {
-  try {
-    // Remove '0x' prefix if present
-    if (privateKeyHex.startsWith('0x')) {
-      privateKeyHex = privateKeyHex.slice(2);
-    }
-    
-    console.log(`Creating account from private key (first 4 chars: ${privateKeyHex.substring(0, 4)}...)`);
-    
-    // Create account from private key
-    const privateKeyBytes = new HexString(privateKeyHex).toUint8Array();
-    return new AptosAccount(privateKeyBytes);
-  } catch (error) {
-    console.error('Error creating Aptos account:', error);
-    throw new Error(`Failed to initialize Aptos account: ${error.message}`);
-  }
+// Create Aptos account from private key
+export const createAptosAccount = (privateKey: string): AptosAccount => {
+  const privateKeyBytes = HexString.ensure(privateKey).toUint8Array();
+  return new AptosAccount(privateKeyBytes);
 };
 
-// Perform actual transaction using Aptos SDK
+// Create and sign a transaction using a private key
 export const createAndSignTransaction = async (
   senderAddress: string,
-  recipientAddress: string, 
+  recipientAddress: string,
   amount: number,
   tokenType: string,
   privateKey: string
 ) => {
   try {
-    console.log(`Creating transaction for ${amount} ${tokenType} from ${senderAddress} to ${recipientAddress}`);
+    console.log(`Creating transaction from ${senderAddress} to ${recipientAddress}`);
     
-    // Convert sender address from string to AccountAddress
-    const escrowAccount = createAptosAccount(privateKey);
+    // Create account from private key
+    const account = createAptosAccount(privateKey);
     
     // Determine token type address
     let tokenTypeAddress;
-    if (tokenType === 'APT') {
-      tokenTypeAddress = '0x1::aptos_coin::AptosCoin';
-    } else if (tokenType === 'EMOJICOIN') {
-      tokenTypeAddress = EMOJICOIN_ADDRESS;
-      console.log('Using EMOJICOIN token address:', tokenTypeAddress);
-      // For testing we'll use APT instead of Emojicoin
-      tokenTypeAddress = '0x1::aptos_coin::AptosCoin';
+    if (tokenType === "APT") {
+      tokenTypeAddress = "0x1::aptos_coin::AptosCoin";
+    } else if (tokenType === "EMOJICOIN") {
+      tokenTypeAddress = "0x173fcd3fda2c89d4702e3d307d4dcc8358b03d9f36189179d2bddd9585e96e27::coin_factory::Emojicoin";
     } else {
       throw new Error(`Unsupported token type: ${tokenType}`);
     }
     
-    // Build coin transfer transaction
-    const payload = {
-      function: "0x1::coin::transfer",
-      type_arguments: [tokenTypeAddress],
-      arguments: [recipientAddress, amount.toString()]
-    };
+    // Get account sequence number (nonce)
+    const { sequence_number: sequenceNumber } = await client.getAccount(account.address());
     
-    // Generate the raw transaction
-    const rawTxn = await client.generateTransaction(escrowAccount.address(), payload);
+    // Calculate gas price to ensure we're not underpaying
+    const gasUnitPrice = await client.estimateGasPrice();
+    
+    // Create transfer transaction payload
+    const entryFunctionPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
+      TxnBuilderTypes.EntryFunction.natural(
+        "0x1::coin",
+        "transfer",
+        [new TxnBuilderTypes.TypeTag(TxnBuilderTypes.StructTag.fromString(tokenTypeAddress))],
+        [
+          BCS.bcsToBytes(TxnBuilderTypes.AccountAddress.fromHex(HexString.ensure(recipientAddress))),
+          BCS.bcsSerializeUint64(amount),
+        ]
+      )
+    );
+    
+    // Create raw transaction
+    const rawTxn = new TxnBuilderTypes.RawTransaction(
+      TxnBuilderTypes.AccountAddress.fromHex(account.address()),
+      BigInt(sequenceNumber),
+      entryFunctionPayload,
+      BigInt(10000), // Max gas units
+      BigInt(gasUnitPrice.gas_estimate), // Gas unit price
+      BigInt(Math.floor(Date.now() / 1000) + 600), // Expiration timestamp (10 minutes)
+      new TxnBuilderTypes.ChainId(2) // Testnet chain ID
+    );
     
     // Sign the transaction
-    const signedTxn = await client.signTransaction(escrowAccount, rawTxn);
+    const signedTxn = BCS.bcsToBytes(new TxnBuilderTypes.SignedTransaction(
+      rawTxn,
+      new TxnBuilderTypes.Ed25519Signature(
+        account.signBuffer(BCS.bcsToBytes(rawTxn)).toUint8Array()
+      ),
+      new TxnBuilderTypes.Ed25519PublicKey(account.pubKey().toUint8Array())
+    ));
     
     // Submit the transaction
-    const transactionResponse = await client.submitTransaction(signedTxn);
-    console.log(`Transaction submitted with hash: ${transactionResponse.hash}`);
+    const response = await client.submitSignedBCSTransaction(signedTxn);
+    
+    console.log(`Transaction submitted with hash: ${response.hash}`);
     
     return {
-      hash: transactionResponse.hash,
-      success: true
+      success: true,
+      hash: response.hash,
+      details: `Transaction submitted from ${senderAddress} to ${recipientAddress} for ${amount} ${tokenType}`
     };
   } catch (error) {
-    console.error("Error creating transaction:", error);
+    console.error("Error creating and signing transaction:", error);
     throw error;
   }
 };
