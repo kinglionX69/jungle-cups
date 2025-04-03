@@ -18,8 +18,18 @@ const WalletNotInstalled = ({ onClick }: WalletNotInstalledProps) => {
   // Button styling based on device
   const buttonClasses = isMobile ? "w-full justify-center py-3 text-base" : "";
   
-  // Button text based on browser
-  const buttonText = isInPetraMobileBrowser() ? "Connect Wallet" : "Get Petra Wallet";
+  // Button text based on browser and device
+  const getButtonText = () => {
+    if (isInPetraMobileBrowser()) {
+      return "Connect Wallet";
+    }
+    
+    if (isMobileDevice()) {
+      return "Open Petra Wallet";
+    }
+    
+    return "Get Petra Wallet";
+  };
 
   const handleClick = () => {
     // Prevent multiple clicks
@@ -61,8 +71,8 @@ const WalletNotInstalled = ({ onClick }: WalletNotInstalledProps) => {
         variant: "destructive",
       });
     } finally {
-      // Reset redirecting state after a short delay
-      setTimeout(() => setIsRedirecting(false), 1000);
+      // Reset redirecting state after a delay
+      setTimeout(() => setIsRedirecting(false), 1500);
     }
   };
 
@@ -73,7 +83,7 @@ const WalletNotInstalled = ({ onClick }: WalletNotInstalledProps) => {
       disabled={isRedirecting}
     >
       <Smartphone className="mr-2 h-5 w-5" />
-      {buttonText}
+      {isRedirecting ? "Please wait..." : getButtonText()}
     </Button>
   );
 };

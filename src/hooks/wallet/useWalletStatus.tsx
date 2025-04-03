@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { NETWORK } from "@/utils/aptosUtils";
 import { isInPetraMobileBrowser } from "@/utils/mobileUtils";
@@ -11,22 +11,31 @@ interface UseWalletStatusProps {
 export function useWalletStatus({ walletAddress }: UseWalletStatusProps) {
   const [isInstalled, setIsInstalled] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(true);
+  const [isChecking, setIsChecking] = useState(false);
   const { toast } = useToast();
 
   // Check wallet installation and network
-  useEffect(() => {
-    const checkWallet = async () => {
+  const checkWalletStatus = useCallback(async () => {
+    // Prevent multiple simultaneous checks
+    if (isChecking) return;
+    
+    setIsChecking(true);
+    
+    try {
       // For Petra mobile browser, always consider wallet installed
       if (isInPetraMobileBrowser()) {
         setIsInstalled(true);
+        // Network check will be performed during connection in mobile
+        setIsCorrectNetwork(true);
         return;
       }
       
       // For other environments, check for window.aptos
-      setIsInstalled(!!window.aptos);
+      const walletDetected = typeof window !== 'undefined' && !!window.aptos;
+      setIsInstalled(walletDetected);
       
       // Check network when connected
-      if (window.aptos && walletAddress) {
+      if (walletDetected && walletAddress) {
         try {
           const network = await window.aptos.network();
           const networkMatch = network.toLowerCase() === NETWORK.toLowerCase();
@@ -44,17 +53,35 @@ export function useWalletStatus({ walletAddress }: UseWalletStatusProps) {
           setIsCorrectNetwork(false);
         }
       }
-    };
+    } catch (error) {
+      console.error("Error checking wallet status:", error);
+    } finally {
+      setIsChecking(false);
+    }
+  }, [walletAddress, toast, isChecking]);
 
-    checkWallet();
+  useEffect(() => {
+    checkWalletStatus();
     
     // Also check when the window loads fully
-    window.addEventListener("load", checkWallet);
-    return () => window.removeEventListener("load", checkWallet);
-  }, [walletAddress, toast]);
+    const handleLoad = () => {
+      checkWalletStatus();
+    };
+    
+    window.addEventListener("load", handleLoad);
+    
+    // Set up periodic checks (every 30 seconds)
+    const checkInterval = setInterval(checkWalletStatus, 30000);
+    
+    return () => {
+      window.removeEventListener("load", handleLoad);
+      clearInterval(checkInterval);
+    };
+  }, [walletAddress, checkWalletStatus]);
 
   return {
     isInstalled,
-    isCorrectNetwork
+    isCorrectNetwork,
+    checkWalletStatus
   };
 }

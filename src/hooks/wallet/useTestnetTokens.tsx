@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { requestTestnetTokens } from "@/utils/aptosUtils";
 
@@ -8,36 +9,52 @@ interface UseTestnetTokensProps {
 }
 
 export function useTestnetTokens({ walletAddress, initializeWallet }: UseTestnetTokensProps) {
+  const [isRequestingTokens, setIsRequestingTokens] = useState(false);
   const { toast } = useToast();
-
+  
   const getTestnetTokens = async () => {
-    if (!walletAddress) return;
+    if (!walletAddress || isRequestingTokens) return;
     
-    toast({
-      title: "Requesting Tokens",
-      description: "Requesting testnet tokens. Please wait...",
-    });
+    setIsRequestingTokens(true);
     
-    // Check if account is initialized first
-    await initializeWallet();
-    
-    const success = await requestTestnetTokens(walletAddress);
-    
-    if (success) {
+    try {
       toast({
-        title: "Success",
-        description: "Testnet tokens have been requested. Please go to https://aptoslabs.com/testnet-faucet to claim tokens.",
+        title: "Requesting Tokens",
+        description: "Initializing wallet and requesting testnet tokens...",
       });
-    } else {
+      
+      // First ensure account is initialized
+      await initializeWallet();
+      
+      // Request testnet tokens
+      const success = await requestTestnetTokens(walletAddress);
+      
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Your tokens are on the way! It may take a few moments to appear in your wallet.",
+        });
+      } else {
+        toast({
+          title: "Request Failed",
+          description: "Failed to request testnet tokens. Please try again or visit the Aptos Faucet.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error requesting testnet tokens:", error);
       toast({
-        title: "Request Failed",
-        description: "Failed to initialize account. Please try again later.",
+        title: "Request Error",
+        description: "An error occurred while requesting tokens. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsRequestingTokens(false);
     }
   };
-
+  
   return {
-    getTestnetTokens
+    getTestnetTokens,
+    isRequestingTokens
   };
 }

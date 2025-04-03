@@ -1,77 +1,126 @@
 
-// Detect if the user is on a mobile device
+// Check if user is on a mobile device
 export const isMobileDevice = (): boolean => {
-  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-  return /android|iPad|iPhone|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  if (typeof window === 'undefined') return false;
+  
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
 };
 
-// Check if the app is running inside Petra browser
+// Check if user is in the Petra mobile browser
 export const isInPetraMobileBrowser = (): boolean => {
-  const userAgent = navigator.userAgent || "";
-  return userAgent.includes("PetraWallet") || userAgent.includes("Petra/");
+  if (typeof window === 'undefined') return false;
+  
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  const isPetraMobile = 
+    userAgent.includes('PetraWallet') || 
+    userAgent.includes('Petra Wallet') || 
+    window.location.href.includes('petra.app');
+  
+  return isPetraMobile && isMobileDevice();
 };
 
-// Generate deep link to open Petra mobile app with current URL
-export const getPetraMobileDeepLink = (): string => {
-  // Encode the current URL to be used in the deep link
-  const currentUrl = encodeURIComponent(window.location.href);
-  return `petra://wallet/dapp?url=${currentUrl}`;
+// Get the current domain for forming deep links
+const getCurrentDomain = (): string => {
+  if (typeof window === 'undefined') return '';
+  
+  const protocol = window.location.protocol;
+  const host = window.location.host;
+  return `${protocol}//${host}`;
 };
 
-// Generate universal link format for iOS
-export const getPetraUniversalLink = (): string => {
-  const currentUrl = encodeURIComponent(window.location.href);
-  return `https://petra.app/explore?link=${currentUrl}`;
+// Generate a deep link URL for Petra mobile
+const generateDeepLinkUrl = (): string => {
+  const domain = getCurrentDomain();
+  const path = window.location.pathname;
+  const search = window.location.search || '';
+  
+  // Create a unique reference to identify this connection attempt
+  const connectionRef = `ref_${Date.now()}`;
+  
+  // Construct the redirect URL the wallet will use to return
+  const redirectUrl = encodeURIComponent(`${domain}${path}${search ? search + '&' : '?'}wallet_connection=${connectionRef}`);
+  
+  // Form the deep link
+  return `https://petra.app/connect?redirectUrl=${redirectUrl}`;
 };
 
-// Redirect to Petra mobile app
-export const redirectToPetraMobile = () => {
-  console.log("Redirecting to Petra mobile app");
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+// Redirect to Petra mobile app with deep link
+export const redirectToPetraMobile = (): void => {
+  if (typeof window === 'undefined') return;
   
-  // Use the appropriate link format based on platform
-  const deepLink = getPetraMobileDeepLink();
-  const universalLink = getPetraUniversalLink();
+  const deepLink = generateDeepLinkUrl();
+  console.log("Redirecting to Petra mobile with deep link:", deepLink);
   
-  console.log("Current URL:", window.location.href);
-  console.log("Deep link:", deepLink);
-  console.log("Universal link:", universalLink);
+  // For iOS, we need to use window.location to ensure proper deep linking
+  if (/(iPad|iPhone|iPod)/g.test(navigator.userAgent)) {
+    window.location.href = deepLink;
+    return;
+  }
   
-  // For iOS, use universal link, for Android use deep link
-  const linkToOpen = isIOS ? universalLink : deepLink;
-  console.log("Opening link:", linkToOpen);
-  
-  // Open the link
-  window.location.href = linkToOpen;
-  
-  // Fallback to app store after a delay
-  const timeout = setTimeout(() => {
-    // Check if the page is still visible (means the app didn't open)
-    if (!document.hidden) {
-      console.log("App didn't open, redirecting to app store");
-      window.location.href = isIOS 
-        ? "https://apps.apple.com/app/petra-aptos-wallet/id6446259840"
-        : "https://play.google.com/store/apps/details?id=com.petra.wallet";
-    }
-  }, 2000);
-  
-  // Clear the timeout if the page visibility changes
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      clearTimeout(timeout);
-      console.log("App opened, clearing timeout");
-    }
-  }, { once: true });
+  // For Android and other platforms, we open in a new tab/window
+  window.open(deepLink, '_blank');
 };
 
-// Check for wallet callback parameters in URL
+// Check if URL has wallet connection parameters
 export const hasWalletCallbackParams = (): boolean => {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.has('petra_wallet_callback') || urlParams.has('walletAddress');
+  if (typeof window === 'undefined') return false;
+  
+  const searchParams = new URLSearchParams(window.location.search);
+  return searchParams.has('wallet_connection') || 
+         searchParams.has('address') || 
+         searchParams.has('publicKey');
 };
 
-// Get wallet address from URL parameters
+// Extract wallet address from URL if present
 export const getWalletAddressFromURL = (): string | null => {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get('walletAddress');
+  if (typeof window === 'undefined') return null;
+  
+  const searchParams = new URLSearchParams(window.location.search);
+  
+  // First check for direct address parameter
+  if (searchParams.has('address')) {
+    return searchParams.get('address');
+  }
+  
+  // Then check for publicKey parameter
+  if (searchParams.has('publicKey')) {
+    return searchParams.get('publicKey');
+  }
+  
+  return null;
+};
+
+// Clean wallet connection parameters from URL
+export const cleanWalletParamsFromURL = (): void => {
+  if (typeof window === 'undefined' || !window.history) return;
+  
+  try {
+    const url = new URL(window.location.href);
+    
+    // Parameters to remove
+    const paramsToRemove = [
+      'wallet_connection', 
+      'address', 
+      'publicKey'
+    ];
+    
+    let changed = false;
+    
+    // Remove each parameter if it exists
+    paramsToRemove.forEach(param => {
+      if (url.searchParams.has(param)) {
+        url.searchParams.delete(param);
+        changed = true;
+      }
+    });
+    
+    // Only update history if changes were made
+    if (changed) {
+      window.history.replaceState({}, document.title, url.toString());
+      console.log("Cleaned wallet parameters from URL");
+    }
+  } catch (error) {
+    console.error("Error cleaning URL parameters:", error);
+  }
 };

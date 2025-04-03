@@ -8,6 +8,7 @@ interface WalletConnectedProps {
   walletAddress: string;
   isCorrectNetwork: boolean;
   isInitializing: boolean;
+  isRequestingTokens?: boolean;
   onGetTestTokens: () => void;
   onDisconnect: () => void;
 }
@@ -16,6 +17,7 @@ const WalletConnected = ({
   walletAddress,
   isCorrectNetwork,
   isInitializing,
+  isRequestingTokens = false,
   onGetTestTokens,
   onDisconnect
 }: WalletConnectedProps) => {
@@ -41,10 +43,14 @@ const WalletConnected = ({
             size="sm" 
             className={`border-2 border-jungle-green ${isMobile ? 'flex-1' : ''}`}
             onClick={onGetTestTokens}
-            disabled={isInitializing}
+            disabled={isInitializing || isRequestingTokens}
           >
             <Coins className="mr-1 h-4 w-4" /> 
-            {isInitializing ? "Initializing..." : "Get Test Tokens"}
+            {isInitializing 
+              ? "Initializing..." 
+              : isRequestingTokens 
+                ? "Requesting..." 
+                : "Get Test Tokens"}
           </Button>
         )}
         <Button 

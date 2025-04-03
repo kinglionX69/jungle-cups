@@ -1,6 +1,10 @@
 
 import { useEffect } from "react";
-import { hasWalletCallbackParams, getWalletAddressFromURL } from "@/utils/mobileUtils";
+import { 
+  hasWalletCallbackParams, 
+  getWalletAddressFromURL, 
+  cleanWalletParamsFromURL 
+} from "@/utils/mobileUtils";
 import { useToast } from "@/components/ui/use-toast";
 
 interface UseWalletUrlCallbackProps {
@@ -14,30 +18,39 @@ export function useWalletUrlCallback({ onConnect, walletAddress }: UseWalletUrlC
   // Check for wallet callback params on mount and URL changes
   useEffect(() => {
     const checkUrlForWalletAddress = () => {
-      if (hasWalletCallbackParams()) {
-        const address = getWalletAddressFromURL();
-        if (address && !walletAddress) {
-          console.log("Detected wallet address from URL params:", address);
-          onConnect(address);
-          
-          toast({
-            title: "Wallet Connected",
-            description: "Successfully connected from mobile wallet",
-          });
-          
-          // Clean up URL parameters
-          if (window.history && window.history.replaceState) {
-            const cleanUrl = window.location.href.split('?')[0];
-            window.history.replaceState({}, document.title, cleanUrl);
+      try {
+        if (hasWalletCallbackParams()) {
+          const address = getWalletAddressFromURL();
+          if (address && !walletAddress) {
+            console.log("Detected wallet address from URL params:", address);
+            onConnect(address);
+            
+            toast({
+              title: "Wallet Connected",
+              description: "Successfully connected from mobile wallet",
+            });
+            
+            // Clean up URL parameters
+            cleanWalletParamsFromURL();
           }
         }
+      } catch (error) {
+        console.error("Error processing wallet URL callback:", error);
       }
     };
     
-    // Check immediately and on popstate events
+    // Check immediately
     checkUrlForWalletAddress();
+    
+    // Also check on navigation events (popstate)
     window.addEventListener('popstate', checkUrlForWalletAddress);
     
-    return () => window.removeEventListener('popstate', checkUrlForWalletAddress);
+    // Check on hash change (for apps using hash-based routing)
+    window.addEventListener('hashchange', checkUrlForWalletAddress);
+    
+    return () => {
+      window.removeEventListener('popstate', checkUrlForWalletAddress);
+      window.removeEventListener('hashchange', checkUrlForWalletAddress);
+    };
   }, [onConnect, walletAddress, toast]);
 }

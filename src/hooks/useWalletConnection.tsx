@@ -4,7 +4,7 @@ import { useWalletInitialization } from "./wallet/useWalletInitialization";
 import { useWalletUrlCallback } from "./wallet/useWalletUrlCallback";
 import { useTestnetTokens } from "./wallet/useTestnetTokens";
 import { useWalletConnector } from "./wallet/useWalletConnector";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface UseWalletConnectionProps {
   onConnect: (wallet: string) => void;
@@ -13,9 +13,10 @@ interface UseWalletConnectionProps {
 
 export function useWalletConnection({ onConnect, walletAddress }: UseWalletConnectionProps) {
   const [connecting, setConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   // Wallet status - checks if wallet is installed and on correct network
-  const { isInstalled, isCorrectNetwork } = useWalletStatus({ 
+  const { isInstalled, isCorrectNetwork, checkWalletStatus } = useWalletStatus({ 
     walletAddress 
   });
   
@@ -31,25 +32,44 @@ export function useWalletConnection({ onConnect, walletAddress }: UseWalletConne
   });
   
   // Testnet token functionality
-  const { getTestnetTokens } = useTestnetTokens({ 
+  const { getTestnetTokens, isRequestingTokens } = useTestnetTokens({ 
     walletAddress, 
     initializeWallet 
   });
   
   // Wallet connection and disconnection
-  const { connectWallet, disconnectWallet, isConnecting } = useWalletConnector({ 
+  const { connectWallet, disconnectWallet, isConnecting: connectorConnecting } = useWalletConnector({ 
     onConnect, 
     initializeWallet 
   });
   
+  // Recheck wallet status when connection changes
+  useEffect(() => {
+    if (walletAddress) {
+      checkWalletStatus();
+    }
+  }, [walletAddress, checkWalletStatus]);
+  
   // Wrapped connect function to handle state
   const handleConnect = async () => {
-    if (connecting || isConnecting) return;
+    if (connecting || connectorConnecting) return;
+    
     setConnecting(true);
+    setConnectionError(null);
+    
     try {
-      await connectWallet();
+      const success = await connectWallet();
+      if (!success) {
+        setConnectionError("Could not establish connection to wallet");
+      }
+    } catch (error) {
+      console.error("Connection error:", error);
+      setConnectionError((error as Error)?.message || "Unknown connection error");
     } finally {
-      setConnecting(false);
+      // Give a small delay before allowing another attempt
+      setTimeout(() => {
+        setConnecting(false);
+      }, 1000);
     }
   };
 
@@ -60,6 +80,9 @@ export function useWalletConnection({ onConnect, walletAddress }: UseWalletConne
     connectWallet: handleConnect,
     disconnectWallet,
     getTestnetTokens,
-    isConnecting: connecting || isConnecting
+    isConnecting: connecting || connectorConnecting,
+    isRequestingTokens,
+    connectionError,
+    checkWalletStatus
   };
 }
