@@ -70,9 +70,36 @@ export const withdrawWinnings = async (
     try {
       console.log("Calling Supabase Edge Function to process withdrawal directly");
       
+      // Get wallet address from the connected account
+      let playerAddress = "";
+      try {
+        // Using the modern Aptos wallet adapter which returns an address object directly
+        if (window.aptos) {
+          const accountInfo = await window.aptos.account();
+          if (accountInfo && typeof accountInfo === 'object' && 'address' in accountInfo) {
+            playerAddress = accountInfo.address;
+          }
+        }
+      } catch (walletError) {
+        console.error("Error getting wallet address:", walletError);
+        return {
+          success: false,
+          message: "Could not retrieve your wallet address",
+          details: "Please make sure your wallet is connected properly"
+        };
+      }
+      
+      if (!playerAddress) {
+        return {
+          success: false,
+          message: "Wallet address not available",
+          details: "Please reconnect your wallet and try again"
+        };
+      }
+      
       const { data, error } = await supabase.functions.invoke('payout/withdraw', {
         body: {
-          playerAddress: window.aptos?.account?.address || "", // Will be replaced with account.address from useWallet
+          playerAddress,
           amount,
           tokenType
         }
