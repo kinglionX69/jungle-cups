@@ -15,37 +15,32 @@ export const isInPetraMobileBrowser = (): boolean => {
 export const getPetraMobileDeepLink = (url: string): string => {
   // Encode the current URL to be used in the deep link
   const currentUrl = encodeURIComponent(url || window.location.href);
-  // Format: petra://wallet/dapp?url={encodedUrl}
   return `petra://wallet/dapp?url=${currentUrl}`;
 };
 
 // Generate universal link format for iOS
 export const getPetraUniversalLink = (url: string): string => {
   const currentUrl = encodeURIComponent(url || window.location.href);
-  // Using the explore URL format as specified in the docs
   return `https://petra.app/explore?link=${currentUrl}`;
 };
 
-// Redirect to Petra mobile app with smart fallback mechanism
+// Redirect to Petra mobile app
 export const redirectToPetraMobile = () => {
+  console.log("Redirecting to Petra mobile app");
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   
-  // Create a direct URL with the current page URL encoded
+  // Get the current URL to pass to the app
   const currentUrl = window.location.href;
+  console.log("Current URL:", currentUrl);
   
-  // On iOS, we use the universal link format, on Android we can use the deep link
-  const deepLink = getPetraMobileDeepLink(currentUrl);
+  // Use universal link for both platforms as it's more reliable
   const universalLink = getPetraUniversalLink(currentUrl);
-  
-  // For ALL devices, we'll first try the universal link format as it's more reliable
-  const linkToUse = universalLink;
-  
-  console.log("Redirecting to Petra mobile with link:", linkToUse);
+  console.log("Using universal link:", universalLink);
   
   // Attempt to open the Petra mobile app
-  window.location.href = linkToUse;
+  window.location.href = universalLink;
   
-  // If the user doesn't have Petra installed, we'll redirect to the app store after a delay
+  // If the user doesn't have Petra installed, redirect to app store after a delay
   const timeout = setTimeout(() => {
     // Check if we're still on the same page
     if (document.hidden || document.visibilityState === "hidden") {

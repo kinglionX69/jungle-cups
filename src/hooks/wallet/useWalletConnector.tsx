@@ -16,71 +16,108 @@ export function useWalletConnector({ onConnect, initializeWallet }: UseWalletCon
   const { toast } = useToast();
 
   const connectWallet = async () => {
-    // Important: If already in Petra browser, just connect directly instead of redirecting
+    console.log("Starting wallet connection process");
+    
+    // Case 1: Already in Petra mobile browser
     if (isInPetraMobileBrowser()) {
-      console.log("Already in Petra mobile browser, connecting directly");
-      if (!window.aptos) {
-        toast({
-          title: "Wallet Not Available",
-          description: "Cannot find Petra wallet in this browser",
-          variant: "destructive",
-        });
-        return;
-      }
+      console.log("In Petra mobile browser, connecting directly");
       
       try {
+        // Check if the Petra wallet object is available
+        if (!window.aptos) {
+          console.error("Petra wallet object not found in Petra browser");
+          toast({
+            title: "Connection Error",
+            description: "Cannot find Petra wallet in this browser. Try refreshing the page.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         // Connect to wallet
         const response = await window.aptos.connect();
-        onConnect(response.address);
+        console.log("Connected to Petra wallet:", response);
         
-        toast({
-          title: "Wallet Connected",
-          description: "Successfully connected to Petra wallet",
-        });
+        if (response && response.address) {
+          onConnect(response.address);
+          
+          toast({
+            title: "Wallet Connected",
+            description: "Successfully connected to Petra wallet",
+          });
+        } else {
+          console.error("Invalid response from wallet connection:", response);
+          toast({
+            title: "Connection Failed",
+            description: "Invalid response from wallet. Please try again.",
+            variant: "destructive",
+          });
+        }
         return;
       } catch (error) {
         console.error("Error connecting to wallet in Petra browser:", error);
         toast({
           title: "Connection Failed",
-          description: "Could not connect to your wallet. Please try again.",
+          description: "Error connecting to wallet. Please try again or restart the app.",
           variant: "destructive",
         });
         return;
       }
     }
     
-    // For other mobile devices, redirect to Petra app
+    // Case 2: Mobile device but not in Petra browser
     if (isMobileDevice() && !isInPetraMobileBrowser()) {
+      console.log("On mobile device, redirecting to Petra app");
+      
       toast({
         title: "Opening Petra Wallet",
-        description: "Redirecting you to the Petra mobile app...",
+        description: "Redirecting to the Petra mobile app...",
       });
+      
+      // Redirect to Petra mobile app
       redirectToPetraMobile();
       return;
     }
     
-    // For desktop devices
+    // Case 3: Desktop device
+    console.log("On desktop, checking for Petra extension");
+    
     if (!window.aptos) {
+      console.log("Petra extension not found on desktop");
       toast({
         title: "Wallet Not Found",
-        description: "Please install Petra wallet",
+        description: "Please install Petra wallet extension",
         variant: "destructive",
       });
       window.open("https://petra.app/", "_blank");
       return;
     }
     
-    // Standard wallet connection flow for desktop
+    // Standard desktop connection flow
     try {
+      console.log("Connecting to Petra extension on desktop");
+      
       // Connect to wallet
       const response = await window.aptos.connect();
+      console.log("Desktop connection response:", response);
+      
+      if (!response || !response.address) {
+        console.error("Invalid response from wallet:", response);
+        toast({
+          title: "Connection Failed",
+          description: "Invalid response from wallet. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const account = response.address;
       
       // Check if on correct network
       const network = await window.aptos.network();
       console.log("Connected to network:", network);
       
-      // Fix for network detection - check for both "testnet" and "Testnet"
+      // Network check - case insensitive
       const networkMatch = network.toLowerCase() === NETWORK.toLowerCase();
       if (!networkMatch) {
         toast({
@@ -93,7 +130,7 @@ export function useWalletConnector({ onConnect, initializeWallet }: UseWalletCon
       
       onConnect(account);
       
-      // Initialize the wallet if needed
+      // Initialize the wallet
       await initializeWallet();
       
       toast({
@@ -102,7 +139,7 @@ export function useWalletConnector({ onConnect, initializeWallet }: UseWalletCon
         variant: "default",
       });
     } catch (error) {
-      console.error("Error connecting wallet:", error);
+      console.error("Error connecting wallet on desktop:", error);
       toast({
         title: "Connection Failed",
         description: "Could not connect to your wallet. Please try again.",
