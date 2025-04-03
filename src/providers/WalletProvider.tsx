@@ -1,7 +1,7 @@
 
 import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react";
 import { PropsWithChildren, useEffect, useState } from "react";
-import { Network } from "@aptos-labs/ts-sdk";
+import { Network, NetworkToNetworkName } from "@aptos-labs/ts-sdk";
 
 export const WalletProvider = ({ children }: PropsWithChildren) => {
   // We're not using plugins since we're having issues with the wallet-standard package
@@ -24,8 +24,8 @@ export const WalletProvider = ({ children }: PropsWithChildren) => {
   return (
     <AptosWalletAdapterProvider
       autoConnect={true}
-      dappConfig={{ network: Network.TESTNET }}
-      optInWallets={["Petra"]} // Only opt into Petra wallet for simplicity
+      network={NetworkToNetworkName[Network.TESTNET]}
+      plugins={[]} // Empty plugins array instead of optInWallets
       onError={(error) => {
         console.error("Wallet adapter error:", error);
       }}
