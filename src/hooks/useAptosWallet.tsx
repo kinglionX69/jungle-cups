@@ -1,3 +1,4 @@
+
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -42,7 +43,7 @@ export function useAptosWallet() {
     try {
       setIsConnecting(true);
       
-      // Connect without parameters as per the new SDK
+      // Connect with the Petra wallet (no arguments, as it's now handled internally)
       await connect();
       
       toast({
