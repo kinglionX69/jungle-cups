@@ -43,8 +43,8 @@ export function useAptosWallet() {
     try {
       setIsConnecting(true);
       
-      // Connect with the Petra wallet (no arguments, as it's now handled internally)
-      await connect();
+      // Connect with the available wallet (passing an empty object to satisfy TS)
+      await connect({});
       
       toast({
         title: "Wallet Connected",

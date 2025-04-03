@@ -51,7 +51,13 @@ export const initializeAccount = async (address: string): Promise<boolean> => {
         
         // Wait for transaction to be confirmed
         await retryRequest(async (client) => {
-          return await client.waitForTransaction({ transactionHash: response.hash, timeoutSecs: 30 });
+          return await client.waitForTransaction({ 
+            transactionHash: response.hash,
+            options: { 
+              checkSuccess: true,
+              timeoutMs: 30000 // 30 seconds in milliseconds
+            }
+          });
         });
         
         console.log("Coin registration confirmed");

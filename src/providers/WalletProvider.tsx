@@ -24,8 +24,12 @@ export const WalletProvider = ({ children }: PropsWithChildren) => {
   return (
     <AptosWalletAdapterProvider
       autoConnect={true}
-      network={Network.TESTNET}
       plugins={[]} // Empty plugins array instead of optInWallets
+      networkInfo={{
+        name: Network.TESTNET,
+        chainId: "testnet",
+        url: "https://fullnode.testnet.aptoslabs.com/v1"
+      }}
       onError={(error) => {
         console.error("Wallet adapter error:", error);
       }}
