@@ -13,6 +13,15 @@ const LoadingScreen = ({ progress }: LoadingScreenProps) => {
   const showProgress = progress !== undefined;
   const isMobile = useIsMobile();
   const [displayProgress, setDisplayProgress] = useState(0);
+  const [messageIndex, setMessageIndex] = useState(0);
+  
+  const loadingMessages = [
+    "Preparing the jungle for some exciting cup action!",
+    "Waking up the monkeys...",
+    "Shuffling the cups...",
+    "Looking for the hidden ball...",
+    "Almost ready to play!"
+  ];
   
   // Smooth progress animation
   useEffect(() => {
@@ -31,31 +40,45 @@ const LoadingScreen = ({ progress }: LoadingScreenProps) => {
         setDisplayProgress(prev => {
           // Accelerate progress if it seems stuck
           if (prev >= 95) return 100;
-          if (prev < 30) return prev + 0.2;
-          if (prev < 70) return prev + 0.1;
-          return prev + 0.05;
+          if (prev < 30) return prev + 0.3;
+          if (prev < 70) return prev + 0.2;
+          return prev + 0.1;
         });
-      }, 100);
+      }, 50); // Update more frequently for smoother animation
     }
     
     return () => clearInterval(interval);
   }, [displayProgress]);
   
+  // Rotate loading messages
+  useEffect(() => {
+    if (displayProgress < 100) {
+      const messageTimer = setInterval(() => {
+        setMessageIndex(prev => (prev + 1) % loadingMessages.length);
+      }, 3000);
+      
+      return () => clearInterval(messageTimer);
+    }
+  }, [displayProgress]);
+  
   return (
-    <div className="fixed inset-0 bg-jungle-background bg-opacity-95 flex flex-col items-center justify-center z-50">
-      <div className={`text-center p-6 ${isMobile ? 'max-w-[90%]' : 'max-w-md'}`}>
-        <div className="mb-6">
-          <Logo className={isMobile ? "scale-100 mb-6" : "scale-125 mb-8"} />
+    <div 
+      className="fixed inset-0 bg-jungle-background bg-opacity-95 flex flex-col items-center justify-center z-50"
+      style={{ backgroundColor: '#f0f9e8' }} // Fallback color in case background image fails
+    >
+      <div className={`text-center p-4 ${isMobile ? 'max-w-[95%]' : 'max-w-md'}`}>
+        <div className="mb-4">
+          <Logo className={isMobile ? "scale-90 mb-4" : "scale-125 mb-8"} />
         </div>
         <div className="flex items-center justify-center gap-2 mb-4">
-          <Loader2 className="h-6 w-6 text-jungle-green animate-spin" />
-          <span className={`${isMobile ? 'text-lg' : 'text-xl'} font-bungee text-jungle-darkGreen`}>
+          <Loader2 className="h-5 w-5 text-jungle-green animate-spin" />
+          <span className={`${isMobile ? 'text-base' : 'text-xl'} font-bungee text-jungle-darkGreen`}>
             Loading game assets...
           </span>
         </div>
         
         {showProgress && (
-          <div className="w-full mt-4 mb-2">
+          <div className="w-full mt-3 mb-2">
             <Progress value={displayProgress} className="h-2" />
             <p className="text-xs text-right mt-1 text-jungle-darkGreen">
               {Math.round(displayProgress)}%
@@ -63,8 +86,8 @@ const LoadingScreen = ({ progress }: LoadingScreenProps) => {
           </div>
         )}
         
-        <p className={`mt-4 text-jungle-darkGreen opacity-80 ${isMobile ? 'text-sm' : ''}`}>
-          Preparing the jungle for some exciting cup action!
+        <p className={`mt-3 text-jungle-darkGreen opacity-80 ${isMobile ? 'text-sm' : ''}`}>
+          {loadingMessages[messageIndex]}
         </p>
       </div>
     </div>
