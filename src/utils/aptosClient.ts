@@ -1,14 +1,16 @@
 
-import { AptosClient, Types } from "aptos";
-import { client, NODE_URL } from "./aptosConfig";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { client } from "./aptosConfig";
 
 // Check if wallet is connected
 export const isWalletConnected = async (): Promise<boolean> => {
-  if (!window.aptos) return false;
-  
   try {
-    const { address } = await window.aptos.account();
-    return !!address;
+    // Modern way to check connection status through wallet adapter
+    if (typeof window !== 'undefined' && window.aptos) {
+      const account = await window.aptos.account();
+      return !!account.address;
+    }
+    return false;
   } catch (error) {
     console.error("Error checking wallet connection:", error);
     return false;

@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ESCROW_WALLET_ADDRESS, EMOJICOIN_ADDRESS } from "./aptosConfig";
 import { initializeAccount, initializeTokenStore } from "./tokenManagement";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 // Transfer tokens from player to escrow (betting)
 export const placeBet = async (
@@ -12,7 +13,7 @@ export const placeBet = async (
     console.log(`Placing bet of ${amount} ${tokenType} on Aptos`);
     
     if (tokenType === "APT") {
-      // Create a transaction payload to transfer APT
+      // Create a transaction payload for the wallet adapter
       const payload = {
         function: "0x1::coin::transfer",
         typeArguments: ["0x1::aptos_coin::AptosCoin"],
@@ -22,7 +23,7 @@ export const placeBet = async (
         ]
       };
       
-      // Return the transaction object for the component to handle
+      // Return the transaction object for the component to handle via wallet adapter
       return true;
     } else if (tokenType === "EMOJICOIN") {
       // For testing, we just use APT with the APT coin transfer
@@ -76,7 +77,7 @@ export const withdrawWinnings = async (
             playerAddress = accountInfo.address;
           }
         } else {
-          // Try to get address from wallet adapter
+          // Fallback to older method if needed
           const wallet = await window.aptos?.connect();
           if (wallet && wallet.address) {
             playerAddress = wallet.address;

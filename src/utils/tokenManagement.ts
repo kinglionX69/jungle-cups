@@ -11,7 +11,7 @@ export const initializeAccount = async (address: string): Promise<boolean> => {
   try {
     console.log(`Checking if account ${address} needs initialization`);
     
-    // Check if the account has already registered the coin store
+    // Check if the account has already registered the coin store using new SDK
     const resources = await retryRequest(async (client) => {
       return await client.getAccountResources({ accountAddress: address });
     });
@@ -33,8 +33,8 @@ export const initializeAccount = async (address: string): Promise<boolean> => {
       return false;
     }
     
+    // Use the wallet adapter to send transaction
     const payload = {
-      type: "entry_function_payload",
       function: "0x1::managed_coin::register",
       type_arguments: ["0x1::aptos_coin::AptosCoin"],
       arguments: []
@@ -46,10 +46,11 @@ export const initializeAccount = async (address: string): Promise<boolean> => {
     
     while (attempts < maxAttempts) {
       try {
+        // Use wallet adapter to sign and submit
         const response = await window.aptos.signAndSubmitTransaction(payload);
         console.log("Coin registration transaction submitted:", response);
         
-        // Wait for transaction to be confirmed
+        // Wait for transaction to be confirmed using new SDK
         await retryRequest(async (client) => {
           return await client.waitForTransaction({ 
             transactionHash: response.hash,
@@ -124,7 +125,7 @@ export const getWalletBalance = async (address: string, tokenType: string = "APT
   
   try {
     if (tokenType === "APT") {
-      // Get native APT balance from chain with retry logic
+      // Get native APT balance from chain with retry logic using new SDK
       const resources = await retryRequest(async (client) => {
         return await client.getAccountResources({ accountAddress: address });
       });

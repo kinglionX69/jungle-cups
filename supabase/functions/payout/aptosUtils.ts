@@ -3,7 +3,7 @@ import { AptosClient, AptosAccount, AccountAddress, Ed25519PrivateKey, TypeTag, 
 
 // Aptos client configuration
 export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
-export const client = new AptosClient(NODE_URL);
+export const client = new AptosClient({ baseUrl: NODE_URL, network: 'testnet' });
 
 // Create Aptos account from private key
 export const createAptosAccount = (privateKey: string): AptosAccount => {
