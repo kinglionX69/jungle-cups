@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +10,7 @@ import NotFound from "./pages/NotFound";
 import LoadingScreen from "./components/LoadingScreen";
 import { useImagePreloader } from "./hooks/useImagePreloader";
 import { useIsMobile } from "./hooks/use-mobile";
-import WalletProvider from "./providers/WalletProvider";
+import { WalletProvider } from "./utils/walletAdapter";
 
 const queryClient = new QueryClient();
 

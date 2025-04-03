@@ -1,4 +1,3 @@
-
 @layer components {
   .jungle-btn {
     @apply bg-jungle-orange hover:bg-jungle-yellow text-white font-bungee py-3 px-6 rounded-full 
@@ -49,4 +48,52 @@
   .logo-cup {
     @apply bg-jungle-brown rounded-t-full border-2 border-yellow-700 relative;
   }
+}
+
+/* Custom Wallet Styles */
+.wallet-button {
+  background-color: var(--jungle-green);
+  color: white;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.wallet-button:hover {
+  background-color: var(--jungle-darkGreen);
+}
+
+.wallet-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.wallet-address {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+.wallet-dropdown {
+  background-color: white;
+  border: 1px solid var(--jungle-green-light);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.wallet-network-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--jungle-green-light);
+  color: var(--jungle-darkGreen);
+}
+
+.wallet-network-badge.error {
+  background-color: #fee2e2;
+  color: #dc2626;
 }
