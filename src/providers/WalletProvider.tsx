@@ -1,12 +1,15 @@
 
 import { AptosWalletAdapterProvider, NetworkName } from "@aptos-labs/wallet-adapter-react";
 import { PropsWithChildren } from "react";
+import { PetraWallet } from "petra-plugin-wallet-adapter";
 
 export const WalletProvider = ({ children }: PropsWithChildren) => {
-  // Define wallet adapter configuration
+  // Define wallet adapter configuration with correct wallet plugins
+  const wallets = [new PetraWallet()];
+
   return (
     <AptosWalletAdapterProvider
-      plugins={[]}
+      wallets={wallets}
       autoConnect={true}
       onError={(error) => {
         console.error('Wallet adapter error:', error);
