@@ -43,9 +43,9 @@ export function useAptosWallet() {
     try {
       setIsConnecting(true);
       
-      // For Petra wallet, we shouldn't pass the name directly
-      // Instead, we try to connect to the first available wallet (which will be Petra if installed)
-      await connect();
+      // The connect function requires at least an empty object as an argument
+      // This will attempt to connect to the first available wallet
+      await connect({});
       
       toast({
         title: "Wallet Connected",
