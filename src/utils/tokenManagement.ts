@@ -55,7 +55,7 @@ export const initializeAccount = async (address: string): Promise<boolean> => {
             transactionHash: response.hash,
             options: { 
               checkSuccess: true,
-              timeoutMs: 30000 // 30 seconds in milliseconds
+              timeoutSecs: 30 // Timeout in seconds as expected by the API
             }
           });
         });
