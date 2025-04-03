@@ -22,18 +22,23 @@ export const getPetraMobileDeepLink = (url: string): string => {
 // Generate universal link format for iOS
 export const getPetraUniversalLink = (url: string): string => {
   const currentUrl = encodeURIComponent(url || window.location.href);
-  // Using the explore URL format as suggested
+  // Using the explore URL format as specified in the docs
   return `https://petra.app/explore?link=${currentUrl}`;
 };
 
 // Redirect to Petra mobile app with smart fallback mechanism
 export const redirectToPetraMobile = () => {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const deepLink = getPetraMobileDeepLink(window.location.href);
-  const universalLink = getPetraUniversalLink(window.location.href);
   
-  // Use the appropriate link based on platform
-  const linkToUse = isIOS ? universalLink : deepLink;
+  // Create a direct URL with the current page URL encoded
+  const currentUrl = window.location.href;
+  
+  // On iOS, we use the universal link format, on Android we can use the deep link
+  const deepLink = getPetraMobileDeepLink(currentUrl);
+  const universalLink = getPetraUniversalLink(currentUrl);
+  
+  // For ALL devices, we'll first try the universal link format as it's more reliable
+  const linkToUse = universalLink;
   
   console.log("Redirecting to Petra mobile with link:", linkToUse);
   
