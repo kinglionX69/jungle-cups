@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Smartphone } from "lucide-react";
 import { redirectToPetraMobile, isMobileDevice, isInPetraMobileBrowser } from "@/utils/mobileUtils";
@@ -33,7 +34,7 @@ const WalletNotInstalled = ({ onClick }: WalletNotInstalledProps) => {
       onClick={handleClick}
     >
       <Smartphone className="mr-2 h-5 w-5" />
-      Connect Wallet
+      {isInPetraMobileBrowser() ? "Connect Wallet" : "Get Petra Wallet"}
     </Button>
   );
 };
