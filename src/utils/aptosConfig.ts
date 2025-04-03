@@ -1,5 +1,5 @@
 
-import { Aptos, Network } from "@aptos-labs/ts-sdk";
+import { Aptos, Network, createDefaultAptosConfig } from "@aptos-labs/ts-sdk";
 
 // Configuration for Aptos network
 export const NETWORK = "testnet";
@@ -15,9 +15,8 @@ export const MIN_APT_BALANCE = 1; // 1 APT
 export const MIN_EMOJICOIN_BALANCE = 1000; // 1000 Emojicoin
 
 // Initialize Aptos client with new SDK
-export const client = new Aptos({
-  network: Network.TESTNET
-});
+const config = createDefaultAptosConfig({ network: Network.TESTNET });
+export const client = new Aptos(config);
 
 // Helper function to handle API errors with clear error messages
 export const handleApiError = (error: any): string => {
