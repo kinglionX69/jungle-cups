@@ -8,6 +8,7 @@ interface ImagePreloaderProps {
 export const useImagePreloader = ({ imageUrls }: ImagePreloaderProps) => {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [failedImages, setFailedImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (!imageUrls.length) {
@@ -17,6 +18,7 @@ export const useImagePreloader = ({ imageUrls }: ImagePreloaderProps) => {
 
     let loadedCount = 0;
     const totalImages = imageUrls.length;
+    const failedImagesList: string[] = [];
 
     const preloadImage = (url: string) => {
       return new Promise<void>((resolve, reject) => {
@@ -30,6 +32,7 @@ export const useImagePreloader = ({ imageUrls }: ImagePreloaderProps) => {
         
         img.onerror = () => {
           console.error(`Failed to load image: ${url}`);
+          failedImagesList.push(url);
           loadedCount++;
           setLoadingProgress((loadedCount / totalImages) * 100);
           resolve(); // Still resolve to continue loading other images
@@ -43,6 +46,7 @@ export const useImagePreloader = ({ imageUrls }: ImagePreloaderProps) => {
       try {
         // Use Promise.all to load all images in parallel
         await Promise.all(imageUrls.map(url => preloadImage(url)));
+        setFailedImages(failedImagesList);
         setImagesLoaded(true);
       } catch (error) {
         console.error("Error preloading images:", error);
@@ -53,5 +57,5 @@ export const useImagePreloader = ({ imageUrls }: ImagePreloaderProps) => {
     preloadAllImages();
   }, [imageUrls]);
 
-  return { imagesLoaded, loadingProgress };
+  return { imagesLoaded, loadingProgress, failedImages };
 };
