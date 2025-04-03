@@ -5,8 +5,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useWalletConnection } from "@/hooks/useWalletConnection";
 import WalletNotInstalled from "@/components/wallet/WalletNotInstalled";
 import WalletConnected from "@/components/wallet/WalletConnected";
-import { useEffect } from "react";
-import { hasWalletCallbackParams, getWalletAddressFromURL } from "@/utils/mobileUtils";
 
 interface WalletConnectProps {
   onConnect: (wallet: string) => void;
@@ -27,23 +25,6 @@ const WalletConnect = ({ onConnect, connected, walletAddress }: WalletConnectPro
     onConnect,
     walletAddress
   });
-
-  // Check URL parameters for wallet address on component mount
-  useEffect(() => {
-    if (hasWalletCallbackParams() && !walletAddress) {
-      const address = getWalletAddressFromURL();
-      if (address) {
-        console.log("Found wallet address in URL params:", address);
-        onConnect(address);
-        
-        // Clean up URL parameters
-        if (window.history && window.history.replaceState) {
-          const cleanUrl = window.location.href.split('?')[0];
-          window.history.replaceState({}, document.title, cleanUrl);
-        }
-      }
-    }
-  }, [walletAddress, onConnect]);
 
   // Mobile-specific UI adjustments
   const buttonClasses = isMobile ? "w-full justify-center py-3 text-base" : "";

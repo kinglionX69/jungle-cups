@@ -70,7 +70,7 @@ export function useWalletConnector({ onConnect, initializeWallet }: UseWalletCon
       return;
     }
     
-    // Standard wallet connection flow
+    // Standard wallet connection flow for desktop
     try {
       // Connect to wallet
       const response = await window.aptos.connect();
