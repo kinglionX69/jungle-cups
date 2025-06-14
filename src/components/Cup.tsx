@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -35,25 +34,35 @@ const Cup = ({
   
   // Ball image - using the new design
   const ballImage = "/lovable-uploads/691ee6e4-5edb-458c-91da-1ac2fb0bb0a5.png";
+
+  // Defensive/default images
+  const cupImages = [
+    "/lovable-uploads/3f7aa2ea-d29b-4cf6-bfcf-b727b6905b84.png",
+    "/lovable-uploads/fd90dd73-5d4f-4bca-ad3b-0683d39ee2cd.png",
+    "/lovable-uploads/6c1f9c73-4732-4a6e-90b0-82e808afc3ab.png"
+  ];
+  
+  // LOG: Defensive image index check
+  let cupImageSrc = cupImages[index] || cupImages[0];
+  if (typeof index !== 'number' || index < 0 || index > 2) {
+    console.error("Invalid cup index in Cup.tsx:", { index, cupImages });
+    cupImageSrc = cupImages[0];
+  }
   
   // Preload images to prevent blank screens
   useEffect(() => {
-    const preloadImages = () => {
-      const imageUrls = [cup1Image, cup2Image, cup3Image, ballImage];
-      imageUrls.forEach(url => {
-        const img = new Image();
-        img.src = url;
-        img.onload = () => {
-          if (url === getCupImage()) {
-            setImageLoaded(true);
-          }
-        };
-      });
-    };
-    
-    preloadImages();
-  }, []);
-  
+    [cupImageSrc, ballImage].forEach(url => {
+      const img = new window.Image();
+      img.src = url;
+      img.onload = () => {
+        if (url === cupImageSrc) setImageLoaded(true);
+      };
+      img.onerror = () => {
+        console.error("Failed to load image in Cup.tsx:", url);
+      };
+    });
+  }, [cupImageSrc, ballImage]);
+
   useEffect(() => {
     if (isShuffling) {
       setShuffleAnimation(`animate-cup-shuffle-${index + 1}`);
@@ -84,6 +93,16 @@ const Cup = ({
     }
   }, [selected, isRevealed, hasBall, isShuffling, isLifted]);
 
+  // LOG: Defensive checks for critical props
+  useEffect(() => {
+    if (selectedCupExists() && typeof index !== 'number') {
+      console.error("Cup.tsx: index is invalid or missing", { index });
+    }
+    if (typeof hasBall !== 'boolean') {
+      console.error("Cup.tsx: hasBall is not boolean", { hasBall });
+    }
+  }, [index, hasBall]);
+
   const selectedCupExists = () => {
     return showAnticipation || selected;
   };
@@ -106,6 +125,15 @@ const Cup = ({
     return cup3Image;
   };
 
+  // Defensive UI fallback: If image failed to load, show error
+  if (!cupImageSrc) {
+    return (
+      <div className="w-36 h-40 flex flex-col items-center justify-center border-2 border-red-500">
+        <span className="text-red-500">Failed to load cup image.</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center relative">
       <div
@@ -127,20 +155,24 @@ const Cup = ({
         style={{ zIndex: (isShuffling || isLifted) ? 5 : 10 }}
       >
         <img 
-          src={getCupImage()} 
-          alt={`Cup ${index + 1}`} 
+          src={cupImageSrc} 
+          alt={`Cup ${index + 1}`}
           className="w-full h-full object-contain"
           style={{ backgroundColor: 'transparent' }}
           onLoad={() => setImageLoaded(true)}
+          onError={() => {
+            setImageLoaded(true);
+            console.error("Cup image failed to load:", cupImageSrc);
+          }}
         />
       </div>
-      
+
       {showAnticipation && (
         <div className="absolute inset-0 -z-10 animate-pulse">
           <div className="absolute inset-0 bg-jungle-yellow/30 rounded-full blur-xl transform scale-110"></div>
         </div>
       )}
-      
+
       {hasBall && (isLifted || (isRevealed && selected)) && (
         <div className={cn(
           "ball absolute left-1/2 transform -translate-x-1/2 animate-fade-in",
@@ -151,6 +183,9 @@ const Cup = ({
             alt="Ball" 
             className="w-12 h-12 object-contain" 
             style={{ backgroundColor: 'transparent' }}
+            onError={() => {
+              console.error("Ball image failed to load:", ballImage);
+            }}
           />
         </div>
       )}

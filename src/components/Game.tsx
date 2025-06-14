@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { GameProvider } from "@/contexts/GameProvider";
 import { useGameLogic } from "@/hooks/useGameLogic";
@@ -7,6 +6,7 @@ import CupsDisplay from "@/components/CupsDisplay";
 import GameControls from "@/components/GameControls";
 import GameOverlay from "@/components/GameOverlay";
 import { checkEscrowFunding } from "@/utils/aptosUtils";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 interface GameProps {
   walletAddress: string;
@@ -37,13 +37,15 @@ const Game = ({ walletAddress, isEscrowFunded, onStatsUpdated, updatePlayerStats
 
   return (
     <GameProvider>
-      <GameContent 
-        walletAddress={walletAddress} 
-        isEscrowFunded={isEscrowFunded} 
-        onStatsUpdated={onStatsUpdated}
-        updatePlayerStats={updatePlayerStats}
-        availableTokens={availableTokens}
-      />
+      <ErrorBoundary>
+        <GameContent 
+          walletAddress={walletAddress} 
+          isEscrowFunded={isEscrowFunded} 
+          onStatsUpdated={onStatsUpdated}
+          updatePlayerStats={updatePlayerStats}
+          availableTokens={availableTokens}
+        />
+      </ErrorBoundary>
     </GameProvider>
   );
 };
