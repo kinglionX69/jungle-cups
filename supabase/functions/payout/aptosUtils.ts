@@ -1,6 +1,5 @@
 
-import { Aptos, Network, AptosConfig, AccountAddress, TransactionBuilderRemoteABI, EntryFunctionArgumentTypes } from "https://esm.sh/@aptos-labs/ts-sdk@1.5.1";
-import { Ed25519PrivateKey } from "https://esm.sh/@aptos-labs/ts-sdk@1.5.1";
+import { Aptos, Network, AptosConfig, AccountAddress, EntryFunctionArgumentTypes, Account, Ed25519PrivateKey } from "https://esm.sh/@aptos-labs/ts-sdk@2.0.1";
 
 // Aptos client configuration
 export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
@@ -9,14 +8,13 @@ export const client = new Aptos(config);
 
 // Create Aptos account from private key
 export const createAptosAccount = (privateKey: string) => {
-  // Remove '0x' prefix if present
-  const privateKeyHex = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey;
+  const privateKeyHex = privateKey.startsWith("0x") ? privateKey.slice(2) : privateKey;
   const privateKeyObj = new Ed25519PrivateKey(privateKeyHex);
-  return {
+  const address = privateKeyObj.publicKey().toAddress().toString();
+  return Account.fromPrivateKey({
     privateKey: privateKeyObj,
-    publicKey: privateKeyObj.publicKey(),
-    address: AccountAddress.fromHex(privateKeyObj.publicKey().toAddress().toString())
-  };
+    address: AccountAddress.fromString(address)
+  });
 };
 
 // Create and sign a transaction using a private key
@@ -44,31 +42,23 @@ export const createAndSignTransaction = async (
     }
     
     // Parse addresses
-    const sender = AccountAddress.fromHex(senderAddress);
-    const recipient = AccountAddress.fromHex(recipientAddress);
+    const sender = AccountAddress.fromString(senderAddress);
+    const recipient = AccountAddress.fromString(recipientAddress);
     
     // Create transaction builder
-    const builder = new TransactionBuilderRemoteABI(config, {sender});
-    
-    // Create the transaction payload
-    const rawTxn = await builder.build(
-      "0x1::coin::transfer",
-      [tokenTypeAddress],
-      [recipient, BigInt(amount)]
-    );
-    
-    // Sign the transaction
-    const signer = {
-      signTransaction: async (txn) => {
-        const signedTx = await txn.sign(account.privateKey);
-        return signedTx;
+    const rawTxn = await client.transaction.build.simple({
+      sender,
+      data: {
+        function: "0x1::coin::transfer",
+        typeArguments: [tokenTypeAddress],
+        functionArguments: [recipient, BigInt(amount)]
       }
-    };
+    });
     
-    const signedTxn = await signer.signTransaction(rawTxn);
-    
-    // Submit the transaction
-    const pendingTxn = await client.submitSignedTransaction(signedTxn);
+    const pendingTxn = await client.signAndSubmitTransaction({
+      signer: account,
+      transaction: rawTxn
+    });
     
     console.log(`Transaction submitted with hash: ${pendingTxn.hash}`);
     
