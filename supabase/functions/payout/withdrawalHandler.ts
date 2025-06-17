@@ -70,7 +70,7 @@ export const handleWithdrawalTransaction = async (
         let escrowAccount;
         try {
           escrowAccount = createAptosAccount(escrowPrivateKey);
-          const escrowAddress = escrowAccount.address().hex();
+          const escrowAddress = escrowAccount.accountAddress.toString();
           console.log(`Using escrow wallet address: ${escrowAddress}`);
         } catch (accountError) {
           console.error("Error creating escrow account:", accountError);
@@ -93,8 +93,8 @@ export const handleWithdrawalTransaction = async (
         // Process the transaction directly
         let transactionRes;
         try {
-          transactionRes = await processWithdrawalTransaction(
-            escrowAccount.address().hex(),
+            transactionRes = await processWithdrawalTransaction(
+            escrowAccount.accountAddress.toString(),
             playerAddress,
             amountInOctas,
             tokenType,

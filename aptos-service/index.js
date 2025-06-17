@@ -2,7 +2,14 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { AptosClient, AptosAccount, AccountAddress, Ed25519PrivateKey, TypeTag, EntryFunction, TransactionPayloadEntryFunction } = require('@aptos-labs/ts-sdk');
+const {
+  Aptos,
+  AptosConfig,
+  Network,
+  Account,
+  AccountAddress,
+  Ed25519PrivateKey,
+} = require('@aptos-labs/ts-sdk');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,7 +46,8 @@ app.use(validateApiKey);
 
 // Aptos client setup
 const NODE_URL = process.env.NODE_URL || 'https://fullnode.testnet.aptoslabs.com/v1';
-const client = new AptosClient({ baseUrl: NODE_URL });
+const config = new AptosConfig({ network: Network.TESTNET, fullnode: NODE_URL });
+const client = new Aptos(config);
 console.log(`Aptos client initialized with node URL: ${NODE_URL}`);
 
 // Helper to create Aptos account from private key
@@ -59,7 +67,11 @@ const createAptosAccount = (privateKeyHex) => {
     
     // Create account from private key using new SDK
     const privateKey = new Ed25519PrivateKey(privateKeyHex);
-    return new AptosAccount(privateKey);
+    const address = privateKey.publicKey().toAddress().toString();
+    return Account.fromPrivateKey({
+      privateKey,
+      address: AccountAddress.fromString(address),
+    });
   } catch (error) {
     console.error('Error creating Aptos account:', error);
     throw new Error(`Failed to initialize Aptos account: ${error.message}`);
@@ -116,35 +128,20 @@ app.post('/processTransaction', async (req, res) => {
     if (operation === 'withdraw') {
       try {
         // Parse recipient address
-        const recipient = AccountAddress.fromHex(recipientAddress);
-        
-        // Create entry function for coin transfer
-        const typeTag = new TypeTag(tokenTypeAddress);
-        const entryFunction = EntryFunction.natural(
-          "0x1::coin",
-          "transfer",
-          [typeTag],
-          [recipient.hex(), amount.toString()]
-        );
-        
-        // Create transaction payload
-        const payload = new TransactionPayloadEntryFunction(entryFunction);
-        
-        // Submit transaction
-        const rawTxn = await client.generateRawTransaction({
+        const recipient = AccountAddress.fromString(recipientAddress);
+
+        const rawTxn = await client.transaction.build.simple({
           sender: escrowAccount.accountAddress,
-          data: payload
+          data: {
+            function: "0x1::coin::transfer",
+            typeArguments: [tokenTypeAddress],
+            functionArguments: [recipient, BigInt(amount)]
+          }
         });
-        
-        // Sign the transaction
-        const signedTxn = await client.signTransaction({
+
+        const pendingTxn = await client.signAndSubmitTransaction({
           signer: escrowAccount,
           transaction: rawTxn
-        });
-        
-        // Submit the transaction
-        const pendingTxn = await client.submitTransaction({
-          transaction: signedTxn
         });
         
         console.log(`Transaction submitted with hash: ${pendingTxn.hash}`);
