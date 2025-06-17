@@ -1,5 +1,5 @@
 
-import { Aptos, Network, AptosConfig, AccountAddress, EntryFunctionArgumentTypes, Account, Ed25519PrivateKey } from "https://esm.sh/@aptos-labs/ts-sdk@1.39.0";
+import { Aptos, Network, AptosConfig, AccountAddress, EntryFunctionArgumentTypes, Account, Ed25519PrivateKey } from "https://esm.sh/@aptos-labs/ts-sdk@2.0.1";
 
 // Aptos client configuration
 export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
