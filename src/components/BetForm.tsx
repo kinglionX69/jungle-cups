@@ -92,7 +92,7 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
       <div className="flex flex-col gap-2">
         <label className="font-luckiest text-lg text-jungle-darkGreen">Select Token</label>
         <Select
-          value={tokenType || ""}
+          value={tokenType && availableTokens.includes(tokenType) ? tokenType : undefined}
           onValueChange={setTokenType}
           disabled={disabled || noTokensAvailable}
         >
