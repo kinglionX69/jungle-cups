@@ -1,5 +1,5 @@
 
-i"use client"; // (If using Next.js and in app directory, ensure it's marked as a client component)
+"use client"; // (If using Next.js and in app directory, ensure it's marked as a client component)
 
 import { AptosWalletAdapterProvider, NetworkName } from "@aptos-labs/wallet-adapter-react";
 import { PropsWithChildren } from "react";
