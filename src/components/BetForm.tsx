@@ -19,7 +19,7 @@ interface BetFormProps {
 }
 
 const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetFormProps) => {
-  const [tokenType, setTokenType] = useState("");
+  const [tokenType, setTokenType] = useState<string>("");
   const [amount, setAmount] = useState("");
   const { toast } = useToast();
 
@@ -92,7 +92,7 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
       <div className="flex flex-col gap-2">
         <label className="font-luckiest text-lg text-jungle-darkGreen">Select Token</label>
         <Select
-          value={tokenType}
+          value={tokenType || ""}
           onValueChange={setTokenType}
           disabled={disabled || noTokensAvailable}
         >
