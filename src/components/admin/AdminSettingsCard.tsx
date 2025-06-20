@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,8 @@ const AdminSettingsCard = () => {
           setGameSettings(parsed);
         }
       } else if (data?.settings) {
-        setGameSettings(data.settings as GameSettings);
+        // Properly type cast the Json to GameSettings
+        setGameSettings(data.settings as unknown as GameSettings);
       }
     } catch (error) {
       console.error("Error loading settings:", error);
@@ -100,12 +102,12 @@ const AdminSettingsCard = () => {
         return;
       }
 
-      // Save to database
+      // Save to database - properly convert GameSettings to Json
       const { error } = await supabase
         .from('game_settings')
         .upsert({
           id: 'main',
-          settings: gameSettings,
+          settings: gameSettings as unknown as any,
           updated_at: new Date().toISOString()
         });
 
