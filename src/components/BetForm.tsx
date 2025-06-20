@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -105,9 +104,6 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
             )}
             {availableTokens.includes("EMOJICOIN") && (
               <SelectItem value="EMOJICOIN">🦁♥️ Emojicoin (Testing)</SelectItem>
-            )}
-            {noTokensAvailable && (
-              <SelectItem value="" disabled>No tokens available</SelectItem>
             )}
           </SelectContent>
         </Select>
