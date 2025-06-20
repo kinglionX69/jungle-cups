@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
 import PageFooter from "@/components/PageFooter";
@@ -5,9 +6,11 @@ import WelcomeScreen from "@/components/WelcomeScreen";
 import Game from "@/components/Game";
 import StatsCard from "@/components/StatsCard";
 import ReferralCard from "@/components/ReferralCard";
+import AdminDashboard from "@/components/admin/AdminDashboard";
 import { useToast } from "@/components/ui/use-toast";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { useReferralSystem } from "@/hooks/useReferralSystem";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
 
 import {
   checkEscrowFunding,
@@ -20,6 +23,9 @@ const Index = () => {
   // Wallet and connection states
   const [walletAddress, setWalletAddress] = useState("");
   const [isEscrowFunded, setIsEscrowFunded] = useState(true);
+  
+  // Check if connected wallet is admin
+  const { isAdmin } = useAdminStatus({ walletAddress });
   
   // Use player stats hook
   const { stats, isLoading, isWithdrawing, updateStats, addReferral, withdrawFunds } = usePlayerStats(walletAddress);
@@ -79,7 +85,11 @@ const Index = () => {
       <main className="max-w-7xl mx-auto">
         {!walletAddress ? (
           <WelcomeScreen onConnect={handleWalletConnect} />
+        ) : isAdmin ? (
+          // Show admin dashboard for admin wallet
+          <AdminDashboard walletAddress={walletAddress} />
         ) : (
+          // Show regular game interface for non-admin wallets
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Game Area */}
             <div className="lg:col-span-2">
