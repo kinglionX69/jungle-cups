@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Settings, Copy, ExternalLink, AlertTriangle, Save } from "lucide-react";
 import { ESCROW_WALLET_ADDRESS, MIN_APT_BALANCE, MIN_EMOJICOIN_BALANCE, NETWORK } from "@/utils/aptosConfig";
-import { supabase } from "@/integrations/supabase/client";
 
 interface GameSettings {
   minAptBet: number;
@@ -39,8 +38,7 @@ const AdminSettingsCard = () => {
   const loadSettings = async () => {
     try {
       setIsLoading(true);
-      // For now, use local storage to persist settings
-      // In production, this would come from a database
+      // Use local storage to persist settings
       const savedSettings = localStorage.getItem('adminGameSettings');
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
@@ -89,25 +87,8 @@ const AdminSettingsCard = () => {
         return;
       }
 
-      // Save to local storage (in production, save to database)
+      // Save to local storage
       localStorage.setItem('adminGameSettings', JSON.stringify(gameSettings));
-      
-      // Also save to a settings table if it exists
-      try {
-        const { error } = await supabase
-          .from('game_settings')
-          .upsert({
-            id: 'main',
-            settings: gameSettings,
-            updated_at: new Date().toISOString()
-          });
-        
-        if (error && !error.message.includes('relation "game_settings" does not exist')) {
-          console.error("Database save error:", error);
-        }
-      } catch (dbError) {
-        console.log("Database table doesn't exist yet, using local storage");
-      }
 
       toast({
         title: "Settings Saved",
