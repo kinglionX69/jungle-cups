@@ -1,14 +1,10 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Coins, TrendingUp, AlertTriangle, Plus, RefreshCw } from "lucide-react";
+import { Coins, TrendingUp, AlertTriangle, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
-import { requestTestnetTokens } from "@/utils/tokenManagement";
 import { ESCROW_WALLET_ADDRESS } from "@/utils/aptosConfig";
 
 interface AdminBalanceCardProps {
@@ -22,56 +18,14 @@ interface AdminBalanceCardProps {
 
 const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
   const { toast } = useToast();
-  const [isRequestingTokens, setIsRequestingTokens] = useState(false);
-  const [customAmount, setCustomAmount] = useState<string>("10");
 
-  const handleRequestTokens = async () => {
-    try {
-      setIsRequestingTokens(true);
-      const success = await requestTestnetTokens(ESCROW_WALLET_ADDRESS);
-      
-      if (success) {
-        toast({
-          title: "Tokens Requested",
-          description: "Testnet tokens have been requested. Check the faucet page for details.",
-        });
-      } else {
-        toast({
-          title: "Request Failed",
-          description: "Failed to request testnet tokens. Please try the manual faucet.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error requesting tokens:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred while requesting tokens",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRequestingTokens(false);
-    }
-  };
-
-  const handleManualFunding = () => {
-    const amount = parseFloat(customAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid amount",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Open the faucet with the escrow wallet address
-    const faucetUrl = `https://aptoslabs.com/testnet-faucet?address=${ESCROW_WALLET_ADDRESS}`;
+  const openFaucet = () => {
+    const faucetUrl = `https://aptoslabs.com/testnet-faucet`;
     window.open(faucetUrl, "_blank");
     
     toast({
-      title: "Manual Funding",
-      description: "Faucet opened in new tab. Request tokens manually.",
+      title: "Faucet Opened",
+      description: "Request testnet tokens manually using the escrow wallet address.",
     });
   };
 
@@ -93,7 +47,6 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
     );
   }
 
-  const totalValue = balances.apt + (balances.emojicoin * 0.001);
   const isLowFunds = balances.availableTokens.length === 0;
 
   return (
@@ -151,58 +104,34 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
         </Card>
       </div>
 
-      {/* Funding Actions */}
+      {/* Manual Funding Only */}
       <Card className="border-blue-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
+            <ExternalLink className="h-5 w-5" />
             Fund Escrow Wallet
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="customAmount">Request Amount (APT)</Label>
-              <Input
-                id="customAmount"
-                type="number"
-                step="1"
-                min="1"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                placeholder="10"
-              />
-            </div>
-            <div className="flex items-end gap-2">
-              <Button 
-                onClick={handleRequestTokens}
-                disabled={isRequestingTokens}
-                className="flex-1"
-              >
-                {isRequestingTokens ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Requesting...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Auto Request
-                  </>
-                )}
-              </Button>
-              <Button 
-                onClick={handleManualFunding}
-                variant="outline"
-              >
-                Manual Fund
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Use the testnet faucet to fund the escrow wallet: 
+            </p>
+            <p className="text-xs font-mono bg-gray-100 p-2 rounded break-all">
+              {ESCROW_WALLET_ADDRESS}
+            </p>
           </div>
           
+          <Button 
+            onClick={openFaucet}
+            className="w-full"
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Open Testnet Faucet
+          </Button>
+          
           <div className="text-xs text-muted-foreground">
-            <p><strong>Auto Request:</strong> Opens faucet automatically with escrow address</p>
-            <p><strong>Manual Fund:</strong> Opens faucet for manual token request</p>
+            <p>Copy the escrow wallet address above and paste it into the faucet to request testnet tokens.</p>
           </div>
         </CardContent>
       </Card>
@@ -217,24 +146,13 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
             <p className="text-sm text-red-700 mb-4">
               The escrow wallet has insufficient funds for payouts. Players cannot place bets until funds are added.
             </p>
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleRequestTokens}
-                disabled={isRequestingTokens}
-                size="sm"
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {isRequestingTokens ? "Requesting..." : "Request Tokens Now"}
-              </Button>
-              <Button 
-                onClick={handleManualFunding}
-                variant="outline"
-                size="sm"
-                className="border-red-300 text-red-700 hover:bg-red-100"
-              >
-                Manual Fund
-              </Button>
-            </div>
+            <Button 
+              onClick={openFaucet}
+              size="sm"
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Open Faucet to Fund Wallet
+            </Button>
           </CardContent>
         </Card>
       )}
