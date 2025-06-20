@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Settings, Copy, ExternalLink, AlertTriangle, Save } from "lucide-react";
 import { ESCROW_WALLET_ADDRESS, MIN_APT_BALANCE, MIN_EMOJICOIN_BALANCE, NETWORK } from "@/utils/aptosConfig";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GameSettings {
   minAptBet: number;
@@ -38,11 +38,24 @@ const AdminSettingsCard = () => {
   const loadSettings = async () => {
     try {
       setIsLoading(true);
-      // Use local storage to persist settings
-      const savedSettings = localStorage.getItem('adminGameSettings');
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        setGameSettings(parsed);
+      
+      // Load from database
+      const { data, error } = await supabase
+        .from('game_settings')
+        .select('settings')
+        .eq('id', 'main')
+        .single();
+      
+      if (error) {
+        console.error("Error loading settings:", error);
+        // Fallback to localStorage if database fails
+        const savedSettings = localStorage.getItem('adminGameSettings');
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          setGameSettings(parsed);
+        }
+      } else if (data?.settings) {
+        setGameSettings(data.settings as GameSettings);
       }
     } catch (error) {
       console.error("Error loading settings:", error);
@@ -87,7 +100,20 @@ const AdminSettingsCard = () => {
         return;
       }
 
-      // Save to local storage
+      // Save to database
+      const { error } = await supabase
+        .from('game_settings')
+        .upsert({
+          id: 'main',
+          settings: gameSettings,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Backup to localStorage
       localStorage.setItem('adminGameSettings', JSON.stringify(gameSettings));
 
       toast({
