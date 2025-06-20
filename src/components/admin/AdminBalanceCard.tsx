@@ -20,12 +20,12 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
   const { toast } = useToast();
 
   const openFaucet = () => {
-    const faucetUrl = `https://aptoslabs.com/testnet-faucet`;
+    const faucetUrl = `https://aptos.dev/en/network/faucet?address=${ESCROW_WALLET_ADDRESS}`;
     window.open(faucetUrl, "_blank");
     
     toast({
       title: "Faucet Opened",
-      description: "Request testnet tokens manually using the escrow wallet address.",
+      description: "The faucet has been opened with the escrow wallet address pre-filled.",
     });
   };
 
@@ -131,7 +131,7 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
           </Button>
           
           <div className="text-xs text-muted-foreground">
-            <p>Copy the escrow wallet address above and paste it into the faucet to request testnet tokens.</p>
+            <p>The faucet will open with the escrow wallet address pre-filled. Click the "Fund Account" button to request testnet tokens.</p>
           </div>
         </CardContent>
       </Card>

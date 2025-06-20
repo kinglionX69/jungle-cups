@@ -135,7 +135,7 @@ const AdminSettingsCard = () => {
   };
 
   const openFaucet = () => {
-    window.open("https://aptoslabs.com/testnet-faucet", "_blank");
+    window.open(`https://aptos.dev/en/network/faucet?address=${ESCROW_WALLET_ADDRESS}`, "_blank");
   };
 
   const openExplorer = () => {
