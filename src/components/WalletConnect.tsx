@@ -1,3 +1,4 @@
+
 import { Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -32,6 +33,14 @@ const WalletConnect = ({ onConnect }: WalletConnectProps) => {
     }
   }, [connected, walletAddress, onConnect]);
 
+  // Handle disconnect properly
+  const handleDisconnect = async () => {
+    const success = await disconnectWallet();
+    if (success) {
+      onConnect(""); // Clear the wallet address in parent
+    }
+  };
+
   // Button styling based on device
   const buttonClasses = isMobile ? "w-full justify-center py-3 text-base" : "";
 
@@ -43,7 +52,7 @@ const WalletConnect = ({ onConnect }: WalletConnectProps) => {
         isCorrectNetwork={isCorrectNetwork}
         isInitializing={false}
         onGetTestTokens={() => window.open("https://aptoslabs.com/testnet-faucet", "_blank")}
-        onDisconnect={disconnectWallet}
+        onDisconnect={handleDisconnect}
         isRequestingTokens={false}
       />
     );
