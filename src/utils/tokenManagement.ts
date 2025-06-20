@@ -121,21 +121,59 @@ export const getWalletBalance = async (address: string, tokenType: string = "APT
   
   try {
     if (tokenType === "APT") {
-      // Get native APT balance from chain with retry logic using new SDK
+      // Try multiple methods to get APT balance
+      console.log(`Fetching APT balance for ${address}`);
+      
+      // Method 1: Try to get balance using the account info endpoint
+      try {
+        const accountInfo = await retryRequest(async (client) => {
+          return await client.getAccountInfo({ 
+            accountAddress: address 
+          });
+        });
+        
+        if (accountInfo) {
+          console.log("Account info retrieved successfully:", accountInfo);
+        }
+      } catch (error) {
+        console.log("Account info method failed:", error);
+      }
+      
+      // Method 2: Try to get balance using coin API
+      try {
+        const coinBalance = await retryRequest(async (client) => {
+          return await client.getAccountCoinAmount({
+            accountAddress: address,
+            coinType: "0x1::aptos_coin::AptosCoin"
+          });
+        });
+        
+        if (coinBalance !== undefined) {
+          const result = coinBalance / 100000000; // Convert from octas to APT (8 decimals)
+          console.log(`APT balance (coin API) for ${address}: ${result}`);
+          return result;
+        }
+      } catch (error) {
+        console.log("Coin API method failed:", error);
+      }
+      
+      // Method 3: Fallback to resources method
       const resources = await retryRequest(async (client) => {
         return await client.getAccountResources({ 
           accountAddress: address 
         });
       });
       
+      console.log(`Found ${resources.length} resources for ${address}`);
+      
       const aptosCoin = resources.find(
         (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
       );
       
-      if (aptosCoin) {
+      if (aptosCoin && aptosCoin.data) {
         const balance = parseInt((aptosCoin.data as any).coin.value);
         const result = balance / 100000000; // Convert from octas to APT (8 decimals)
-        console.log(`APT balance for ${address}: ${result}`);
+        console.log(`APT balance (resources) for ${address}: ${result}`);
         return result;
       }
       
