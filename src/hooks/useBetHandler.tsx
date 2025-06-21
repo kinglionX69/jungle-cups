@@ -67,18 +67,12 @@ export const useBetHandler = (walletAddress: string) => {
       
       console.log("Submitting transaction via wallet adapter", payload);
       
-      // Submit transaction with timeout
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Transaction timeout")), 30000);
-      });
-      
-      const transactionPromise = submitTransaction(payload);
-      
-      const response = await Promise.race([transactionPromise, timeoutPromise]);
+      const response = await submitTransaction(payload);
       
       console.log("Transaction response:", response);
       
-      if (response && response.hash) {
+      // Type guard to check if response has hash property
+      if (response && typeof response === 'object' && 'hash' in response && response.hash) {
         console.log("Transaction successful with hash:", response.hash);
         
         // Store current bet
@@ -94,16 +88,16 @@ export const useBetHandler = (walletAddress: string) => {
       } else {
         throw new Error("No transaction hash received");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error placing bet:", error);
       
       let errorMessage = "Failed to place your bet. Please try again.";
       
-      if (error.message.includes("User rejected")) {
+      if (error?.message?.includes("User rejected")) {
         errorMessage = "Transaction was rejected. Please approve the transaction to place your bet.";
-      } else if (error.message.includes("timeout")) {
+      } else if (error?.message?.includes("timeout")) {
         errorMessage = "Transaction timed out. Please check your wallet and try again.";
-      } else if (error.message.includes("insufficient")) {
+      } else if (error?.message?.includes("insufficient")) {
         errorMessage = "Insufficient balance. Please check your wallet balance.";
       }
       
