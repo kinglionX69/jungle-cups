@@ -27,7 +27,7 @@ export {
   initializeTokenStore,
   getWalletBalance,
   requestTestnetTokens
-} from './tokenManagement';
+} from './token';
 
 // Escrow operations
 export {
