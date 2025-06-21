@@ -43,7 +43,6 @@ export function useAptosWallet() {
     try {
       setIsConnecting(true);
       
-      // Connect with Petra wallet specifically
       await connect("Petra");
       
       toast({
@@ -53,7 +52,7 @@ export function useAptosWallet() {
       
       return true;
     } catch (error) {
-      console.error("Error connecting to wallet:", error);
+      console.error("🔧 WALLET: Connection error:", error);
       
       let errorMessage = "Could not connect to wallet. Please try again.";
       
@@ -90,16 +89,14 @@ export function useAptosWallet() {
       
       return true;
     } catch (error) {
-      console.error("Error disconnecting wallet:", error);
+      console.error("🔧 WALLET: Disconnection error:", error);
       return false;
     }
   }, [disconnect, toast]);
 
-  // Enhanced transaction submission with better error handling
+  // Simplified transaction submission - removed Promise wrapper
   const submitTransaction = useCallback(async (payload: any) => {
     console.log("🔧 WALLET: submitTransaction called with payload:", payload);
-    console.log("🔧 WALLET: Connected status:", connected);
-    console.log("🔧 WALLET: signAndSubmitTransaction available:", !!signAndSubmitTransaction);
     
     if (!connected) {
       console.error("❌ WALLET: Wallet not connected");
@@ -112,45 +109,26 @@ export function useAptosWallet() {
     }
 
     try {
-      console.log("📤 WALLET: Calling signAndSubmitTransaction");
+      console.log("📤 WALLET: Calling signAndSubmitTransaction directly");
       
-      // Add a wrapper to catch any synchronous errors
-      const result = await new Promise((resolve, reject) => {
-        // Set up a timeout
-        const timeoutId = setTimeout(() => {
-          reject(new Error("Transaction timeout after 30 seconds"));
-        }, 30000);
-        
-        // Execute the transaction
-        signAndSubmitTransaction(payload)
-          .then((result) => {
-            clearTimeout(timeoutId);
-            console.log("✅ WALLET: Transaction completed:", result);
-            resolve(result);
-          })
-          .catch((error) => {
-            clearTimeout(timeoutId);
-            console.error("❌ WALLET: Transaction failed:", error);
-            reject(error);
-          });
-      });
+      // Direct call to wallet adapter without Promise wrapper
+      const result = await signAndSubmitTransaction(payload);
       
-      console.log("🎯 WALLET: Transaction result:", result);
+      console.log("✅ WALLET: Transaction completed:", result);
       return result;
     } catch (error) {
-      console.error("💥 WALLET: Transaction submission error:", error);
-      console.error("💥 WALLET: Error stack:", error?.stack);
+      console.error("❌ WALLET: Transaction failed:", error);
       
-      // Re-throw with more context
-      if (error.message.includes("timeout")) {
-        throw new Error("Transaction timed out. Please try again.");
-      } else if (error.message.includes("User rejected")) {
-        throw new Error("User rejected the transaction");
-      } else if (error.message.includes("insufficient")) {
-        throw new Error("Insufficient balance for transaction");
-      } else {
-        throw error;
+      // Enhanced error handling
+      if (error instanceof Error) {
+        if (error.message.includes("User rejected")) {
+          throw new Error("User rejected the transaction");
+        } else if (error.message.includes("insufficient")) {
+          throw new Error("Insufficient balance for transaction");
+        }
       }
+      
+      throw error;
     }
   }, [connected, signAndSubmitTransaction]);
 
@@ -162,7 +140,7 @@ export function useAptosWallet() {
     connectWallet,
     disconnectWallet,
     submitTransaction,
-    isPetraInstalled: () => true, // The adapter handles wallet availability
+    isPetraInstalled: () => true,
     wallet: wallet?.name || "",
     walletAddress: account?.address?.toString() || ""
   };

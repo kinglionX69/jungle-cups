@@ -1,4 +1,3 @@
-
 // Utility functions for game logic
 
 // Shuffle the cups and ball position
@@ -18,55 +17,23 @@ export const didPlayerWin = (selectedCup: number, ballPosition: number): boolean
   return selectedCup === ballPosition;
 };
 
-// Play shuffle sound
-export const playShuffleSound = () => {
-  const audio = new Audio("/sounds/shuffle.mp3");
-  audio.volume = 0.5;
-  audio.play().catch(e => console.error("Error playing sound:", e));
-};
+// Import safe audio functions
+import { 
+  playShuffleSoundSafe, 
+  playCupsDownSoundSafe, 
+  playWinSoundSafe, 
+  playLoseSoundSafe, 
+  playClickSoundSafe, 
+  playAnticipationSoundSafe 
+} from './safeAudio';
 
-// Play cups down sound
-export const playCupsDownSound = () => {
-  const audio = new Audio("/sounds/click.mp3");
-  audio.volume = 0.4;
-  audio.play().catch(e => console.error("Error playing sound:", e));
-};
-
-// Play win sound
-export const playWinSound = () => {
-  const audio = new Audio("/sounds/win.mp3");
-  audio.volume = 0.7;
-  audio.play().catch(e => console.error("Error playing sound:", e));
-};
-
-// Play lose sound
-export const playLoseSound = () => {
-  const audio = new Audio("/sounds/lose.mp3");
-  audio.volume = 0.7;
-  audio.play().catch(e => console.error("Error playing sound:", e));
-};
-
-// Play click sound
-export const playClickSound = () => {
-  const audio = new Audio("/sounds/click.mp3");
-  audio.volume = 0.3;
-  audio.play().catch(e => console.error("Error playing sound:", e));
-};
-
-// Play anticipation sound
-export const playAnticipationSound = () => {
-  const audio = new Audio("/sounds/click.mp3");
-  audio.volume = 0.2;
-  const interval = setInterval(() => {
-    audio.currentTime = 0;
-    audio.play().catch(e => console.error("Error playing sound:", e));
-  }, 300); // Faster clicking for more tension
-  
-  // Stop the anticipation sound after 1.1 seconds (matches the reveal timing)
-  setTimeout(() => {
-    clearInterval(interval);
-  }, 1100);
-};
+// Updated sound functions to use safe audio
+export const playShuffleSound = () => playShuffleSoundSafe();
+export const playCupsDownSound = () => playCupsDownSoundSafe();
+export const playWinSound = () => playWinSoundSafe();
+export const playLoseSound = () => playLoseSoundSafe();
+export const playClickSound = () => playClickSoundSafe();
+export const playAnticipationSound = () => playAnticipationSoundSafe();
 
 // Game timing constants (in milliseconds)
 export const TIMING = {
