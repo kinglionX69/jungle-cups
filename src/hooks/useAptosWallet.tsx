@@ -97,24 +97,49 @@ export function useAptosWallet() {
 
   // Enhanced transaction submission with better error handling
   const submitTransaction = useCallback(async (payload: any) => {
-    if (!connected || !signAndSubmitTransaction) {
+    console.log("🔧 WALLET: submitTransaction called with payload:", payload);
+    console.log("🔧 WALLET: Connected status:", connected);
+    console.log("🔧 WALLET: signAndSubmitTransaction available:", !!signAndSubmitTransaction);
+    
+    if (!connected) {
+      console.error("❌ WALLET: Wallet not connected");
       throw new Error("Wallet not connected");
     }
-
-    console.log("Submitting transaction with payload:", payload);
     
+    if (!signAndSubmitTransaction) {
+      console.error("❌ WALLET: signAndSubmitTransaction not available");
+      throw new Error("Transaction function not available");
+    }
+
     try {
-      // Add timeout to prevent freezing
-      const transactionPromise = signAndSubmitTransaction(payload);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Transaction timeout after 30 seconds")), 30000)
-      );
+      console.log("📤 WALLET: Calling signAndSubmitTransaction");
       
-      const result = await Promise.race([transactionPromise, timeoutPromise]);
-      console.log("Transaction submitted successfully:", result);
+      // Add a wrapper to catch any synchronous errors
+      const result = await new Promise((resolve, reject) => {
+        // Set up a timeout
+        const timeoutId = setTimeout(() => {
+          reject(new Error("Transaction timeout after 30 seconds"));
+        }, 30000);
+        
+        // Execute the transaction
+        signAndSubmitTransaction(payload)
+          .then((result) => {
+            clearTimeout(timeoutId);
+            console.log("✅ WALLET: Transaction completed:", result);
+            resolve(result);
+          })
+          .catch((error) => {
+            clearTimeout(timeoutId);
+            console.error("❌ WALLET: Transaction failed:", error);
+            reject(error);
+          });
+      });
+      
+      console.log("🎯 WALLET: Transaction result:", result);
       return result;
     } catch (error) {
-      console.error("Transaction submission error:", error);
+      console.error("💥 WALLET: Transaction submission error:", error);
+      console.error("💥 WALLET: Error stack:", error?.stack);
       
       // Re-throw with more context
       if (error.message.includes("timeout")) {

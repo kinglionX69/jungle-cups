@@ -16,44 +16,47 @@ export const useBetHandler = (walletAddress: string) => {
   
   // Handle placing a bet and participating in the game
   const handlePlaceBet = async (tokenType: string, amount: number) => {
-    console.log(`Starting bet placement: ${amount} ${tokenType}`);
-    
-    if (!walletAddress) {
-      console.log("No wallet address available");
-      toast({
-        title: "Wallet Required",
-        description: "Please connect your wallet first",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!canBet) {
-      console.log("Cannot bet at this time");
-      toast({
-        title: "Wait for Shuffling",
-        description: "Please wait for the cups to shuffle before placing a bet",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check minimum bet amount
-    const minBet = tokenType === "APT" ? MIN_APT_BET : MIN_EMOJICOIN_BET;
-    if (amount < minBet) {
-      console.log(`Bet amount ${amount} is below minimum ${minBet}`);
-      toast({
-        title: "Bet Too Small",
-        description: `Minimum bet is ${minBet} ${tokenType}`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    playClickSound();
+    console.log(`🎯 BET HANDLER: Starting bet placement: ${amount} ${tokenType}`);
+    console.log(`🎯 BET HANDLER: Wallet address: ${walletAddress}`);
+    console.log(`🎯 BET HANDLER: Can bet: ${canBet}`);
     
     try {
-      console.log("Creating transaction payload");
+      if (!walletAddress) {
+        console.log("❌ BET HANDLER: No wallet address available");
+        toast({
+          title: "Wallet Required",
+          description: "Please connect your wallet first",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!canBet) {
+        console.log("❌ BET HANDLER: Cannot bet at this time");
+        toast({
+          title: "Wait for Shuffling",
+          description: "Please wait for the cups to shuffle before placing a bet",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check minimum bet amount
+      const minBet = tokenType === "APT" ? MIN_APT_BET : MIN_EMOJICOIN_BET;
+      if (amount < minBet) {
+        console.log(`❌ BET HANDLER: Bet amount ${amount} is below minimum ${minBet}`);
+        toast({
+          title: "Bet Too Small",
+          description: `Minimum bet is ${minBet} ${tokenType}`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      console.log("🔊 BET HANDLER: Playing click sound");
+      playClickSound();
+      
+      console.log("💰 BET HANDLER: Creating transaction payload");
       
       // Create transaction payload
       const payload = {
@@ -65,31 +68,41 @@ export const useBetHandler = (walletAddress: string) => {
         ]
       };
       
-      console.log("Submitting transaction via wallet adapter", payload);
+      console.log("📤 BET HANDLER: Submitting transaction via wallet adapter", payload);
       
-      const response = await submitTransaction(payload);
-      
-      console.log("Transaction response:", response);
+      // Add a try-catch specifically around the transaction submission
+      let response;
+      try {
+        response = await submitTransaction(payload);
+        console.log("✅ BET HANDLER: Transaction response received:", response);
+      } catch (submitError) {
+        console.error("❌ BET HANDLER: Transaction submission failed:", submitError);
+        throw submitError;
+      }
       
       // Type guard to check if response has hash property
       if (response && typeof response === 'object' && 'hash' in response && response.hash) {
-        console.log("Transaction successful with hash:", response.hash);
+        console.log("🎉 BET HANDLER: Transaction successful with hash:", response.hash);
         
         // Store current bet
+        console.log("💾 BET HANDLER: Storing current bet");
         setCurrentBet({
           amount,
           tokenType,
         });
         
+        console.log("📢 BET HANDLER: Showing success toast");
         toast({
           title: "Bet Placed!",
           description: `${amount} ${tokenType} has been deducted from your wallet. Now select a cup where you think the ball is hidden.`,
         });
       } else {
+        console.error("❌ BET HANDLER: No transaction hash in response:", response);
         throw new Error("No transaction hash received");
       }
     } catch (error: any) {
-      console.error("Error placing bet:", error);
+      console.error("💥 BET HANDLER: Critical error in handlePlaceBet:", error);
+      console.error("💥 BET HANDLER: Error stack:", error?.stack);
       
       let errorMessage = "Failed to place your bet. Please try again.";
       
@@ -101,6 +114,7 @@ export const useBetHandler = (walletAddress: string) => {
         errorMessage = "Insufficient balance. Please check your wallet balance.";
       }
       
+      console.log("📢 BET HANDLER: Showing error toast:", errorMessage);
       toast({
         title: "Bet Failed",
         description: errorMessage,
