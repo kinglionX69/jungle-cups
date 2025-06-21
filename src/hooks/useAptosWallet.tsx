@@ -95,6 +95,40 @@ export function useAptosWallet() {
     }
   }, [disconnect, toast]);
 
+  // Enhanced transaction submission with better error handling
+  const submitTransaction = useCallback(async (payload: any) => {
+    if (!connected || !signAndSubmitTransaction) {
+      throw new Error("Wallet not connected");
+    }
+
+    console.log("Submitting transaction with payload:", payload);
+    
+    try {
+      // Add timeout to prevent freezing
+      const transactionPromise = signAndSubmitTransaction(payload);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Transaction timeout after 30 seconds")), 30000)
+      );
+      
+      const result = await Promise.race([transactionPromise, timeoutPromise]);
+      console.log("Transaction submitted successfully:", result);
+      return result;
+    } catch (error) {
+      console.error("Transaction submission error:", error);
+      
+      // Re-throw with more context
+      if (error.message.includes("timeout")) {
+        throw new Error("Transaction timed out. Please try again.");
+      } else if (error.message.includes("User rejected")) {
+        throw new Error("User rejected the transaction");
+      } else if (error.message.includes("insufficient")) {
+        throw new Error("Insufficient balance for transaction");
+      } else {
+        throw error;
+      }
+    }
+  }, [connected, signAndSubmitTransaction]);
+
   return {
     account,
     connected,
@@ -102,7 +136,7 @@ export function useAptosWallet() {
     isCorrectNetwork,
     connectWallet,
     disconnectWallet,
-    submitTransaction: signAndSubmitTransaction,
+    submitTransaction,
     isPetraInstalled: () => true, // The adapter handles wallet availability
     wallet: wallet?.name || "",
     walletAddress: account?.address?.toString() || ""

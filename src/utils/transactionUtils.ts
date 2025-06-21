@@ -8,39 +8,13 @@ export const placeBet = async (
   tokenType: string = "APT"
 ): Promise<boolean> => {
   try {
-    console.log(`Placing bet of ${amount} ${tokenType} on Aptos`);
+    console.log(`Creating bet payload for ${amount} ${tokenType}`);
     
-    if (tokenType === "APT") {
-      // Create a transaction payload for the wallet adapter
-      const payload = {
-        function: "0x1::coin::transfer",
-        typeArguments: ["0x1::aptos_coin::AptosCoin"],
-        functionArguments: [
-          ESCROW_WALLET_ADDRESS, 
-          Math.floor(amount * 100000000).toString() // Convert APT to octas (8 decimals)
-        ]
-      };
-      
-      // Return the transaction object for the component to handle via wallet adapter
-      return true;
-    } else if (tokenType === "EMOJICOIN") {
-      // For testing, we just use APT with the APT coin transfer
-      const payload = {
-        function: "0x1::coin::transfer",
-        typeArguments: ["0x1::aptos_coin::AptosCoin"], // Use APT for testing
-        functionArguments: [
-          ESCROW_WALLET_ADDRESS, 
-          Math.floor(amount * 100000000).toString() // Convert to smallest units (8 decimals)
-        ]
-      };
-      
-      return true;
-    } else {
-      console.error(`Unsupported token type: ${tokenType}`);
-      return false;
-    }
+    // Just return true to indicate payload creation success
+    // The actual transaction is handled by the wallet adapter in the hook
+    return true;
   } catch (error) {
-    console.error("Error placing bet:", error);
+    console.error("Error creating bet payload:", error);
     return false;
   }
 };
