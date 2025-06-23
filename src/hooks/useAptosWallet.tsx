@@ -94,7 +94,7 @@ export function useAptosWallet() {
     }
   }, [disconnect, toast]);
 
-  // Simplified transaction submission - removed Promise wrapper
+  // Fixed transaction submission - direct call to wallet adapter
   const submitTransaction = useCallback(async (payload: any) => {
     console.log("🔧 WALLET: submitTransaction called with payload:", payload);
     
@@ -108,20 +108,25 @@ export function useAptosWallet() {
       throw new Error("Transaction function not available");
     }
 
+    if (!isCorrectNetwork) {
+      console.error("❌ WALLET: Wrong network");
+      throw new Error("Please switch to the correct network");
+    }
+
     try {
-      console.log("📤 WALLET: Calling signAndSubmitTransaction directly");
+      console.log("📤 WALLET: Calling signAndSubmitTransaction with payload:", payload);
       
-      // Direct call to wallet adapter without Promise wrapper
+      // Direct call to wallet adapter - this should trigger the wallet popup
       const result = await signAndSubmitTransaction(payload);
       
-      console.log("✅ WALLET: Transaction completed:", result);
+      console.log("✅ WALLET: Transaction completed successfully:", result);
       return result;
     } catch (error) {
       console.error("❌ WALLET: Transaction failed:", error);
       
-      // Enhanced error handling
+      // Re-throw the error with additional context
       if (error instanceof Error) {
-        if (error.message.includes("User rejected")) {
+        if (error.message.includes("User rejected") || error.message.includes("rejected")) {
           throw new Error("User rejected the transaction");
         } else if (error.message.includes("insufficient")) {
           throw new Error("Insufficient balance for transaction");
@@ -130,7 +135,7 @@ export function useAptosWallet() {
       
       throw error;
     }
-  }, [connected, signAndSubmitTransaction]);
+  }, [connected, signAndSubmitTransaction, isCorrectNetwork]);
 
   return {
     account,

@@ -12,7 +12,7 @@ const MIN_EMOJICOIN_BET = 1000;
 export const useBetHandler = (walletAddress: string) => {
   const { toast } = useToast();
   const { setCurrentBet, canBet } = useGameState();
-  const { submitTransaction } = useAptosWallet();
+  const { submitTransaction, connected } = useAptosWallet();
   
   // Initialize circuit breaker
   const circuitBreaker = useCircuitBreaker({
@@ -26,19 +26,20 @@ export const useBetHandler = (walletAddress: string) => {
     console.log(`🎯 BET HANDLER: Starting bet placement: ${amount} ${tokenType}`);
     console.log(`🎯 BET HANDLER: Wallet address: ${walletAddress}`);
     console.log(`🎯 BET HANDLER: Can bet: ${canBet}`);
+    console.log(`🎯 BET HANDLER: Connected: ${connected}`);
     
     // Use circuit breaker to execute the bet operation
     try {
       await circuitBreaker.execute(async () => {
         // Pre-flight checks
-        if (!walletAddress) {
-          console.log("❌ BET HANDLER: No wallet address available");
+        if (!connected || !walletAddress) {
+          console.log("❌ BET HANDLER: Wallet not connected");
           toast({
             title: "Wallet Required",
             description: "Please connect your wallet first",
             variant: "destructive",
           });
-          throw new Error("No wallet address");
+          throw new Error("Wallet not connected");
         }
         
         if (!canBet) {
@@ -68,27 +69,28 @@ export const useBetHandler = (walletAddress: string) => {
         
         console.log("💰 BET HANDLER: Creating transaction payload");
         
-        // Create transaction payload
+        // Create proper transaction payload for APT transfer
+        const amountInOctas = Math.floor(amount * 100000000); // Convert APT to octas
         const payload = {
           function: "0x1::coin::transfer",
-          typeArguments: ["0x1::aptos_coin::AptosCoin"],
-          functionArguments: [
+          type_arguments: ["0x1::aptos_coin::AptosCoin"],
+          arguments: [
             "0x2afbb09094a37b84d14bc9aaf7deb6dd586acc20b0e3ba8c8c5a7cafd9eb5a0d", // Escrow address
-            Math.floor(amount * 100000000).toString() // Convert to octas
+            amountInOctas.toString()
           ]
         };
         
-        console.log("📤 BET HANDLER: Submitting transaction", payload);
+        console.log("📤 BET HANDLER: Submitting transaction with payload:", payload);
         
-        // Submit transaction with simplified flow
+        // Submit transaction and wait for result
         const response = await submitTransaction(payload);
-        console.log("✅ BET HANDLER: Transaction response:", response);
+        console.log("✅ BET HANDLER: Transaction response received:", response);
         
-        // Check if response has hash (transaction succeeded)
-        if (response && typeof response === 'object' && 'hash' in response && response.hash) {
+        // Check if transaction was successful
+        if (response && response.hash) {
           console.log("🎉 BET HANDLER: Transaction successful with hash:", response.hash);
           
-          // Store current bet
+          // Store current bet immediately after successful transaction
           console.log("💾 BET HANDLER: Storing current bet");
           setCurrentBet({
             amount,
@@ -97,27 +99,31 @@ export const useBetHandler = (walletAddress: string) => {
           
           console.log("📢 BET HANDLER: Showing success toast");
           toast({
-            title: "Bet Placed!",
-            description: `${amount} ${tokenType} has been deducted from your wallet. Now select a cup where you think the ball is hidden.`,
+            title: "Bet Placed Successfully!",
+            description: `${amount} ${tokenType} has been deducted from your wallet. Now select a cup!`,
           });
+          
+          return true;
         } else {
-          console.error("❌ BET HANDLER: No transaction hash in response:", response);
-          throw new Error("Transaction failed - no hash received");
+          console.error("❌ BET HANDLER: Transaction failed - no hash received:", response);
+          throw new Error("Transaction failed - please try again");
         }
       });
     } catch (error: any) {
-      console.error("💥 BET HANDLER: Circuit breaker caught error:", error);
+      console.error("💥 BET HANDLER: Error during bet placement:", error);
       
       let errorMessage = "Failed to place your bet. Please try again.";
       
       if (circuitBreaker.state === 'open') {
         errorMessage = "Too many failed attempts. Please wait 30 seconds before trying again.";
-      } else if (error?.message?.includes("User rejected")) {
+      } else if (error?.message?.includes("User rejected") || error?.message?.includes("rejected")) {
         errorMessage = "Transaction was rejected. Please approve the transaction to place your bet.";
       } else if (error?.message?.includes("already in progress")) {
         errorMessage = "Bet placement in progress. Please wait.";
       } else if (error?.message?.includes("insufficient")) {
         errorMessage = "Insufficient balance. Please check your wallet balance.";
+      } else if (error?.message?.includes("Wallet not connected")) {
+        errorMessage = "Please connect your wallet first.";
       }
       
       console.log("📢 BET HANDLER: Showing error toast:", errorMessage);
