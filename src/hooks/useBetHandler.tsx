@@ -88,10 +88,9 @@ export const useBetHandler = (walletAddress: string) => {
         const response = await submitTransaction(payload);
         console.log("✅ BET HANDLER: Transaction response received:", response);
         
-        // Check if transaction was successful
-        if (response && (response.hash || response.transactionHash)) {
-          const txHash = response.hash || response.transactionHash;
-          console.log("🎉 BET HANDLER: Transaction successful with hash:", txHash);
+        // Check if transaction was successful - only check for hash
+        if (response && response.hash) {
+          console.log("🎉 BET HANDLER: Transaction successful with hash:", response.hash);
           
           // Store current bet immediately after successful transaction
           console.log("💾 BET HANDLER: Storing current bet");
