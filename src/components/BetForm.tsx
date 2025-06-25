@@ -29,7 +29,9 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
 
   // Initialize token type when available tokens change
   useEffect(() => {
+    console.log("💰 BET FORM: Available tokens changed:", availableTokens);
     if (availableTokens.length > 0 && !availableTokens.includes(tokenType)) {
+      console.log("💰 BET FORM: Setting token type to:", availableTokens[0]);
       setTokenType(availableTokens[0]);
     }
   }, [availableTokens, tokenType]);
@@ -41,13 +43,23 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
 
   // Reset amount when token type changes
   useEffect(() => {
+    console.log("💰 BET FORM: Token type changed to:", tokenType);
     setAmount("");
   }, [tokenType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log("💰 BET FORM: ===============================");
+    console.log("💰 BET FORM: Form submitted");
+    console.log("💰 BET FORM: Token type:", tokenType);
+    console.log("💰 BET FORM: Amount:", amount);
+    console.log("💰 BET FORM: Disabled:", disabled);
+    console.log("💰 BET FORM: isEscrowFunded:", isEscrowFunded);
+    console.log("💰 BET FORM: availableTokens:", availableTokens);
+    
     if (!tokenType) {
+      console.log("❌ BET FORM: No token type selected");
       toast({
         title: "Token Required",
         description: "Please select a token type",
@@ -59,7 +71,13 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
     const minBet = getCurrentMinBet();
     const amountNum = parseFloat(amount);
     
+    console.log("💰 BET FORM: Validation values:");
+    console.log("💰 BET FORM: minBet:", minBet);
+    console.log("💰 BET FORM: amountNum:", amountNum);
+    console.log("💰 BET FORM: amount valid:", !amount || amountNum <= 0);
+    
     if (!amount || amountNum <= 0) {
+      console.log("❌ BET FORM: Invalid amount");
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid bet amount",
@@ -69,6 +87,7 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
     }
     
     if (amountNum < minBet) {
+      console.log("❌ BET FORM: Amount below minimum");
       toast({
         title: "Bet Too Small",
         description: `Minimum bet is ${minBet} ${tokenType}`,
@@ -76,6 +95,9 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
       });
       return;
     }
+    
+    console.log("✅ BET FORM: All validations passed, calling onPlaceBet");
+    console.log("📤 BET FORM: Calling onPlaceBet with:", tokenType, amountNum);
     
     onPlaceBet(tokenType, amountNum);
   };
@@ -86,13 +108,22 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
   // Check if no tokens are available
   const noTokensAvailable = availableTokens.length === 0;
 
+  console.log("💰 BET FORM: Render state:");
+  console.log("💰 BET FORM: isFormValid:", isFormValid);
+  console.log("💰 BET FORM: noTokensAvailable:", noTokensAvailable);
+  console.log("💰 BET FORM: disabled:", disabled);
+  console.log("💰 BET FORM: isEscrowFunded:", isEscrowFunded);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex flex-col gap-2">
         <label className="font-luckiest text-lg text-jungle-darkGreen">Select Token</label>
         <Select
           value={tokenType && availableTokens.includes(tokenType) ? tokenType : undefined}
-          onValueChange={setTokenType}
+          onValueChange={(value) => {
+            console.log("💰 BET FORM: Token type changed to:", value);
+            setTokenType(value);
+          }}
           disabled={disabled || noTokensAvailable}
         >
           <SelectTrigger className="input-field">
@@ -114,7 +145,10 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
         <Input
           type="number"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => {
+            console.log("💰 BET FORM: Amount changed to:", e.target.value);
+            setAmount(e.target.value);
+          }}
           placeholder={tokenType ? `Min: ${getCurrentMinBet()} ${tokenType}` : "Select token first"}
           className="input-field"
           min={tokenType ? getCurrentMinBet() : 0}
