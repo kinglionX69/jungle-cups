@@ -12,7 +12,7 @@ const MIN_EMOJICOIN_BET = 1000;
 export const useBetHandler = (walletAddress: string) => {
   const { toast } = useToast();
   const { setCurrentBet, canBet } = useGameState();
-  const { submitTransaction, connected } = useAptosWallet();
+  const { submitTransaction, connected, account } = useAptosWallet();
   
   // Initialize circuit breaker
   const circuitBreaker = useCircuitBreaker({
@@ -25,8 +25,9 @@ export const useBetHandler = (walletAddress: string) => {
   const handlePlaceBet = async (tokenType: string, amount: number) => {
     console.log(`🎯 BET HANDLER: Starting bet placement: ${amount} ${tokenType}`);
     console.log(`🎯 BET HANDLER: Wallet address: ${walletAddress}`);
-    console.log(`🎯 BET HANDLER: Can bet: ${canBet}`);
     console.log(`🎯 BET HANDLER: Connected: ${connected}`);
+    console.log(`🎯 BET HANDLER: Account:`, account);
+    console.log(`🎯 BET HANDLER: Can bet: ${canBet}`);
     
     // Use circuit breaker to execute the bet operation
     try {
@@ -80,15 +81,17 @@ export const useBetHandler = (walletAddress: string) => {
           ]
         };
         
-        console.log("📤 BET HANDLER: Submitting transaction with payload:", payload);
+        console.log("📤 BET HANDLER: About to submit transaction");
+        console.log("📤 BET HANDLER: Payload:", JSON.stringify(payload, null, 2));
         
-        // Submit transaction and wait for result
+        // This should trigger the wallet popup
         const response = await submitTransaction(payload);
         console.log("✅ BET HANDLER: Transaction response received:", response);
         
         // Check if transaction was successful
-        if (response && response.hash) {
-          console.log("🎉 BET HANDLER: Transaction successful with hash:", response.hash);
+        if (response && (response.hash || response.transactionHash)) {
+          const txHash = response.hash || response.transactionHash;
+          console.log("🎉 BET HANDLER: Transaction successful with hash:", txHash);
           
           // Store current bet immediately after successful transaction
           console.log("💾 BET HANDLER: Storing current bet");

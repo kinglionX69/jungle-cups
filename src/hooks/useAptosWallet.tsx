@@ -94,7 +94,7 @@ export function useAptosWallet() {
     }
   }, [disconnect, toast]);
 
-  // Fixed transaction submission - direct call to wallet adapter
+  // Submit transaction - simplified and direct
   const submitTransaction = useCallback(async (payload: any) => {
     console.log("🔧 WALLET: submitTransaction called with payload:", payload);
     
@@ -103,6 +103,11 @@ export function useAptosWallet() {
       throw new Error("Wallet not connected");
     }
     
+    if (!account?.address) {
+      console.error("❌ WALLET: No account address");
+      throw new Error("No wallet address available");
+    }
+
     if (!signAndSubmitTransaction) {
       console.error("❌ WALLET: signAndSubmitTransaction not available");
       throw new Error("Transaction function not available");
@@ -114,28 +119,20 @@ export function useAptosWallet() {
     }
 
     try {
-      console.log("📤 WALLET: Calling signAndSubmitTransaction with payload:", payload);
+      console.log("📤 WALLET: Submitting transaction to wallet...");
+      console.log("📤 WALLET: Account address:", account.address);
+      console.log("📤 WALLET: Payload:", JSON.stringify(payload, null, 2));
       
-      // Direct call to wallet adapter - this should trigger the wallet popup
+      // Call the wallet adapter directly - this should trigger the popup
       const result = await signAndSubmitTransaction(payload);
       
-      console.log("✅ WALLET: Transaction completed successfully:", result);
+      console.log("✅ WALLET: Transaction result:", result);
       return result;
     } catch (error) {
       console.error("❌ WALLET: Transaction failed:", error);
-      
-      // Re-throw the error with additional context
-      if (error instanceof Error) {
-        if (error.message.includes("User rejected") || error.message.includes("rejected")) {
-          throw new Error("User rejected the transaction");
-        } else if (error.message.includes("insufficient")) {
-          throw new Error("Insufficient balance for transaction");
-        }
-      }
-      
       throw error;
     }
-  }, [connected, signAndSubmitTransaction, isCorrectNetwork]);
+  }, [connected, account, signAndSubmitTransaction, isCorrectNetwork]);
 
   return {
     account,
