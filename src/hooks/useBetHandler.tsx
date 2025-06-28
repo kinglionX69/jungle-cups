@@ -1,8 +1,8 @@
-
 import { useToast } from "@/components/ui/use-toast";
 import { playClickSoundSafe } from "@/utils/safeAudio";
 import { useGameState } from "./useGameState";
 import { useAptosWallet } from "./useAptosWallet";
+import { ESCROW_WALLET_ADDRESS } from "@/utils/aptosConfig";
 
 // Define minimum bet constants
 const MIN_APT_BET = 0.01;
