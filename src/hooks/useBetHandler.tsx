@@ -77,11 +77,12 @@ export const useBetHandler = (walletAddress: string) => {
       // Create proper transaction payload for APT transfer
       const amountInOctas = Math.floor(amount * 100000000); // Convert APT to octas
       const payload = {
-        function: "0x1::coin::transfer",
-        type_arguments: ["0x1::aptos_coin::AptosCoin"],
-        arguments: [
-          "0x2afbb09094a37b84d14bc9aaf7deb6dd586acc20b0e3ba8c8c5a7cafd9eb5a0d", // Escrow address
-          amountInOctas.toString()
+  type: "entry_function_payload", // 👈 this is the key fix
+  function: "0x1::coin::transfer",
+  type_arguments: ["0x1::aptos_coin::AptosCoin"],
+  arguments: [
+    ESCROW_WALLET_ADDRESS,
+    amountInOctas.toString()
         ]
       };
       
