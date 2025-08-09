@@ -2,8 +2,9 @@
 import { Aptos, Network, AptosConfig, AccountAddress, EntryFunctionArgumentTypes, Account, Ed25519PrivateKey } from "https://esm.sh/@aptos-labs/ts-sdk@2.0.1";
 
 // Aptos client configuration
-export const NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1";
-const config = new AptosConfig({ network: Network.TESTNET });
+export const NETWORK = "mainnet";
+export const NODE_URL = "https://fullnode.mainnet.aptoslabs.com/v1";
+const config = new AptosConfig({ network: Network.MAINNET });
 export const client = new Aptos(config);
 
 // Create Aptos account from private key

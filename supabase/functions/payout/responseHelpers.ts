@@ -9,11 +9,8 @@ export const createSuccessResponse = (
   playerAddress: string,
   transactionHash: string
 ) => {
-  // Determine the explorer URL based on the network
-  const explorerBaseUrl = NETWORK === "mainnet" 
-    ? "https://explorer.aptoslabs.com" 
-    : "https://explorer.aptoslabs.com/txn";
-  
+  // Explorer URL (same path for all networks, network selected via query param)
+  const explorerBaseUrl = "https://explorer.aptoslabs.com/txn";
   const explorerUrl = `${explorerBaseUrl}/${transactionHash}?network=${NETWORK}`;
   
   return {

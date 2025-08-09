@@ -20,12 +20,12 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
   const { toast } = useToast();
 
   const openFaucet = () => {
-    const faucetUrl = `https://aptos.dev/en/network/faucet?address=${ESCROW_WALLET_ADDRESS}`;
-    window.open(faucetUrl, "_blank");
+    const explorerUrl = `https://explorer.aptoslabs.com/account/${ESCROW_WALLET_ADDRESS}`;
+    window.open(explorerUrl, "_blank");
     
     toast({
-      title: "Faucet Opened",
-      description: "The faucet has been opened with the escrow wallet address pre-filled.",
+      title: "Explorer Opened",
+      description: "Viewing escrow wallet on Aptos Explorer.",
     });
   };
 
@@ -115,7 +115,7 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Use the testnet faucet to fund the escrow wallet: 
+              Fund the escrow wallet by sending APT to this address:
             </p>
             <p className="text-xs font-mono bg-gray-100 p-2 rounded break-all">
               {ESCROW_WALLET_ADDRESS}
@@ -127,11 +127,11 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
             className="w-full"
           >
             <ExternalLink className="mr-2 h-4 w-4" />
-            Open Testnet Faucet
+            Open in Explorer
           </Button>
           
           <div className="text-xs text-muted-foreground">
-            <p>The faucet will open with the escrow wallet address pre-filled. Click the "Fund Account" button to request testnet tokens.</p>
+            <p>You can view transactions and details for the escrow wallet on the Aptos Explorer.</p>
           </div>
         </CardContent>
       </Card>

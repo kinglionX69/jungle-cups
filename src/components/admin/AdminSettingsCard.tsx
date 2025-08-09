@@ -139,7 +139,7 @@ const AdminSettingsCard = () => {
   };
 
   const openExplorer = () => {
-    window.open(`https://explorer.aptoslabs.com/account/${ESCROW_WALLET_ADDRESS}?network=testnet`, "_blank");
+    window.open(`https://explorer.aptoslabs.com/account/${ESCROW_WALLET_ADDRESS}`, "_blank");
   };
 
   const handleMaintenanceToggle = (enabled: boolean) => {
@@ -362,12 +362,12 @@ const AdminSettingsCard = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button 
-              onClick={openFaucet}
+              onClick={openExplorer}
               variant="outline"
               className="flex items-center gap-2"
             >
               <ExternalLink className="h-4 w-4" />
-              Get Testnet Tokens
+              View Escrow on Explorer
             </Button>
             
             <Button 
@@ -384,13 +384,13 @@ const AdminSettingsCard = () => {
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
               <p className="text-sm font-medium text-amber-800">
-                {gameSettings.maintenanceMode ? "Maintenance Mode Active" : "Testnet Environment"}
+                {gameSettings.maintenanceMode ? "Maintenance Mode Active" : "Production Environment"}
               </p>
             </div>
             <p className="text-xs text-amber-700">
               {gameSettings.maintenanceMode 
                 ? "The game is currently in maintenance mode. Players cannot place bets."
-                : "This is a testnet deployment. All tokens and transactions are for testing purposes only."
+                : "This is a mainnet deployment. All tokens and transactions are on Aptos mainnet."
               }
             </p>
           </div>

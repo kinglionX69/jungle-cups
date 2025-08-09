@@ -170,7 +170,7 @@ export const handleWithdrawalTransaction = async (
             );
 
             // Return success response with explorer URL
-            const explorerUrl = `https://explorer.aptoslabs.com/txn/${transactionRes.hash}?network=testnet`;
+            const explorerUrl = `https://explorer.aptoslabs.com/txn/${transactionRes.hash}?network=mainnet`;
             return {
               success: true,
               status: 200,

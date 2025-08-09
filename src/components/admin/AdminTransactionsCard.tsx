@@ -259,7 +259,7 @@ const AdminTransactionsCard = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => window.open(`https://explorer.aptoslabs.com/txn/${tx.transaction_hash}?network=testnet`, '_blank')}
+                        onClick={() => window.open(`https://explorer.aptoslabs.com/txn/${tx.transaction_hash}?network=mainnet`, '_blank')}
                         className="flex items-center gap-1"
                       >
                         <span className="font-mono text-xs">

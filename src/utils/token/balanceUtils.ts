@@ -69,25 +69,7 @@ export const getWalletBalance = async (address: string, tokenType: string = "APT
       console.log(`No APT coin store found for ${address}`);
       return 0;
     } else if (tokenType === "EMOJICOIN") {
-      // For testing, we're using APT for Emojicoin
-      const resources = await retryRequest(async (client) => {
-        return await client.getAccountResources({ 
-          accountAddress: address 
-        });
-      });
-      
-      const aptosCoin = resources.find(
-        (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
-      );
-      
-      if (aptosCoin) {
-        const balance = parseInt((aptosCoin.data as any).coin.value);
-        const result = balance / 100000000; // Same conversion as APT for testing
-        console.log(`Emojicoin balance (simulated) for ${address}: ${result}`);
-        return result;
-      }
-      
-      console.log(`No simulated Emojicoin coin store found for ${address}`);
+      console.log("EMOJICOIN not supported on mainnet - returning 0");
       return 0;
     }
     
