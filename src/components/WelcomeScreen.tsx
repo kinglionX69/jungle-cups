@@ -24,7 +24,7 @@ const WelcomeScreen = ({
       </h2>
       
       <p className="mb-8 text-lg max-w-xl mx-auto text-jungle-darkGreen/90">
-        Connect your Aptos wallet to start playing Jungle Cups Game & win APT or LionHeart🦁♥️ Emojicoin!
+        Connect your Aptos wallet to start playing Jungle Cups and win APT!
       </p>
       
       <WalletConnect onConnect={onConnect} connected={false} walletAddress="" />

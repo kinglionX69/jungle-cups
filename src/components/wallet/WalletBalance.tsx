@@ -24,7 +24,6 @@ const WalletBalance = ({ walletAddress, isCorrectNetwork }: WalletBalanceProps) 
   
   const { 
     aptBalance, 
-    emojiBalance, 
     isLoading, 
     refetch 
   } = useWalletBalance({ 
@@ -83,19 +82,6 @@ const WalletBalance = ({ walletAddress, isCorrectNetwork }: WalletBalanceProps) 
               )}
             </div>
             
-            <div className="flex justify-between items-center p-2 bg-jungle-yellow/10 rounded-md">
-              <div className="flex items-center gap-2">
-                <div className="bg-jungle-yellow/20 p-1.5 rounded-full">
-                  <span className="text-sm">🦁♥️</span>
-                </div>
-                <span className="font-medium">EMOJICOIN</span>
-              </div>
-              {isLoading ? (
-                <Skeleton className="h-5 w-16" />
-              ) : (
-                <span className="font-bold">{emojiBalance.toFixed(2)}</span>
-              )}
-            </div>
           </div>
         )}
       </CardContent>

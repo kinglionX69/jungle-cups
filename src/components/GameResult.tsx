@@ -70,7 +70,7 @@ const GameResult = ({ won, amount, tokenType, onPlayAgain }: GameResultProps) =>
           <h2 className="text-3xl text-jungle-green mb-2 drop-shadow-sm">You Won!</h2>
           <p className="text-xl mb-4">
             <span className="text-jungle-darkGreen font-bold">
-              {amount * 2} {tokenType === "EMOJICOIN" ? "🦁♥️" : tokenType}
+              {amount * 2} {tokenType}
             </span>{" "}
             has been added to your winnings
           </p>

@@ -70,23 +70,6 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
           </CardContent>
         </Card>
 
-        <Card className="border-jungle-orange/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Emojicoin Balance</CardTitle>
-            <span className="text-lg">🦁♥️</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-jungle-darkGreen">
-              {balances.emojicoin.toFixed(4)} EMJ
-            </div>
-            <Badge 
-              variant={balances.availableTokens.includes("EMOJICOIN") ? "default" : "destructive"}
-              className="mt-2"
-            >
-              {balances.availableTokens.includes("EMOJICOIN") ? "Available" : "Low Funds"}
-            </Badge>
-          </CardContent>
-        </Card>
 
         <Card className="border-blue-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

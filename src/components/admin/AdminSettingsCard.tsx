@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Settings, Copy, ExternalLink, AlertTriangle, Save } from "lucide-react";
-import { ESCROW_WALLET_ADDRESS, MIN_APT_BALANCE, MIN_EMOJICOIN_BALANCE, NETWORK } from "@/utils/aptosConfig";
+import { ESCROW_WALLET_ADDRESS, MIN_APT_BALANCE, NETWORK } from "@/utils/aptosConfig";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GameSettings {
@@ -236,14 +236,6 @@ const AdminSettingsCard = () => {
               />
             </div>
             
-            <div className="space-y-2">
-              <Label>Minimum Emojicoin Balance</Label>
-              <Input 
-                value={`${MIN_EMOJICOIN_BALANCE} EMJ`} 
-                readOnly 
-                className="bg-muted"
-              />
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -270,20 +262,6 @@ const AdminSettingsCard = () => {
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="minEmojiBet">Minimum Emojicoin Bet</Label>
-              <Input
-                id="minEmojiBet"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={gameSettings.minEmojiBet}
-                onChange={(e) => setGameSettings(prev => ({
-                  ...prev,
-                  minEmojiBet: parseFloat(e.target.value) || 0.01
-                }))}
-              />
-            </div>
             
             <div className="space-y-2">
               <Label htmlFor="maxBetAmount">Maximum Bet Amount</Label>

@@ -74,22 +74,21 @@ export const useBetHandler = (walletAddress: string) => {
       
       console.log("💰 BET HANDLER: Creating transaction payload...");
       
-      // Create proper transaction payload for APT transfer
+      // Create transaction using wallet adapter InputTransactionData shape
       const amountInOctas = Math.floor(amount * 100000000); // Convert APT to octas
-      const payload = {
-  type: "entry_function_payload", // 👈 this is the key fix
-  function: "0x1::coin::transfer",
-  type_arguments: ["0x1::aptos_coin::AptosCoin"],
-  arguments: [
-    ESCROW_WALLET_ADDRESS,
-    amountInOctas.toString()
-        ]
-      };
+      const tx = {
+        sender: account?.address?.toString(),
+        data: {
+          function: "0x1::coin::transfer",
+          typeArguments: ["0x1::aptos_coin::AptosCoin"],
+          functionArguments: [ESCROW_WALLET_ADDRESS, amountInOctas]
+        }
+      } as any;
       
       console.log("📦 BET HANDLER: Transaction payload created:");
-      console.log("📦 BET HANDLER: Function:", payload.function);
-      console.log("📦 BET HANDLER: Type arguments:", payload.type_arguments);
-      console.log("📦 BET HANDLER: Arguments:", payload.arguments);
+      console.log("📦 BET HANDLER: Function:", tx.data.function);
+      console.log("📦 BET HANDLER: Type arguments:", tx.data.typeArguments);
+      console.log("📦 BET HANDLER: Arguments:", tx.data.functionArguments);
       console.log("📦 BET HANDLER: Amount in octas:", amountInOctas);
       
       if (!submitTransaction) {
@@ -106,8 +105,7 @@ export const useBetHandler = (walletAddress: string) => {
       console.log("📤 BET HANDLER: About to call submitTransaction...");
       console.log("📤 BET HANDLER: This should trigger the Petra wallet popup");
       
-      // Submit transaction directly without circuit breaker wrapper for debugging
-      const response = await submitTransaction(payload);
+      const response = await submitTransaction(tx);
       
       console.log("📨 BET HANDLER: Transaction response received:");
       console.log("📨 BET HANDLER: Response type:", typeof response);

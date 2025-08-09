@@ -92,15 +92,8 @@ const StatsCard = ({
             <span className="font-bold">{stats.aptWon.toFixed(2)} APT</span>
           </div>
           
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Coins className="h-4 w-4 text-jungle-yellow" />
-              <span className="text-sm">Emojicoin Won</span>
-            </div>
-            <span className="font-bold">{stats.emojiWon.toFixed(0)} EMOJICOIN</span>
-          </div>
           
-          {walletAddress && (stats.aptWon > 0 || stats.emojiWon > 0) && (
+          {walletAddress && stats.aptWon > 0 && (
             <div className="pt-2">
               {showWithdraw ? (
                 <WithdrawFunds
