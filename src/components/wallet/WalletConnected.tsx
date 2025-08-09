@@ -22,6 +22,7 @@ const WalletConnected = ({
   onDisconnect
 }: WalletConnectedProps) => {
   const isMobile = useIsMobile();
+  const isTestnet = (NETWORK as string).toLowerCase() === "testnet";
 
   return (
     <div className={`flex flex-col ${isMobile ? 'w-full gap-2' : 'sm:flex-row gap-2 items-center'}`}>
@@ -37,7 +38,7 @@ const WalletConnected = ({
         </span>
       )}
       <div className={`flex gap-2 ${isMobile ? 'w-full' : ''}`}>
-        {isCorrectNetwork && NETWORK === "testnet" && (
+        {isCorrectNetwork && isTestnet && (
           <Button 
             variant="outline" 
             size="sm" 
