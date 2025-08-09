@@ -36,11 +36,9 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
     }
   }, [availableTokens, tokenType]);
 
-  // Get the current minimum bet based on selected token
   const getCurrentMinBet = () => {
-    return tokenType === "APT" ? MIN_APT_BET : MIN_EMOJICOIN_BET;
+    return MIN_APT_BET;
   };
-
   // Reset amount when token type changes
   useEffect(() => {
     console.log("💰 BET FORM: Token type changed to:", tokenType);
@@ -133,9 +131,6 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
             {availableTokens.includes("APT") && (
               <SelectItem value="APT">APT</SelectItem>
             )}
-            {availableTokens.includes("EMOJICOIN") && (
-              <SelectItem value="EMOJICOIN">🦁♥️ Emojicoin (Testing)</SelectItem>
-            )}
           </SelectContent>
         </Select>
       </div>
@@ -152,12 +147,12 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
           placeholder={tokenType ? `Min: ${getCurrentMinBet()} ${tokenType}` : "Select token first"}
           className="input-field"
           min={tokenType ? getCurrentMinBet() : 0}
-          step={tokenType === "APT" ? "0.01" : "0.01"} // Same step for testing
+          step="0.01"
           disabled={disabled || !tokenType || noTokensAvailable}
         />
         {tokenType && (
           <span className="text-xs text-muted-foreground">
-            Minimum bet: {getCurrentMinBet()} {tokenType} {tokenType === "EMOJICOIN" && "(Testing mode)"}
+            Minimum bet: {getCurrentMinBet()} {tokenType}
           </span>
         )}
       </div>
@@ -181,12 +176,6 @@ const BetForm = ({ onPlaceBet, disabled, isEscrowFunded, availableTokens }: BetF
         </p>
       )}
       
-      {tokenType === "EMOJICOIN" && (
-        <p className="text-xs text-amber-600 text-center mt-2">
-          Note: For testing purposes, we're using APT for 🦁♥️ Emojicoin transactions. 
-          This will be replaced with the real Emojicoin token on mainnet.
-        </p>
-      )}
     </form>
   );
 };

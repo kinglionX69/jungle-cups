@@ -151,9 +151,6 @@ const WithdrawFunds = ({
                   <SelectItem value="APT" disabled={stats.aptWon <= 0}>
                     APT {stats.aptWon <= 0 && "(No balance)"}
                   </SelectItem>
-                  <SelectItem value="EMOJICOIN" disabled={stats.emojiWon <= 0}>
-                    🦁♥️ Emojicoin (Testing) {stats.emojiWon <= 0 && "(No balance)"}
-                  </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs mt-1">
