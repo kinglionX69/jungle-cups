@@ -66,13 +66,24 @@ export const withdrawWinnings = async (
         };
       }
       
-      const { data, error } = await supabase.functions.invoke('payout/withdraw', {
-        body: {
-          playerAddress,
-          amount,
-          tokenType
-        }
+      const functionUrl = "https://eiqiabykntujbxldsppg.functions.supabase.co/payout/withdraw";
+      let data: any = null;
+      let error: any = null;
+      const res = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpcWlhYnlrbnR1amJ4bGRzcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MjEwMjgsImV4cCI6MjA1ODk5NzAyOH0.3I16J3OUlxJTAHVKpBugYG0vQt1j0xPPPEvoJLTK6ac",
+        },
+        body: JSON.stringify({ playerAddress, amount, tokenType }),
       });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        error = { message: `Edge Function error: ${res.status} ${text}` };
+      } else {
+        data = await res.json();
+      }
       
       if (error) {
         console.error("Error calling withdrawal function:", error);

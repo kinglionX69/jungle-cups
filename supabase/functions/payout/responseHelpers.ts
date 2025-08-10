@@ -1,6 +1,7 @@
 
 import { corsHeaders } from "./cors.ts";
-import { NETWORK } from "./aptosUtils.ts";
+// Avoid importing Aptos SDK; define network inline for explorer links
+const NETWORK = "mainnet";
 
 // Create successful response for withdrawal or payout
 export const createSuccessResponse = (
