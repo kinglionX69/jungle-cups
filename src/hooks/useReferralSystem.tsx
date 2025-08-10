@@ -71,51 +71,13 @@ export const useReferralSystem = (walletAddress: string) => {
     return await processReferralCode(code);
   };
 
-  // Common function to process referral codes
+  // Common function to process referral codes via Edge Function
   const processReferralCode = async (code: string): Promise<boolean> => {
     try {
       setIsProcessing(true);
-      
-      // Check if this wallet has already been referred
-      const { data: existingReferral, error: checkError } = await supabase
-        .from('referrals')
-        .select('*')
-        .eq('referred_address', walletAddress)
-        .single();
-      
-      if (!checkError && existingReferral) {
-        toast({
-          title: "Already Referred",
-          description: "You have already been referred by another player",
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      // Find the referrer wallet from the referral code
-      // We need to look at the last 5 characters of the code and match with wallet addresses
-      const lastFiveDigits = code.substring(code.length - 5);
-      
-      // Find a wallet address that ends with these digits
-      const { data: referrerData, error: referrerError } = await supabase
-        .from('player_stats')
-        .select('wallet_address')
-        .filter('wallet_address', 'ilike', `%${lastFiveDigits}`)
-        .single();
-      
-      if (referrerError || !referrerData) {
-        toast({
-          title: "Invalid Code",
-          description: "No matching referrer found for this code",
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      const referrerAddress = referrerData.wallet_address;
-      
-      // Don't allow self-referrals
-      if (referrerAddress === walletAddress) {
+
+      // Self-referral guard (quick client-side check); server validates again
+      if (code === referralCode) {
         toast({
           title: "Invalid Code",
           description: "You cannot use your own referral code",
@@ -123,29 +85,30 @@ export const useReferralSystem = (walletAddress: string) => {
         });
         return false;
       }
-      
-      // Create new referral record
-      const { error: insertError } = await supabase
-        .from('referrals')
-        .insert([
-          { referrer_address: referrerAddress, referred_address: walletAddress }
-        ] as any); // Type assertion to bypass TypeScript check
-        
-      if (insertError) {
-        console.error("Error creating referral:", insertError);
+
+      // Delegate validation and insertion to server (service role)
+      const { data, error } = await supabase.functions.invoke('referral', {
+        body: {
+          playerAddress: walletAddress,
+          code,
+        },
+      });
+
+      if (error || !data?.success) {
+        console.error("Referral apply error:", error || data);
         toast({
           title: "Error",
-          description: "Failed to apply referral code. Please try again.",
+          description: data?.message || "Failed to apply referral code. Please try again.",
           variant: "destructive",
         });
         return false;
       }
-      
+
       toast({
         title: "Success!",
         description: "Referral code applied successfully.",
       });
-      
+
       return true;
     } catch (error) {
       console.error("Error processing referral:", error);

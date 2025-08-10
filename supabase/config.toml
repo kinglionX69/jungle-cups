@@ -1,1 +1,10 @@
 project_id = "eiqiabykntujbxldsppg"
+
+[functions.payout]
+verify_jwt = false
+
+[functions.stats]
+verify_jwt = false
+
+[functions.referral]
+verify_jwt = false
