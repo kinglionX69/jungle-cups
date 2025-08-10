@@ -1,5 +1,5 @@
 
-import { Aptos, Network, AptosConfig, AccountAddress, EntryFunctionArgumentTypes, Account, Ed25519PrivateKey } from "https://esm.sh/@aptos-labs/ts-sdk@latest";
+import { Aptos, Network, AptosConfig, AccountAddress, Account, Ed25519PrivateKey } from "npm:@aptos-labs/ts-sdk";
 
 // Aptos client configuration
 export const NETWORK = "mainnet";
