@@ -1,4 +1,4 @@
-
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ interface AdminBalanceCardProps {
 
 const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
   const { toast } = useToast();
+  const [isTesting, setIsTesting] = useState(false);
 
   const openFaucet = () => {
     const explorerUrl = `https://explorer.aptoslabs.com/account/${ESCROW_WALLET_ADDRESS}`;
@@ -27,6 +28,45 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
       title: "Explorer Opened",
       description: "Viewing escrow wallet on Aptos Explorer.",
     });
+  };
+
+  const sendTestTransfer = async () => {
+    try {
+      setIsTesting(true);
+      // Get connected wallet address
+      let playerAddress = "";
+      if ((window as any).aptos) {
+        const accountInfo = await (window as any).aptos.account();
+        playerAddress = accountInfo?.address?.toString() || "";
+      }
+      if (!playerAddress) {
+        toast({ title: "Wallet not connected", description: "Connect a wallet to receive the test transfer." });
+        return;
+      }
+
+      const res = await fetch("https://eiqiabykntujbxldsppg.functions.supabase.co/payout/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpcWlhYnlrbnR1amJ4bGRzcHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MjEwMjgsImV4cCI6MjA1ODk5NzAyOH0.3I16J3OUlxJTAHVKpBugYG0vQt1j0xPPPEvoJLTK6ac",
+        },
+        body: JSON.stringify({ playerAddress, amount: 0.0001, tokenType: "APT" }),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || `Test failed (${res.status})`);
+      }
+
+      toast({
+        title: "Test transfer sent",
+        description: `0.0001 APT sent. View: ${data.explorerUrl || "Explorer link"}`,
+      });
+    } catch (e: any) {
+      toast({ title: "Test failed", description: e?.message || "Unknown error" });
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   if (isLoading) {
@@ -111,6 +151,14 @@ const AdminBalanceCard = ({ balances, isLoading }: AdminBalanceCardProps) => {
           >
             <ExternalLink className="mr-2 h-4 w-4" />
             Open in Explorer
+          </Button>
+
+          <Button 
+            onClick={sendTestTransfer}
+            className="w-full"
+            disabled={isTesting}
+          >
+            {isTesting ? "Sending 0.0001 APT..." : "Send 0.0001 APT Test"}
           </Button>
           
           <div className="text-xs text-muted-foreground">

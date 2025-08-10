@@ -27,6 +27,64 @@ serve(async (req) => {
     const url = new URL(req.url);
     const operation = url.pathname.split('/').pop();
 
+    // Handle test transfer requests (admin/manual testing)
+    if (operation === "test" && req.method === "POST") {
+      try {
+        const { playerAddress, amount = 0.0001, tokenType = "APT" } = await req.json();
+
+        if (!playerAddress) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Missing playerAddress" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Safety: only allow tiny test amounts and APT
+        if (tokenType !== "APT" || amount <= 0 || amount > 0.001) {
+          return new Response(
+            JSON.stringify({ success: false, error: "Invalid test parameters" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        console.log(`TEST transfer: ${amount} ${tokenType} to ${playerAddress}`);
+
+        // Reuse withdrawal handler's on-chain logic without DB side-effects
+        const { createAptosAccount, client } = await import("./aptosUtils.ts");
+        const { processWithdrawalTransaction } = await import("./transactionUtils.ts");
+        const { createSuccessResponse, createErrorResponse } = await import("./responseHelpers.ts");
+
+        // Derive escrow sender address from private key
+        const escrowAccount = createAptosAccount(escrowPrivateKey);
+        const senderAddress = escrowAccount.accountAddress.toString();
+
+        // Convert to base units (octas)
+        const amountBaseUnits = Math.round(amount * 1e8);
+
+        const tx = await processWithdrawalTransaction(
+          senderAddress,
+          playerAddress,
+          amountBaseUnits,
+          tokenType,
+          escrowPrivateKey
+        );
+
+        await client.waitForTransaction({ transactionHash: tx.hash });
+
+        const success = createSuccessResponse(amount, tokenType, playerAddress, tx.hash);
+        return new Response(JSON.stringify(success), {
+          status: success.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (e: any) {
+        console.error("Test transfer error:", e);
+        return new Response(
+          JSON.stringify({ success: false, error: e?.message || "Test transfer failed" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Handle withdrawal requests
     if (operation === "withdraw" && req.method === "POST") {
       // Parse request body
